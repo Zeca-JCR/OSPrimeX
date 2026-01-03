@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kanban de Ordens de Serviço</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-dark": "#0f65bd",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e293b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Scrollbar for horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display h-screen flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
+<!-- Top App Bar -->
+<header class="flex-none bg-surface-light dark:bg-surface-dark px-4 py-3 shadow-sm z-10 border-b border-slate-200 dark:border-slate-700">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400">Oficina Hub</span>
+<h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight">Kanban de OS</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-primary hover:bg-primary-dark text-white shadow-md shadow-primary/30 transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium whitespace-nowrap shadow-sm">
+<span>Todas</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap">
+<span>Minhas OS</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap">
+<span>Atrasadas</span>
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap">
+<span>Alta Prioridade</span>
+</button>
+</div>
+</header>
+<!-- Kanban Board Container -->
+<main class="flex-1 overflow-x-auto snap-x snap-mandatory flex p-4 gap-4 items-start h-full">
+<!-- Column 1: Aberta -->
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-slate-400"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Aberta</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold">3</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<!-- Card 1 -->
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="absolute top-3 right-3 flex gap-1">
+<span class="w-2 h-2 rounded-full bg-yellow-400" title="Prioridade Média"></span>
+</div>
+<div class="flex items-start gap-3 mb-3">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+<span class="material-symbols-outlined text-slate-400">directions_car</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-primary mb-0.5">OS #4021</p>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Ford Ka 1.0 SE</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200 dark:border-slate-700">ABC-1234</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+<div class="flex flex-col">
+<span class="text-[10px] text-slate-400 font-medium">Cliente</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Maria Silva</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-400 font-medium">Técnico</span>
+<span class="text-xs text-slate-500 italic">--</span>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex items-start gap-3 mb-3">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center shrink-0 shadow-sm" data-alt="Imagem miniatura de um carro branco" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtiTAu0psdfYQ7UFhUKVNgnA8GDkmX7Jrcb6qZg9mZAqVqWLSOp2YcYlVdKehAsaHuW966i9c4SzgNdYVEUXU78byMSvNF8kVRaH1qHcJXQfnMvcXWt3gc2-H1soCB9AXLGEX2sCO_Z-dPkvQ58w4X2BliDoZSKkev2XXxUubWZA-Dw8qLSa2e41qQQPJW71h8XgFzMgjOlU2KNsHNwG4Ckm6jKt9YzhGYFw_NE6H13aL_qxwtqwUIa14USaaCRvkRFXl0X_qY2NUB');"></div>
+<div>
+<p class="text-xs font-semibold text-primary mb-0.5">OS #4025</p>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Chevrolet Onix</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200 dark:border-slate-700">GHJ-4567</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+<div class="flex flex-col">
+<span class="text-[10px] text-slate-400 font-medium">Cliente</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Empresa Logística</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-400 font-medium">Técnico</span>
+<span class="text-xs text-slate-500 italic">--</span>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex items-start gap-3 mb-3">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+<span class="material-symbols-outlined text-slate-400">two_wheeler</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-primary mb-0.5">OS #4026</p>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Honda PCX 150</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200 dark:border-slate-700">MTB-9988</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+<div class="flex flex-col">
+<span class="text-[10px] text-slate-400 font-medium">Cliente</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Roberto Dias</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-400 font-medium">Técnico</span>
+<span class="text-xs text-slate-500 italic">--</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+<!-- Column 2: Em Execução -->
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Em Execução</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">2</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<!-- Card Active -->
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-3 shadow-md border-l-4 border-l-primary border-y border-r border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="absolute top-3 right-3 flex gap-1">
+<span class="w-2 h-2 rounded-full bg-red-500" title="Alta Prioridade"></span>
+</div>
+<div class="flex items-start gap-3 mb-3">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center shrink-0 shadow-sm" data-alt="Logotipo da Honda em fundo azul" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPpCteUh3lV8Xpud1DM8GMpsVtz-rd1zotJx57oMrKvURqGHTi0QTCDjJ4WDUDZwpkTpdDhdyJm1oxXGK_19watXub3r6d1z8fpTwAo0fCmRkHHven3TJ4QrBbm3n24Df5bu4YjPcP78gajsVZG2BfN1Kgc04r18ZDR6alJMI6DoKk7XFv65WgQTCYDc1tZr-VridmpWbQTT1pTxYYY3SnJ6oEGrQGwaUbMy3FOFcNG3X4609eZ-oTf6j22Bvg41OvbBavRRyHNOuV');"></div>
+<div>
+<p class="text-xs font-semibold text-primary mb-0.5">OS #4019</p>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Honda Civic LXR</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200 dark:border-slate-700">XYZ-9876</span>
+</div>
+</div>
+</div>
+<!-- Progress Bar simulation -->
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-3 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+<div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+<div class="flex flex-col">
+<span class="text-[10px] text-slate-400 font-medium">Cliente</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">João Souza</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-400 font-medium">Técnico</span>
+<span class="text-xs font-bold text-primary">Carlos M.</span>
+</div>
+<div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 overflow-hidden">
+                                CM
+                            </div>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex items-start gap-3 mb-3">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+<span class="material-symbols-outlined text-slate-400">agriculture</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-primary mb-0.5">OS #4022</p>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Fiat Toro Volc.</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200 dark:border-slate-700">TRK-2211</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+<div class="flex flex-col">
+<span class="text-[10px] text-slate-400 font-medium">Cliente</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Fazenda Sta. Luzia</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-400 font-medium">Técnico</span>
+<span class="text-xs font-bold text-primary">Pedro H.</span>
+</div>
+<div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 overflow-hidden">
+                                PH
+                            </div>
+</div>
+</div>
+</article>
+</div>
+</div>
+<!-- Column 3: Finalizada -->
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Finalizada</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold">1</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 opacity-80 hover:opacity-100 transition-opacity active:scale-[0.98]">
+<div class="flex items-start gap-3 mb-3">
+<div class="w-12 h-12 rounded-lg bg-cover bg-center shrink-0 shadow-sm opacity-80" data-alt="Logotipo Toyota desbotado" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBnr6UaA3_DUK9TrYVOIBLhITUd4Chd4qQsZxPjM_wTZlnZ7vJzjgFGqyHkQxyrJwek8teOjKQNHz1c0oomJyhjdX5vJNVdsLwpdsPUeWIl3DDqCOZsAXVDmO4wQj63U8awST74gGh8BhYzo05YnaQn2ltiHn5KcsNKmHuEBZ7Vh9U2vhr8PsrbxkEy9W90ik_-DsSECJm4oum17t4XOjKF53RZ6RsnvS-ZzfC-35nEaoSKpwRS_ibHVp9mNUNlQEnrm7DD3O5jgYro');"></div>
+<div>
+<p class="text-xs font-semibold text-green-600 mb-0.5 flex items-center gap-1">
+                                OS #4010 
+                                <span class="material-symbols-outlined text-[14px]">check_circle</span>
+</p>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Toyota Corolla</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200 dark:border-slate-700">DEF-5678</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+<div class="flex flex-col">
+<span class="text-[10px] text-slate-400 font-medium">Cliente</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Pedro Santos</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-400 font-medium">Entregue por</span>
+<span class="text-xs font-bold text-slate-600 dark:text-slate-400">Ana L.</span>
+</div>
+<div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 overflow-hidden">
+                                AL
+                            </div>
+</div>
+</div>
+</article>
+</div>
+</div>
+<!-- Column 4: Cancelada -->
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-red-500"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Cancelada</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-bold">1</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-700 opacity-60 grayscale hover:grayscale-0 transition-all active:scale-[0.98]">
+<div class="flex items-start gap-3 mb-3">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+<span class="material-symbols-outlined text-slate-400">no_crash</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-red-600 mb-0.5 flex items-center gap-1">
+                                OS #4005
+                                <span class="material-symbols-outlined text-[14px]">cancel</span>
+</p>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Fiat Uno Way</h3>
+<div class="flex items-center gap-1 mt-1">
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide border border-slate-200 dark:border-slate-700">GHI-9012</span>
+</div>
+</div>
+</div>
+<div class="p-2 rounded bg-red-50 dark:bg-red-900/10 mb-2">
+<p class="text-[10px] text-red-700 dark:text-red-300 font-medium leading-tight">Motivo: Cliente não aprovou orçamento.</p>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+<div class="flex flex-col">
+<span class="text-[10px] text-slate-400 font-medium">Cliente</span>
+<span class="text-xs font-medium text-slate-700 dark:text-slate-300">Marcos Lima</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<!-- Floating Action Button (Mobile Only visible on small heights usually, but added as requested contextually) -->
+<!-- Note: I placed the main add button in the header for cleaner layout, but here is a sticky bottom option if needed for easier thumb reach -->
+<div class="fixed bottom-6 right-6 md:hidden z-20">
+<button class="flex items-center justify-center w-14 h-14 rounded-full bg-primary hover:bg-primary-dark text-white shadow-lg shadow-primary/40 transition-transform active:scale-90">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+</div>
+</body></html>

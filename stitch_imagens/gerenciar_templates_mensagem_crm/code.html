@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gerenciar Templates CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1c2a38",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for horizontal lists */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased selection:bg-primary selection:text-white">
+<!-- Mobile Container Wrapper -->
+<div class="mx-auto flex min-h-screen w-full max-w-md flex-col relative pb-20">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-20 flex items-center justify-between bg-surface-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 border-b border-slate-200 dark:border-slate-800">
+<h2 class="text-xl font-bold leading-tight tracking-tight flex-1">Templates CRM</h2>
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-slate-100 dark:hover:bg-surface-dark text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Search Bar Section -->
+<div class="px-4 py-4 bg-background-light dark:bg-background-dark sticky top-[73px] z-10">
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border-none rounded-xl text-base bg-white dark:bg-surface-dark text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary shadow-sm" placeholder="Buscar template..." type="text" value=""/>
+</div>
+</div>
+<!-- Template List Content -->
+<main class="flex-1 flex flex-col gap-3 px-4">
+<!-- List Header -->
+<div class="flex items-center justify-between mt-2 mb-1">
+<p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Meus Templates</p>
+<span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">12 ativos</span>
+</div>
+<!-- Item 1 -->
+<button class="group flex flex-col gap-1 w-full text-left bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 active:scale-[0.98] transition-all">
+<div class="flex items-center justify-between w-full mb-1">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Lembrete de Revisão</h3>
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-sm">arrow_forward_ios</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    Olá <span class="text-primary bg-primary/10 px-1 rounded">{{nome_cliente}}</span>, notamos que a revisão do veículo <span class="text-primary bg-primary/10 px-1 rounded">{{placa_veiculo}}</span> está próxima. Agende agora para evitar imprevistos!
+                </p>
+</button>
+<!-- Item 2 -->
+<button class="group flex flex-col gap-1 w-full text-left bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 active:scale-[0.98] transition-all">
+<div class="flex items-center justify-between w-full mb-1">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Orçamento Pronto</h3>
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-sm">arrow_forward_ios</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    Olá <span class="text-primary bg-primary/10 px-1 rounded">{{nome_cliente}}</span>, o orçamento para o serviço no <span class="text-primary bg-primary/10 px-1 rounded">{{modelo_carro}}</span> já está disponível. Acesse o link para aprovar.
+                </p>
+</button>
+<!-- Item 3 -->
+<button class="group flex flex-col gap-1 w-full text-left bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 active:scale-[0.98] transition-all">
+<div class="flex items-center justify-between w-full mb-1">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Agradecimento Pós-Serviço</h3>
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-sm">arrow_forward_ios</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    Oi <span class="text-primary bg-primary/10 px-1 rounded">{{nome_cliente}}</span>, obrigado por confiar na nossa oficina. Como ficou o <span class="text-primary bg-primary/10 px-1 rounded">{{modelo_carro}}</span>? Deixe seu feedback.
+                </p>
+</button>
+<!-- Item 4 -->
+<button class="group flex flex-col gap-1 w-full text-left bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 active:scale-[0.98] transition-all">
+<div class="flex items-center justify-between w-full mb-1">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Cobrança Pendente</h3>
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 text-sm">arrow_forward_ios</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    Olá <span class="text-primary bg-primary/10 px-1 rounded">{{nome_cliente}}</span>, ainda não identificamos o pagamento referente ao serviço do dia...
+                </p>
+</button>
+<div class="h-20"></div> <!-- Spacer for FAB -->
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-6 right-6 z-30">
+<button class="flex items-center justify-center size-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 hover:bg-blue-600 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<!-- 
+             DEMONSTRATION: EDITOR STATE 
+             Usually this would be a separate route or modal. 
+             Here I'm displaying it as a Bottom Sheet that is 'open' for demonstration purposes.
+        -->
+<!-- Backdrop -->
+<div aria-hidden="true" class="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"></div>
+<!-- Editor Modal / Bottom Sheet -->
+<div class="fixed bottom-0 left-0 right-0 z-50 flex flex-col max-h-[90vh] bg-background-light dark:bg-surface-dark rounded-t-2xl shadow-2xl transform transition-transform border-t border-slate-200 dark:border-slate-700 w-full max-w-md mx-auto">
+<!-- Drag Handle / Header -->
+<div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+<button class="text-slate-500 dark:text-slate-400 font-medium text-sm">Cancelar</button>
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Novo Template</h3>
+<button class="text-primary font-bold text-sm">Salvar</button>
+</div>
+<!-- Scrollable Form Content -->
+<div class="overflow-y-auto p-4 flex flex-col gap-6">
+<!-- Template Name -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome do Template</label>
+<input class="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-600 rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-slate-400" placeholder="Ex: Promoção de Pneus" type="text" value="Promoção de Alinhamento"/>
+</div>
+<!-- Message Editor -->
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mensagem</label>
+<span class="text-xs text-slate-400 dark:text-slate-500">145 caracteres</span>
+</div>
+<!-- Variable Chips Scroller -->
+<div class="w-full overflow-x-auto hide-scrollbar pb-2">
+<div class="flex gap-2">
+<button class="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]">person</span>
+                                {{nome_cliente}}
+                            </button>
+<button class="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]">directions_car</span>
+                                {{placa_veiculo}}
+                            </button>
+<button class="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]">build</span>
+                                {{servico}}
+                            </button>
+<button class="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[16px]">calendar_month</span>
+                                {{data_agendamento}}
+                            </button>
+</div>
+</div>
+<!-- Text Area -->
+<div class="relative">
+<textarea class="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-600 rounded-lg p-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none text-base leading-relaxed" placeholder="Digite sua mensagem aqui..." rows="6">Olá {{nome_cliente}}, traga seu carro para um alinhamento e ganhe 10% de desconto. Válido até sexta-feira!</textarea>
+<!-- Helper Text -->
+<div class="absolute bottom-3 right-3 flex items-center gap-1 pointer-events-none">
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-lg">sentiment_satisfied</span>
+</div>
+</div>
+<p class="text-xs text-slate-400 dark:text-slate-500">Toque nas variáveis acima para inserir no texto.</p>
+</div>
+<!-- Preview Box (Optional but good for CRM) -->
+<div class="bg-slate-100 dark:bg-background-dark/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-slate-400 text-sm">visibility</span>
+<span class="text-xs font-bold text-slate-500 uppercase">Preview WhatsApp</span>
+</div>
+<div class="bg-[#dcf8c6] dark:bg-[#005c4b] p-3 rounded-lg rounded-tr-none text-sm text-slate-800 dark:text-slate-100 inline-block max-w-[90%] shadow-sm relative">
+                        Olá João Silva, traga seu carro para um alinhamento e ganhe 10% de desconto. Válido até sexta-feira!
+                        <div class="text-[10px] text-right opacity-60 mt-1 flex justify-end gap-1 items-center">
+                            10:42 <span class="material-symbols-outlined text-[10px]">done_all</span>
+</div>
+</div>
+</div>
+<div class="h-6"></div> <!-- Bottom Spacer -->
+</div>
+</div>
+</div>
+</body></html>

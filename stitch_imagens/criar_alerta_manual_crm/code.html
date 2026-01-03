@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Criar Alerta Manual CRM</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-hover": "#0f6bd0",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#192633",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#324d67",
+                        "text-main-light": "#111827",
+                        "text-main-dark": "#ffffff",
+                        "text-secondary-light": "#6b7280",
+                        "text-secondary-dark": "#92adc9",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>/* Custom scrollbar for better mobile feel if content overflows */
+::-webkit-scrollbar {
+    width: 6px
+    }
+::-webkit-scrollbar-track {
+    background: transparent
+    }
+::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px
+    }
+/* Select icon override for dark/light mode consistency */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA22BKi4hFqGf3hcoFvQyxhTdBUPLEI3Rzv2lhuMPq7z5YW-n-OXPlaajKKGsU23O4TDHLT2nfqC5srUGH1yleEk5mzJi_Sfd-c3hPm6aiw3XLTzruPhzBJ3MrUZMJMHuqUeou4EuFYiBPyPJbYc5oJ8CyZPrFj8mClp2N36xsekUPGW0lzjemjiaoX93mXcf0WdzzCcWxCR7Q19v4cXAAKTSzFvhIIhe9UzpaS39lDdSPiQ5NbgMWEcyDsx2nfDTbTWstEteKibb2t);
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em
+    }
+.dark select {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuC19BIF8DtjPlz4Qr-EvhZhNtp9J4v3eH6kHROGfCm8Djb3-ZnxFmpnJ0nHvM7H-6FxuLrp5v3v2ZOxCagR2QpFkwW7vpKIutQboakrmYDitbTFSD9X7T17jJM5irbBhP4wZ8rsMhVRGBKcKXkmd-mhin5-kHRruX-4kmKWWBGjIRWFxCfNU0a1ZmXG1fIqULIM9BQMwGY-Rjg6rwc-4izDQlbhT-NhQ6HIwlAEbqtBxJqbaLKIWpRrbSml5RRE1EepCquLN4sQ1bOu)
+    }
+/* Date input icon adjustment */
+::-webkit-calendar-picker-indicator {
+    filter: invert(0.5)
+    }
+.dark ::-webkit-calendar-picker-indicator {
+    filter: invert(0.8)
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display transition-colors duration-200 antialiased min-h-screen flex flex-col">
+<!-- Main Container -->
+<div class="relative flex flex-col flex-1 w-full max-w-md mx-auto overflow-hidden bg-background-light dark:bg-background-dark shadow-2xl min-h-screen sm:min-h-[800px] sm:h-auto sm:my-8 sm:rounded-2xl sm:border sm:border-gray-200 dark:sm:border-gray-800">
+<!-- Header / Handle -->
+<div class="flex flex-col items-center pt-3 pb-2 flex-shrink-0 bg-background-light dark:bg-background-dark z-10 sticky top-0">
+<!-- Handle Bar -->
+<div class="h-1.5 w-12 rounded-full bg-gray-300 dark:bg-border-dark mb-4"></div>
+<!-- Headline -->
+<div class="w-full px-5 flex items-center justify-between">
+<h1 class="text-text-main-light dark:text-text-main-dark tracking-tight text-2xl font-bold leading-tight">
+                    Novo Alerta Manual
+                </h1>
+<button class="text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors p-1 rounded-full">
+<span class="material-symbols-outlined text-2xl">close</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Form Content -->
+<div class="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+<!-- Field: Cliente (Search) -->
+<div class="flex flex-col gap-2">
+<label class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal">
+                    Cliente
+                </label>
+<div class="relative flex items-center w-full rounded-lg shadow-sm">
+<input class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-main-light dark:text-text-main-dark bg-surface-light dark:bg-surface-dark border border-gray-300 dark:border-border-dark focus:border-primary focus:ring-1 focus:ring-primary h-12 placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark px-4 pr-12 text-base font-normal leading-normal transition-colors" placeholder="Buscar cliente por nome..." type="text" value=""/>
+<div class="absolute right-0 h-full flex items-center pr-3 pointer-events-none text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined">search</span>
+</div>
+</div>
+</div>
+<!-- Field: Veículo (Select) -->
+<div class="flex flex-col gap-2">
+<label class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal">
+                    Veículo
+                </label>
+<select class="flex w-full min-w-0 flex-1 rounded-lg text-text-main-light dark:text-text-main-dark bg-surface-light dark:bg-surface-dark border border-gray-300 dark:border-border-dark focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base font-normal leading-normal transition-colors cursor-pointer">
+<option class="text-gray-400" disabled="" selected="" value="">Selecione o veículo...</option>
+<option value="1">VW Gol - ABC-1234</option>
+<option value="2">Fiat Uno - XYZ-9876</option>
+<option value="3">Chevrolet Onix - DEF-5678</option>
+</select>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                    Selecione um cliente para ver os veículos disponíveis.
+                </p>
+</div>
+<!-- Field: Motivo (Textarea) -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-baseline">
+<label class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal">
+                        Motivo do Alerta
+                    </label>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">0/200</span>
+</div>
+<textarea class="flex w-full min-w-0 flex-1 resize-none rounded-lg text-text-main-light dark:text-text-main-dark bg-surface-light dark:bg-surface-dark border border-gray-300 dark:border-border-dark focus:border-primary focus:ring-1 focus:ring-primary min-h-[140px] placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-4 text-base font-normal leading-normal transition-colors" placeholder="Ex: Cliente pediu contato sobre revisão dos pneus..."></textarea>
+</div>
+<!-- Field: Data de Retorno (Date) -->
+<div class="flex flex-col gap-2">
+<label class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal">
+                    Data de Acompanhamento
+                </label>
+<div class="relative flex items-center w-full rounded-lg shadow-sm">
+<input class="flex w-full min-w-0 flex-1 rounded-lg text-text-main-light dark:text-text-main-dark bg-surface-light dark:bg-surface-dark border border-gray-300 dark:border-border-dark focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-base font-normal leading-normal transition-colors" type="date"/>
+</div>
+</div>
+<!-- Spacer for bottom scrolling -->
+<div class="h-4"></div>
+</div>
+<!-- Footer Actions -->
+<div class="p-5 bg-background-light dark:bg-background-dark border-t border-gray-200 dark:border-border-dark mt-auto z-10 sticky bottom-0">
+<div class="flex flex-col gap-3">
+<button class="flex w-full items-center justify-center rounded-lg bg-primary hover:bg-primary-hover text-white h-12 px-6 text-base font-semibold leading-normal shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
+                    Salvar Alerta
+                </button>
+<button class="flex w-full items-center justify-center rounded-lg bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 text-text-secondary-light dark:text-text-secondary-dark h-12 px-6 text-base font-medium leading-normal transition-colors">
+                    Cancelar
+                </button>
+</div>
+</div>
+</div>
+</body></html>

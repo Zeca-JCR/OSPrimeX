@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalhes do Cliente</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+<div class="sticky top-0 z-50 flex items-center bg-background-light dark:bg-background-dark p-4 border-b border-gray-200 dark:border-gray-800">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full active:bg-gray-200 dark:active:bg-gray-800 transition-colors cursor-pointer text-gray-900 dark:text-white">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+</div>
+<h2 class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-2">Detalhes do Cliente</h2>
+<div class="flex items-center justify-end">
+<button class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0 hover:opacity-80 transition-opacity">
+                    Salvar
+                </button>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-6 p-4 pb-24">
+<div class="flex flex-col items-center gap-4 py-2">
+<div class="relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-24 w-24 ring-4 ring-white dark:ring-[#192633] shadow-lg" data-alt="Portrait of a smiling man with a beard" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDtYB3miaMJVX4AGFtOy32tB51foxVmFbQXG3q5yeIgErMWJhvqFMI9Fw9aakLTIu1T8QYMltPwC2PF5G4E_iHmfy5_ovvJa1TzzPBv5hsicjpe9Fa6mPVSMWjliUenT-X4zCa8GTe4l7rUPVdo3z-kuHPODsY3KE__drmQRxm-TenIbaFIyJJOURyIk5CsxTseCNW_PUDJOGkTYzlosPO_J0CUh2Fv_lcVkBuYhV_b6FtKqOis5wKQSi_xMlBlwj3PSQropn9nDlpK");'>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 shadow-md flex items-center justify-center border-2 border-background-light dark:border-background-dark">
+<span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center">
+<p class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] text-center">João da Silva</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal text-center">Cliente VIP • Desde 2021</p>
+</div>
+<div class="grid grid-cols-3 gap-3 w-full mt-2">
+<button class="flex items-center justify-center gap-1.5 h-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary font-medium text-xs sm:text-sm hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">call</span>
+                        Ligar
+                    </button>
+<button class="flex items-center justify-center gap-1.5 h-10 rounded-full bg-green-600/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 font-medium text-xs sm:text-sm hover:bg-green-600/20 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chat</span>
+                        WhatsApp
+                    </button>
+<button class="flex items-center justify-center gap-1.5 h-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary font-medium text-xs sm:text-sm hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">mail</span>
+                        E-mail
+                    </button>
+</div>
+</div>
+<hr class="border-gray-200 dark:border-gray-800 w-full"/>
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">person</span>
+<h3 class="text-gray-900 dark:text-white text-base font-bold leading-tight">Dados Pessoais</h3>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Nome Completo</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="João da Silva"/>
+</label>
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">CPF / CNPJ</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="123.456.789-00"/>
+</label>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Telefone</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" type="tel" value="(11) 98765-4321"/>
+</label>
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">E-mail</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" type="email" value="joao.silva@email.com"/>
+</label>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-4 mt-2">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">location_on</span>
+<h3 class="text-gray-900 dark:text-white text-base font-bold leading-tight">Endereço</h3>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Logradouro e Número</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="Av. Paulista, 1000"/>
+</label>
+<div class="grid grid-cols-2 gap-4">
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Bairro</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="Bela Vista"/>
+</label>
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">CEP</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="01310-100"/>
+</label>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<label class="flex flex-col w-full col-span-2">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Cidade</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="São Paulo"/>
+</label>
+<label class="flex flex-col w-full col-span-1">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">UF</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="SP"/>
+</label>
+</div>
+</div>
+</div>
+<hr class="border-gray-200 dark:border-gray-800 w-full mt-2"/>
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">directions_car</span>
+<h3 class="text-gray-900 dark:text-white text-base font-bold leading-tight">Veículos Vinculados</h3>
+</div>
+<button class="flex items-center justify-center size-8 rounded-full bg-primary/10 dark:bg-primary/20 text-primary hover:bg-primary/30 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-3">
+<div class="group relative flex items-center justify-between gap-4 rounded-xl bg-white dark:bg-[#192633] p-4 border border-gray-200 dark:border-gray-800 shadow-sm active:scale-[0.99] transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-[#253646] text-gray-500 dark:text-gray-400">
+<span class="material-symbols-outlined" style="font-size: 24px;">directions_car</span>
+</div>
+<div class="flex flex-col">
+<p class="text-gray-900 dark:text-white text-base font-bold leading-tight">Honda Civic</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal">2020 • Prata</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="hidden sm:flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-[#253646] rounded text-xs font-mono font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                                ABC-1234
+                            </div>
+<div class="sm:hidden flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-[#253646] rounded text-[10px] font-mono font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                                ABC-1234
+                            </div>
+<span class="material-symbols-outlined text-gray-400" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<div class="group relative flex items-center justify-between gap-4 rounded-xl bg-white dark:bg-[#192633] p-4 border border-gray-200 dark:border-gray-800 shadow-sm active:scale-[0.99] transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="flex size-12 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-[#253646] text-gray-500 dark:text-gray-400">
+<span class="material-symbols-outlined" style="font-size: 24px;">airport_shuttle</span>
+</div>
+<div class="flex flex-col">
+<p class="text-gray-900 dark:text-white text-base font-bold leading-tight">Fiat Strada</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal">2018 • Branca</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center px-2 py-1 bg-gray-100 dark:bg-[#253646] rounded text-xs sm:text-xs text-[10px] font-mono font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                                XYZ-9876
+                            </div>
+<span class="material-symbols-outlined text-gray-400" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+</div>
+<button class="flex w-full items-center justify-center gap-2 rounded-xl bg-transparent border-2 border-dashed border-gray-300 dark:border-[#324d67] p-4 text-gray-500 dark:text-[#92adc9] font-medium hover:bg-gray-50 dark:hover:bg-[#192633]/50 transition-colors mt-2">
+<span class="material-symbols-outlined" style="font-size: 20px;">add_circle</span>
+                    Adicionar Novo Veículo
+                </button>
+</div>
+</div>
+</div>
+
+</body></html>

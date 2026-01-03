@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lista de Usuários - Oficina SaaS</title>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c252e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for horizontal scroll areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col pb-20">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between bg-surface-light dark:bg-surface-dark px-4 py-3 shadow-sm dark:shadow-none border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-white">
+                    Equipe
+                </h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center rounded-full p-2 text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">person_add</span>
+</button>
+</div>
+</header>
+<!-- Search Bar Area -->
+<div class="px-4 py-4 bg-background-light dark:bg-background-dark sticky top-[60px] z-40">
+<div class="relative flex items-center w-full">
+<span class="material-symbols-outlined absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none" style="font-size: 20px;">search</span>
+<input class="h-11 w-full rounded-xl border-none bg-surface-light dark:bg-surface-dark py-2 pl-10 pr-4 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Buscar nome ou e-mail" type="text"/>
+</div>
+</div>
+<!-- Filter Chips (Horizontal Scroll) -->
+<div class="flex w-full overflow-x-auto no-scrollbar gap-2 px-4 pb-4">
+<!-- Active Chip -->
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary px-4 shadow-sm transition-transform active:scale-95">
+<span class="text-white text-xs font-semibold">Todos</span>
+</button>
+<!-- Inactive Chip: Admin -->
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-4 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400" style="font-size: 16px;">shield_person</span>
+<span class="text-slate-600 dark:text-slate-300 text-xs font-medium">Admin</span>
+</button>
+<!-- Inactive Chip: Técnico -->
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-4 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400" style="font-size: 16px;">build</span>
+<span class="text-slate-600 dark:text-slate-300 text-xs font-medium">Técnico</span>
+</button>
+<!-- Inactive Chip: Financeiro -->
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-4 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400" style="font-size: 16px;">attach_money</span>
+<span class="text-slate-600 dark:text-slate-300 text-xs font-medium">Financeiro</span>
+</button>
+</div>
+<!-- User List -->
+<div class="flex flex-col gap-3 px-4">
+<!-- Item 1: Admin -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-3 shadow-sm active:bg-slate-50 dark:active:bg-[#25303b] transition-colors cursor-pointer border border-transparent dark:border-slate-800">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-slate-100 dark:border-slate-700" data-alt="Portrait of Roberto Dias" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA-ng7tLWERBLqh9DHpSICWnr52NCvUz6QQ-hy9d8_vLhabAltTqRrpXK12Uk_ELiKnZl2NLfNQkiDoHBZxM-0D3z0750Xqb19viGLCElnxS1MRF9I0ADsWP8l3E0fXUK5bYjsd25sa8v2J_VNqwC7MjrnrshV9ig0eKI874iPIj3lvKEOlE0Sw5t1E6bty88xOB7b7160qvQHmx0618anrSIjgXcOYq3n4UWkDWW7a7eAjpDb4ExETHh0GZoonuzqv-vxMPg8Xyu7g');"></div>
+<div class="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-light dark:bg-surface-dark">
+<span class="material-symbols-outlined text-primary" style="font-size: 14px;">verified_user</span>
+</div>
+</div>
+<div class="flex flex-col truncate">
+<div class="flex items-center gap-2">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Roberto Dias</p>
+<span class="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-inset ring-primary/20">Admin</span>
+</div>
+<p class="truncate text-xs text-slate-500 dark:text-slate-400">roberto@oficina.com.br</p>
+</div>
+</div>
+<span class="material-symbols-outlined shrink-0 text-slate-400 dark:text-slate-600" style="font-size: 20px;">chevron_right</span>
+</div>
+<!-- Item 2: Técnico -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-3 shadow-sm active:bg-slate-50 dark:active:bg-[#25303b] transition-colors cursor-pointer border border-transparent dark:border-slate-800">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-slate-100 dark:border-slate-700" data-alt="Portrait of Carlos Silva" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDirdOyTgAGc6KGd4NMqcGr5HkPrQeKmf8yKdaqOyblGJuDLz0_lvH30engqfi_aYkXnt33VvxYSj_dhhHEHp1jnEVGn_n7KyBgtC4FiISp4ba27G9h2YG4NuT72GiSqHcW93iu4YXE6T-ispGeYxvkyE9KJqBxMf3UXzdggbR4tdEnc_4tz1a_Uth5hujswnuBk3ayp24zcYI70D3WUjwrkFKJf6JU6rLut7hd8T-Pd9uK7MuuY3WioAvdwS6G4pnY-BPbFxiPCSby');"></div>
+</div>
+<div class="flex flex-col truncate">
+<div class="flex items-center gap-2">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Carlos Silva</p>
+<span class="inline-flex items-center rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20">Técnico</span>
+</div>
+<p class="truncate text-xs text-slate-500 dark:text-slate-400">carlos.silva@oficina.com.br</p>
+</div>
+</div>
+<span class="material-symbols-outlined shrink-0 text-slate-400 dark:text-slate-600" style="font-size: 20px;">chevron_right</span>
+</div>
+<!-- Item 3: Financeiro -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-3 shadow-sm active:bg-slate-50 dark:active:bg-[#25303b] transition-colors cursor-pointer border border-transparent dark:border-slate-800">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-slate-100 dark:border-slate-700" data-alt="Portrait of Ana Souza" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBx5G4VWxlN-0yAnjAf1Z82Zcu7ytfdSAiRU4jVD2132drKu5nJNIQIS7fik50jqM2-pug4u57OsooDOUZ4KFlctgQMuoDngv3Epl-b-CUMyCeCK7Xjf5Y1mps2GzDjZi0K3vtovX_44LBVqYpU3NUf-sR6HK-y-UfhZkFIloz7WBLRGnBinK_8NvO3KlTaSB7S55E8YeW3CNSUrGmzJRfna8Xx7s2m-HRBaHHQy6OltfuLGB5cwfzLRGArtl5j_0LdJXdWrJ4UtvVr');"></div>
+</div>
+<div class="flex flex-col truncate">
+<div class="flex items-center gap-2">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Ana Souza</p>
+<span class="inline-flex items-center rounded-md bg-amber-500/10 dark:bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400 ring-1 ring-inset ring-amber-500/20">Financeiro</span>
+</div>
+<p class="truncate text-xs text-slate-500 dark:text-slate-400">ana@financeiro.com</p>
+</div>
+</div>
+<span class="material-symbols-outlined shrink-0 text-slate-400 dark:text-slate-600" style="font-size: 20px;">chevron_right</span>
+</div>
+<!-- Item 4: Técnico -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-3 shadow-sm active:bg-slate-50 dark:active:bg-[#25303b] transition-colors cursor-pointer border border-transparent dark:border-slate-800">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-slate-100 dark:border-slate-700" data-alt="Portrait of Marcos Oliveira" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDegj_Vfj5CzIm7aFaGn3MFwnPpfI-bBx6Fh2jnkJC9i1E3UVHWthZa1fYsmMO-xecuby7s7NbUvHDNY2fk0-VlZSqkYsWt63C0oNPRqg1fHegps9XyJT7pkUVYRZ9l2dWyi-lFU0O0jg-w9DfuqQSvqCayoMK55h5rsGKUPhhRTTHDdme8YDxj7ynDmZo7YLIQwrKzi6K1bu1OetI4_kheLmbfdbw23jwk1VG4HuUo_nU3Coov8bmctW4s2QUSEEjf-xwCaS1ms9Zr');"></div>
+</div>
+<div class="flex flex-col truncate">
+<div class="flex items-center gap-2">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Marcos Oliveira</p>
+<span class="inline-flex items-center rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20">Técnico</span>
+</div>
+<p class="truncate text-xs text-slate-500 dark:text-slate-400">marcos.mec@oficina.com.br</p>
+</div>
+</div>
+<span class="material-symbols-outlined shrink-0 text-slate-400 dark:text-slate-600" style="font-size: 20px;">chevron_right</span>
+</div>
+<!-- Item 5: Técnico -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-3 shadow-sm active:bg-slate-50 dark:active:bg-[#25303b] transition-colors cursor-pointer border border-transparent dark:border-slate-800">
+<div class="flex items-center gap-3 overflow-hidden">
+<div class="relative shrink-0">
+<!-- Fallback Avatar using initials -->
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold border border-slate-100 dark:border-slate-700">
+                            JP
+                        </div>
+</div>
+<div class="flex flex-col truncate">
+<div class="flex items-center gap-2">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">João Paulo</p>
+<span class="inline-flex items-center rounded-md bg-emerald-500/10 dark:bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20">Técnico</span>
+</div>
+<p class="truncate text-xs text-slate-500 dark:text-slate-400">joao.p@oficina.com.br</p>
+</div>
+</div>
+<span class="material-symbols-outlined shrink-0 text-slate-400 dark:text-slate-600" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<!-- FAB (Floating Action Button) -->
+<button class="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-transform active:scale-90 hover:scale-105 hover:shadow-primary/50">
+<span class="material-symbols-outlined" style="font-size: 28px;">add</span>
+</button>
+<!-- Empty state spacer for scrolling past FAB -->
+<div class="h-20 w-full"></div>
+</div>
+<!-- Toggle Dark Mode Script (Simulated) -->
+<script>
+        // Simple logic to toggle class 'dark' on html for demo purposes
+        // In a real app this would check system preference or local storage
+        document.addEventListener('DOMContentLoaded', () => {
+             // You can uncomment this line to default to light mode if preferred
+             // document.documentElement.classList.remove('dark');
+        });
+    </script>
+</body></html>

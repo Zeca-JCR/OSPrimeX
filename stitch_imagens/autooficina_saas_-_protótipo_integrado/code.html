@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>AutoOficina SaaS - Protótipo Integrado</title>
+    
+    <!-- External Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+
+    <!-- Tailwind Config -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-dark": "#0f65bd",
+                        "primary-hover": "#0f6bd0",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2630",
+                        "surface-border": "#2b3a4a",
+                        "text-main-light": "#111827",
+                        "text-main-dark": "#ffffff",
+                        "text-secondary-light": "#64748b",
+                        "text-secondary-dark": "#92adc9",
+                        "success": "#10b981", 
+                        "danger": "#ef4444",  
+                        "warning": "#f59e0b",
+                        "whatsapp": "#25D366",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#324d67",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1e293b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; }
+        
+        /* Material Symbols override for fill support */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        /* Custom Document Styles */
+        .document-paper {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-image: linear-gradient(#f1f1f1 1px, transparent 1px), linear-gradient(90deg, #f1f1f1 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: white;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Helper Components ---
+
+        const NavLink = ({ to, icon, label, exact = false }) => {
+            const location = useLocation();
+            const isActive = exact ? location.pathname === to : location.pathname.startsWith(to);
+            
+            return (
+                <Link to={to} className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${isActive ? 'text-primary' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}>
+                    <span className={`material-symbols-outlined text-[24px] ${isActive ? 'filled' : ''}`}>{icon}</span>
+                    <span className="text-[10px] font-medium">{label}</span>
+                </Link>
+            );
+        };
+
+        const BottomNav = () => (
+            <nav className="fixed bottom-0 w-full bg-surface-light dark:bg-surface-dark border-t border-gray-200 dark:border-gray-800 pb-safe z-50">
+                <div className="flex justify-around items-center h-16">
+                    <NavLink to="/" icon="dashboard" label="Painel" exact={true} />
+                    <NavLink to="/kanban" icon="view_kanban" label="OS" />
+                    <div className="w-12"></div> {/* Spacer for FAB */}
+                    <NavLink to="/financeiro" icon="attach_money" label="Financeiro" />
+                    <NavLink to="/menu" icon="menu" label="Menu" />
+                </div>
+                {/* Floating Action Button (FAB) Overlay */}
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+                    <Link to="/nova-os" className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/40 hover:bg-blue-600 transition-transform active:scale-95">
+                        <span className="material-symbols-outlined text-[28px]">add</span>
+                    </Link>
+                </div>
+            </nav>
+        );
+
+        const Header = ({ title, showBack = false, showMenu = false, rightAction = null }) => {
+            const navigate = useNavigate();
+            return (
+                <header className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                        {showBack && (
+                            <button onClick={() => navigate(-1)} className="flex items-center justify-center size-10 -ml-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+                                <span className="material-symbols-outlined">arrow_back</span>
+                            </button>
+                        )}
+                        {showMenu && (
+                            <button className="flex items-center justify-center size-10 -ml-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+                                <span className="material-symbols-outlined">menu</span>
+                            </button>
+                        )}
+                        <h1 className="text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-white truncate">{title}</h1>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {rightAction}
+                        <button className="flex items-center justify-center size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                    </div>
+                </header>
+            );
+        };
+
+        const DarkModeToggle = () => {
+            const toggleDarkMode = () => {
+                document.documentElement.classList.toggle('dark');
+            };
+            return (
+                <button onClick={toggleDarkMode} className="fixed bottom-20 right-4 z-50 bg-slate-800 dark:bg-white text-white dark:text-slate-900 p-3 rounded-full shadow-lg opacity-50 hover:opacity-100 transition-opacity">
+                    <span className="material-symbols-outlined text-xl">dark_mode</span>
+                </button>
+            );
+        };
+
+        // --- Screen Components (Simplified/Integrated versions of provided HTML) ---
+
+        // Screen 48: Dashboard da Oficina (Home)
+        const Dashboard = () => {
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen pb-20">
+                    <header className="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/30">
+                                <img alt="Profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHuWfHudeGkxLq5vgQ16_QNdUiDpQV-4ufMfaIA6r786qkVXwSX2WnPDafJQlxe2TvEqUZamXfEEZhhqW5-F8D-KtEfg0kPtFl74uhkhN2XOcFx-f1NF85B7r_6INudhpztX6dmp8L8nAdT0W19O6ZOcih4Iz_XxKmEY_32tbIQdkWgFl-9sxd4AGH6m3nsBByne8iXbvFHH4ev5Fl72V_qTJgtPe_MrCdgezCL0d7pfSR688yKiFCDQcpGemYugOdMNoIVer6kA2y"/>
+                            </div>
+                            <div className="flex flex-col">
+                                <h1 className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-none">Olá, João</h1>
+                                <span className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Auto Center Silva</span>
+                            </div>
+                        </div>
+                        <button className="size-10 rounded-full hover:bg-gray-200 dark:hover:bg-surface-dark flex items-center justify-center transition-colors relative">
+                            <span className="material-symbols-outlined text-gray-600 dark:text-gray-300">notifications</span>
+                            <span className="absolute top-2 right-2 size-2.5 bg-red-500 rounded-full border-2 border-background-light dark:border-background-dark"></span>
+                        </button>
+                    </header>
+
+                    <main className="w-full max-w-md mx-auto flex flex-col gap-6 p-4">
+                        {/* Quick Status */}
+                        <section className="grid grid-cols-2 gap-3">
+                            <Link to="/kanban" className="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+                                <div className="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                    <span className="material-symbols-outlined">assignment</span>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">OS Abertas</p>
+                                    <p className="text-xl font-bold">12</p>
+                                </div>
+                            </Link>
+                            <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+                                <div className="size-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500">
+                                    <span className="material-symbols-outlined">check_circle</span>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Finalizadas</p>
+                                    <p className="text-xl font-bold">5</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Featured OS */}
+                        <section>
+                            <div className="flex items-center justify-between mb-3 px-1">
+                                <h2 className="text-lg font-bold flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-xl">build_circle</span>
+                                    Em Execução
+                                </h2>
+                                <Link to="/kanban" className="text-sm font-medium text-primary hover:text-blue-400">Ver todas</Link>
+                            </div>
+                            <div className="flex overflow-x-auto hide-scrollbar gap-4 pb-2 -mx-4 px-4 snap-x">
+                                <Link to="/os-detalhes" className="snap-center shrink-0 w-[85%] bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-3 relative overflow-hidden group">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="font-bold text-lg">Chevrolet Onix</h3>
+                                            <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-300">ABC-1234</span>
+                                        </div>
+                                        <span className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">Em Andamento</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        <div className="size-12 rounded-lg bg-gray-200 dark:bg-gray-700 bg-cover bg-center" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCPJhGsz2M9QT7k7FQCekz1exyZlLqJ87xi8-qnETGJIGLbSwwmeJssfe3aujqomzRkmhz2BH9zx9uvwvZu__ARG0t0DgYQ0EYo0mZmyXPF6fyxrT6n-Cs29YdapLW49B_dpc2ZKlIKo3SQsW2xYyVWJEYW2Zxr6oiEmV3QGfEzjitHE5fpdPzTBu5fhX83cpWbbIQzS621sYe9HG_ay045nRnrQx6g6P_Y34M8B0-uBNztGgwJ8k1H5xNcT9U54zWaTbr3B8DIZQ1L')"}}></div>
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">Troca de Óleo e Filtros</p>
+                                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                                <span className="material-symbols-outlined text-[14px]">schedule</span>
+                                                <span>Iniciado há 45m</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full mt-2 overflow-hidden">
+                                        <div className="bg-yellow-500 h-full rounded-full" style={{width: "60%"}}></div>
+                                    </div>
+                                </Link>
+                            </div>
+                        </section>
+
+                        {/* Financeiro */}
+                        <Link to="/financeiro" className="bg-surface-light dark:bg-surface-dark rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden block">
+                            <div className="absolute -right-6 -top-6 size-24 bg-primary/5 rounded-full blur-2xl"></div>
+                            <div className="flex justify-between items-center mb-4 relative z-10">
+                                <h2 className="text-lg font-bold flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">payments</span>
+                                    Financeiro Hoje
+                                </h2>
+                                <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium hover:bg-primary/20 transition-colors">Ver Detalhes</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 relative z-10">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Receitas</span>
+                                    <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">R$ 2.500</span>
+                                    <span className="text-xs text-green-500 font-bold flex items-center gap-0.5 bg-green-500/10 w-fit px-1.5 py-0.5 rounded">
+                                        <span className="material-symbols-outlined text-[14px]">trending_up</span> +15%
+                                    </span>
+                                </div>
+                                <div className="flex flex-col gap-1 border-l border-gray-200 dark:border-gray-700 pl-4">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Despesas</span>
+                                    <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">R$ 450</span>
+                                </div>
+                            </div>
+                        </Link>
+
+                        {/* Quick Nav Grid */}
+                        <section className="grid grid-cols-2 gap-4">
+                            <Link to="/alertas" className="bg-orange-50 dark:bg-[#2a1e12] border border-orange-100 dark:border-orange-900/30 p-4 rounded-xl flex flex-col justify-between gap-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="flex items-start justify-between">
+                                    <div className="size-8 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                                        <span className="material-symbols-outlined text-lg">campaign</span>
+                                    </div>
+                                    <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-orange-900 dark:text-orange-100">CRM Alertas</h3>
+                                    <p className="text-xs text-orange-700 dark:text-orange-300/70 mt-1">Clientes para retorno.</p>
+                                </div>
+                            </Link>
+                            <Link to="/estoque" className="bg-red-50 dark:bg-[#2a1215] border border-red-100 dark:border-red-900/30 p-4 rounded-xl flex flex-col justify-between gap-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                                <div className="flex items-start justify-between">
+                                    <div className="size-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400">
+                                        <span className="material-symbols-outlined text-lg">inventory_2</span>
+                                    </div>
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">5</span>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-red-900 dark:text-red-100">Estoque Baixo</h3>
+                                    <p className="text-xs text-red-700 dark:text-red-300/70 mt-1">Repor peças críticas.</p>
+                                </div>
+                            </Link>
+                        </section>
+                    </main>
+                    <BottomNav />
+                </div>
+            );
+        };
+
+        // Screen 31: Kanban de OS
+        const KanbanOS = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark font-display h-screen flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 pb-16">
+                    <header className="flex-none bg-surface-light dark:bg-surface-dark px-4 py-3 shadow-sm z-10 border-b border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Oficina Hub</span>
+                                <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight">Kanban de OS</h1>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+                                    <span className="material-symbols-outlined">search</span>
+                                </button>
+                                <Link to="/nova-os" className="flex items-center justify-center w-10 h-10 rounded-full bg-primary hover:bg-primary-dark text-white shadow-md shadow-primary/30 transition-colors">
+                                    <span className="material-symbols-outlined">add</span>
+                                </Link>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
+                            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium whitespace-nowrap shadow-sm">
+                                <span>Todas</span>
+                            </button>
+                            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap">
+                                <span>Minhas OS</span>
+                            </button>
+                        </div>
+                    </header>
+                    <main className="flex-1 overflow-x-auto snap-x snap-mandatory flex p-4 gap-4 items-start h-full">
+                        {/* Coluna Aberta */}
+                        <div className="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+                            <div className="flex items-center justify-between mb-3 px-1">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                                    <h2 className="text-base font-bold text-slate-700 dark:text-slate-200">Aberta</h2>
+                                    <span className="px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold">2</span>
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+                                <Link to="/os-detalhes" className="block group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-lg font-bold text-primary dark:text-primary-400 leading-none">OS #4021</span>
+                                        <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-sm"></span>
+                                    </div>
+                                    <div className="mb-3">
+                                        <div className="text-sm font-bold text-slate-800 dark:text-white leading-snug">Ford Ka 1.0 SE</div>
+                                        <div className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">ABC-1234</div>
+                                    </div>
+                                    <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-700 flex items-end justify-between">
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Maria Silva</span>
+                                        <span className="text-[10px] text-slate-400">14/10/2023</span>
+                                    </div>
+                                </Link>
+                            </div>
+                        </div>
+                        {/* Coluna Em Execução */}
+                        <div className="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+                            <div className="flex items-center justify-between mb-3 px-1">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                                    <h2 className="text-base font-bold text-slate-700 dark:text-slate-200">Em Execução</h2>
+                                    <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">1</span>
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+                                <Link to="/os-detalhes" className="block group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-md border-l-4 border-l-primary border-y border-r border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-lg font-bold text-primary dark:text-primary-400 leading-none">OS #4019</span>
+                                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm"></span>
+                                    </div>
+                                    <div className="mb-3">
+                                        <div className="text-sm font-bold text-slate-800 dark:text-white leading-snug">Honda Civic LXR</div>
+                                        <div className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">XYZ-9876</div>
+                                    </div>
+                                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-4 overflow-hidden">
+                                        <div className="bg-primary h-1.5 rounded-full" style={{width: "65%"}}></div>
+                                    </div>
+                                </Link>
+                            </div>
+                        </div>
+                         {/* Coluna Finalizada */}
+                         <div className="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+                            <div className="flex items-center justify-between mb-3 px-1">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                    <h2 className="text-base font-bold text-slate-700 dark:text-slate-200">Finalizada</h2>
+                                    <span className="px-1.5 py-0.5 rounded-md bg-green-100 text-green-700 text-xs font-bold">1</span>
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+                                <div className="block group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 opacity-80">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-lg font-bold text-green-600 dark:text-green-400 leading-none">OS #4010</span>
+                                        <span className="material-symbols-outlined text-green-500">check_circle</span>
+                                    </div>
+                                    <div className="mb-3">
+                                        <div className="text-sm font-bold text-slate-800 dark:text-white leading-snug">Toyota Corolla</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                    <BottomNav />
+                </div>
+            );
+        };
+
+        // Screen 14: Detalhes da OS
+        const OSDetails = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col pb-24">
+                    <header className="sticky top-0 z-50 bg-surface-light dark:bg-surface-dark px-4 py-3 shadow-sm border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <button onClick={() => navigate(-1)} className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <h1 className="text-lg font-bold text-slate-900 dark:text-white">OS #4019</h1>
+                        <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+                            <span className="material-symbols-outlined">more_vert</span>
+                        </button>
+                    </header>
+                    
+                    <main className="flex-1 p-4 space-y-5">
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-primary dark:text-blue-300 text-sm font-bold shadow-sm">
+                                    <span className="relative flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+                                    </span>
+                                    Em Execução
+                                </span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 bg-white dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700 shadow-sm">
+                                    <span className="material-symbols-outlined text-[14px]">calendar_today</span> 11/10/2023
+                                </span>
+                            </div>
+                            <div>
+                                <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 font-semibold px-1 mb-1.5">
+                                    <span>Progresso</span>
+                                    <span>65%</span>
+                                </div>
+                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                                    <div className="bg-primary h-2.5 rounded-full relative" style={{width: "65%"}}></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <section className="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[16px]">person</span> Cliente
+                            </h3>
+                            <div className="flex items-start gap-3">
+                                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-200 dark:border-slate-700">
+                                    <span className="material-symbols-outlined text-2xl">person</span>
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <Link to="/cliente-detalhes" className="text-base font-bold text-slate-900 dark:text-white hover:underline">João Souza</Link>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+                                        <span className="material-symbols-outlined text-[14px] text-slate-400">call</span> (11) 99876-5432
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[16px]">directions_car</span> Veículo
+                            </h3>
+                            <div className="flex gap-4 mb-4">
+                                <div className="w-20 h-20 rounded-xl bg-cover bg-center shrink-0 border border-slate-100 dark:border-slate-700" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPpCteUh3lV8Xpud1DM8GMpsVtz-rd1zotJx57oMrKvURqGHTi0QTCDjJ4WDUDZwpkTpdDhdyJm1oxXGK_19watXub3r6d1z8fpTwAo0fCmRkHHven3TJ4QrBbm3n24Df5bu4YjPcP78gajsVZG2BfN1Kgc04r18ZDR6alJMI6DoKk7XFv65WgQTCYDc1tZr-VridmpWbQTT1pTxYYY3SnJ6oEGrQGwaUbMy3FOFcNG3X4609eZ-oTf6j22Bvg41OvbBavRRyHNOuV')"}}></div>
+                                <div className="flex flex-col justify-center">
+                                    <div className="text-base font-bold text-slate-900 dark:text-white leading-tight">Honda Civic LXR</div>
+                                    <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">2.0 Flex - 2016</div>
+                                    <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 inline-block self-start">XYZ-9876</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+                                <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[16px]">build</span> Serviços e Peças
+                                </h3>
+                                <button className="w-7 h-7 flex items-center justify-center rounded-full bg-primary hover:bg-primary-dark text-white shadow-sm transition-colors">
+                                    <span className="material-symbols-outlined text-lg">add</span>
+                                </button>
+                            </div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                <div className="p-4 flex gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700">3x</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-start mb-0.5">
+                                            <div className="text-sm font-bold text-slate-900 dark:text-white truncate pr-2">Óleo Sintético 5W30</div>
+                                            <div className="text-sm font-bold text-slate-900 dark:text-white">R$ 135,00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-4 flex gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700">1x</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-start mb-0.5">
+                                            <div className="text-sm font-bold text-slate-900 dark:text-white truncate pr-2">Filtro de Óleo</div>
+                                            <div className="text-sm font-bold text-slate-900 dark:text-white">R$ 35,00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-800/30 p-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
+                                <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-700/50">
+                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Total</span>
+                                    <span className="text-xl font-bold text-slate-900 dark:text-white">R$ 350,00</span>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                    
+                    <footer className="fixed bottom-0 left-0 right-0 bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 p-4 pb-8 z-20">
+                        <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
+                            <button className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <span className="material-symbols-outlined text-[20px]">description</span> Orçamento
+                            </button>
+                            <button className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20">
+                                <span className="material-symbols-outlined text-[20px]">check_circle</span> Finalizar
+                            </button>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        // Screen 19: Financeiro
+        const Financeiro = () => {
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen pb-20">
+                    <header className="sticky top-0 z-20 flex items-center justify-between bg-surface-light/90 dark:bg-surface-dark/90 px-4 py-3 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg font-bold leading-tight text-slate-900 dark:text-white">Financeiro</h2>
+                        </div>
+                        <button className="flex items-center justify-center rounded-full p-2 text-primary hover:bg-primary/10 transition-colors">
+                            <span className="material-symbols-outlined text-[24px]">filter_list</span>
+                        </button>
+                    </header>
+                    <main className="flex flex-col gap-6 p-4">
+                        <div className="relative overflow-hidden rounded-xl bg-primary p-6 shadow-lg shadow-primary/20">
+                            <div className="relative z-10 flex flex-col gap-1">
+                                <div className="flex items-center gap-2 text-white/90">
+                                    <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+                                    <p className="text-sm font-medium">Saldo Líquido</p>
+                                </div>
+                                <p className="text-3xl font-bold tracking-tight text-white mt-1">R$ 32.750,00</p>
+                                <div className="flex items-center gap-1 mt-2">
+                                    <span className="flex items-center justify-center rounded-full bg-white/20 p-0.5">
+                                        <span className="material-symbols-outlined text-white text-[14px]">trending_up</span>
+                                    </span>
+                                    <p className="text-xs font-medium text-white">+8% vs mês anterior</p>
+                                </div>
+                            </div>
+                            <div className="absolute right-[-20px] top-[-20px] h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-2">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 text-success">
+                                        <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
+                                    </span>
+                                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Receitas</p>
+                                </div>
+                                <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">R$ 45.200</p>
+                            </div>
+                            <div className="flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-2">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-danger">
+                                        <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
+                                    </span>
+                                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Despesas</p>
+                                </div>
+                                <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">R$ 12.450</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <button className="flex items-center justify-center gap-2 rounded-lg bg-primary/10 dark:bg-primary/20 p-3 text-sm font-bold text-primary dark:text-blue-400 hover:bg-primary/20 active:scale-95 transition-all">
+                                <span className="material-symbols-outlined text-[20px]">add_circle</span> Nova Receita
+                            </button>
+                            <button className="flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 p-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all">
+                                <span className="material-symbols-outlined text-[20px]">remove_circle</span> Nova Despesa
+                            </button>
+                        </div>
+                    </main>
+                    <BottomNav />
+                </div>
+            );
+        };
+
+        // Screen 16: Estoque
+        const Estoque = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen pb-20">
+                    <header className="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => navigate(-1)} className="flex items-center justify-center size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+                                <span className="material-symbols-outlined">arrow_back</span>
+                            </button>
+                            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Estoque</h1>
+                        </div>
+                        <button className="flex items-center justify-center size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+                            <span className="material-symbols-outlined">filter_list</span>
+                        </button>
+                    </header>
+                    <div className="px-4 py-3 sticky top-[60px] z-10 bg-background-light dark:bg-background-dark">
+                        <div className="relative flex items-center w-full h-12 rounded-xl focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 dark:focus-within:ring-offset-background-dark transition-all shadow-sm">
+                            <div className="absolute left-0 pl-3 flex items-center pointer-events-none"><span className="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span></div>
+                            <input className="w-full h-full pl-10 pr-4 rounded-xl border-none bg-white dark:bg-surface-dark text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-0 text-base" placeholder="Buscar por nome ou código" type="text"/>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-3 px-4 pb-24">
+                        <div className="group flex items-center justify-between p-3 bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                <div className="shrink-0 size-14 rounded-lg bg-slate-100 dark:bg-slate-800 bg-cover bg-center border border-slate-100 dark:border-slate-700" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuC1feCbJhvFpAM5_D2aQt4p54X7T6-8pCB0CHE3oQ7JCKAwaGXT9KSNMaf4Ms__-W9eJHsZNKnTp5SA2vpwkcL09te4tB1g98ziXve9imCDMUKh1O3fuKsKijA1Au7IIaaD05OUUj-UIHm5sZxmS13V3dT-5h7g7v8V1ELBYN_FX4V58Pwj2e97Kog4PV3VFRVkvZeUlfiIg6wouqD8R48b_NeL4RpHeHZ8GM8LQFwsyMZeAvZ6RxF1oSrjjD3Ju8_Zh3iDMSOnXGpi')"}}></div>
+                                <div className="flex flex-col min-w-0">
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate pr-2">Óleo Sintético 5W30</h3>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">COD-4821</p>
+                                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-1">R$ 35,00 / un</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">24 un</span>
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-500 font-medium">Em estoque</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button className="fixed bottom-6 right-6 size-14 rounded-full bg-primary hover:bg-blue-600 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center transition-transform active:scale-90 z-30">
+                        <span className="material-symbols-outlined text-[28px]">add</span>
+                    </button>
+                </div>
+            );
+        };
+
+        // Screen 24: Alertas CRM
+        const Alertas = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen pb-20">
+                    <div className="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
+                        <div className="flex items-center justify-between px-4 py-3">
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => navigate(-1)} className="flex items-center justify-center p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                                    <span className="material-symbols-outlined text-slate-600 dark:text-slate-300">arrow_back</span>
+                                </button>
+                                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Alertas</h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-3 px-4 mt-4">
+                        <Link to="/alerta-detalhes" className="group relative flex flex-col gap-3 p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
+                            <div className="flex justify-between items-start">
+                                <div className="flex gap-3">
+                                    <div className="relative shrink-0">
+                                        <div className="size-12 rounded-full bg-slate-200 dark:bg-slate-700 bg-center bg-cover" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfgMZoa6Mjop_GjNKFpN9O6jM7ghG-3udg_y1YwaHlASUG0VZEHiS8W9QV3VjbJtQgrM9x1NXhBaghqNNereldGIxNWXsZn47wW4BnY0r2HP7JTcDwNl3jLCau3FSDeCvqbEBi4ywz3pRiXvVPg3GH4bLst2iybm7Qi5gCrV7GWJ6zBkXWi97oiez2qq3lYD1xeXQYKhdkERUj3odDP2a6dNWHROKjcyUF7dPVwNtOk6LG5JD9hX24d-zv_EtZnUQ0U1N0OSx-tITJ')"}}></div>
+                                        <div className="absolute -bottom-1 -right-1 flex items-center justify-center size-5 rounded-full bg-background-light dark:bg-surface-dark border-2 border-surface-light dark:border-surface-dark">
+                                            <span className="material-symbols-outlined text-[14px] text-amber-500">warning</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">João Silva</h3>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="px-1.5 py-0.5 rounded text-[11px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 uppercase tracking-wide">ABC-1234</span>
+                                            <span className="text-xs text-slate-500 dark:text-slate-400">• Fiat Uno Way</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="shrink-0">
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">PENDENTE</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark border border-slate-100 dark:border-slate-800/50">
+                                <span className="material-symbols-outlined text-amber-500 text-lg">history</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">6 Meses sem Revisão</span>
+                            </div>
+                        </Link>
+                    </div>
+                </div>
+            );
+        };
+
+        // Screen 51: Detalhes Alerta
+        const AlertaDetalhes = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col pb-24">
+                    <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-surface-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 shadow-sm">
+                        <button onClick={() => navigate(-1)} className="flex items-center justify-center size-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-slate-900 dark:text-white">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <h1 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Alerta #1023</h1>
+                    </header>
+                    <main className="flex-1 flex flex-col gap-5 p-4 max-w-lg mx-auto w-full">
+                        <section className="flex flex-col gap-3">
+                            <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary-light dark:text-text-secondary-dark ml-1">Cliente</h2>
+                            <div className="flex items-center justify-between gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-gray-200 dark:border-gray-800">
+                                <div className="flex items-center gap-4 flex-1">
+                                    <div className="size-12 rounded-full bg-center bg-cover bg-no-repeat shadow-inner shrink-0" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAswvUFJ2-zpp7cxEqAbg5MIlN59m-_g06y5yBTv5H8V-GyiSRxsHEZNwyRosEFcvp7IErqzeZkl0w8DECy6nFXqVDiSkjkPivbAkYJsQqh37Zi7kG9xAtfkjNF038jn9igPk9SeE502OdPuv3LKEY4pVgRnDpd_4nV8iPKm88LiveoJG8PXqOWnrYGc-ju1I5cUJKzIDBtWcJkCbN4v6-QsvZP63h2x5w4NvBpQYcY7pUuaN6XuUpKQRB1vNkZz8EMLqOgfyhJyW5L')"}}></div>
+                                    <div className="flex flex-col">
+                                        <p className="text-base font-bold leading-tight">João Silva</p>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm">(11) 99999-9999</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button className="size-10 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:opacity-80 transition-opacity">
+                                        <span className="material-symbols-outlined text-[20px]">call</span>
+                                    </button>
+                                    <button className="size-10 flex items-center justify-center rounded-full bg-[#25D366]/20 text-[#25D366] hover:opacity-80 transition-opacity">
+                                        <i className="fa-brands fa-whatsapp text-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                        <section className="flex flex-col gap-4 mt-2">
+                            <h3 className="text-lg font-bold leading-tight px-1">Registrar Contato</h3>
+                            <div className="rounded-xl bg-surface-light dark:bg-surface-dark p-5 shadow-md border border-gray-200 dark:border-gray-800 flex flex-col gap-5">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Resultado</label>
+                                    <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-900/50 rounded-lg">
+                                        <button className="flex flex-col items-center justify-center gap-1 py-2 rounded-md bg-white dark:bg-gray-700 shadow-sm text-primary font-semibold text-xs transition-all border border-gray-200 dark:border-gray-600">Agendou</button>
+                                        <button className="flex flex-col items-center justify-center gap-1 py-2 rounded-md hover:bg-white/50 dark:hover:bg-gray-800 text-text-secondary-light dark:text-gray-400 font-medium text-xs transition-all">Sem Resp.</button>
+                                        <button className="flex flex-col items-center justify-center gap-1 py-2 rounded-md hover:bg-white/50 dark:hover:bg-gray-800 text-text-secondary-light dark:text-gray-400 font-medium text-xs transition-all">Perda</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            );
+        };
+
+        // Screen 52: Suporte
+        const Menu = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen pb-20">
+                    <header className="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+                        <button onClick={() => navigate(-1)} className="flex items-center justify-center size-10 rounded-full hover:bg-gray-200 dark:hover:bg-surface-dark transition-colors text-slate-700 dark:text-white">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10 text-slate-900 dark:text-white">Menu</h2>
+                    </header>
+                    <main className="p-4 space-y-4">
+                        <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="size-12 rounded-full bg-gray-200 dark:bg-gray-700 bg-cover bg-center"></div>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 dark:text-white">João Silva</h3>
+                                    <p className="text-sm text-slate-500">Mecânico Chefe</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Link to="/configuracoes" className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <span className="material-symbols-outlined text-primary">settings</span>
+                                    <span className="text-sm font-medium">Configurações</span>
+                                </Link>
+                                <Link to="/equipe" className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <span className="material-symbols-outlined text-primary">group</span>
+                                    <span className="text-sm font-medium">Equipe</span>
+                                </Link>
+                            </div>
+                        </div>
+                        <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                            <Link to="/suporte" className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-100 dark:border-gray-800">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-slate-400">help</span>
+                                    <span className="font-medium text-slate-900 dark:text-white">Ajuda e Suporte</span>
+                                </div>
+                                <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+                            </Link>
+                            <div className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer text-red-500">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined">logout</span>
+                                    <span className="font-medium">Sair</span>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                    <BottomNav />
+                </div>
+            );
+        };
+
+        const Suporte = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col">
+                    <div className="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800/50 px-4 py-3 flex items-center justify-between">
+                        <button onClick={() => navigate(-1)} className="flex items-center justify-center size-10 rounded-full hover:bg-gray-200 dark:hover:bg-surface-dark transition-colors text-slate-700 dark:text-white">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10 text-slate-900 dark:text-white">Suporte</h2>
+                    </div>
+                    <main className="flex-1 p-4 space-y-6 overflow-y-auto">
+                        <div className="flex items-stretch justify-between gap-4 rounded-2xl bg-white dark:bg-[#192633] p-5 shadow-sm border border-gray-100 dark:border-gray-800 hover:border-primary/30 transition-colors cursor-pointer group">
+                            <div className="flex flex-col justify-between flex-[3_3_0px]">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="material-symbols-outlined text-primary text-[20px]">menu_book</span>
+                                        <p className="text-slate-900 dark:text-white text-base font-bold leading-tight">Base de Conhecimento</p>
+                                    </div>
+                                    <p className="text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-relaxed">Tutoriais e guias.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight mb-4">Canais</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button className="flex flex-col items-start p-4 rounded-xl bg-white dark:bg-[#192633] border border-gray-100 dark:border-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-[#233648] transition-all active:scale-[0.98]">
+                                    <div className="size-10 rounded-full bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 flex items-center justify-center mb-3">
+                                        <i className="fa-brands fa-whatsapp text-xl"></i>
+                                    </div>
+                                    <span className="text-slate-900 dark:text-white font-bold text-sm">WhatsApp</span>
+                                </button>
+                                <button className="flex flex-col items-start p-4 rounded-xl bg-white dark:bg-[#192633] border border-gray-100 dark:border-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-[#233648] transition-all active:scale-[0.98]">
+                                    <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3">
+                                        <span className="material-symbols-outlined">mail</span>
+                                    </div>
+                                    <span className="text-slate-900 dark:text-white font-bold text-sm">E-mail</span>
+                                </button>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        // Screen 50: Detalhes Cliente
+        const ClienteDetalhes = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col pb-24">
+                    <header className="sticky top-0 z-50 flex items-center bg-background-light dark:bg-background-dark p-4 border-b border-gray-200 dark:border-gray-800">
+                        <button onClick={() => navigate(-1)} className="flex size-10 shrink-0 items-center justify-center rounded-full active:bg-gray-200 dark:active:bg-gray-800 transition-colors cursor-pointer text-gray-900 dark:text-white">
+                            <span className="material-symbols-outlined" style={{fontSize: "24px"}}>arrow_back</span>
+                        </button>
+                        <h2 className="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-2">Detalhes do Cliente</h2>
+                        <div className="flex items-center justify-end">
+                            <button className="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0 hover:opacity-80 transition-opacity">Salvar</button>
+                        </div>
+                    </header>
+                    <main className="flex-1 flex flex-col gap-6 p-4">
+                        <div className="flex flex-col items-center gap-4 py-2">
+                            <div className="relative">
+                                <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-24 w-24 ring-4 ring-white dark:ring-[#192633] shadow-lg" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtYB3miaMJVX4AGFtOy32tB51foxVmFbQXG3q5yeIgErMWJhvqFMI9Fw9aakLTIu1T8QYMltPwC2PF5G4E_iHmfy5_ovvJa1TzzPBv5hsicjpe9Fa6mPVSMWjliUenT-X4zCa8GTe4l7rUPVdo3z-kuHPODsY3KE__drmQRxm-TenIbaFIyJJOURyIk5CsxTseCNW_PUDJOGkTYzlosPO_J0CUh2Fv_lcVkBuYhV_b6FtKqOis5wKQSi_xMlBlwj3PSQropn9nDlpK')"}}></div>
+                            </div>
+                            <div className="flex flex-col items-center justify-center">
+                                <p className="text-gray-900 dark:text-white text-[22px] font-bold leading-tight text-center">João da Silva</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm font-normal text-center">Cliente VIP</p>
+                            </div>
+                            <div className="flex flex-wrap gap-3 w-full justify-center mt-2 px-2">
+                                <button className="flex flex-1 min-w-[100px] items-center justify-center gap-2 h-10 rounded-full bg-whatsapp/10 dark:bg-whatsapp/20 text-whatsapp font-medium text-sm hover:bg-whatsapp/20 transition-colors border border-whatsapp/20">
+                                    <i className="fa-brands fa-whatsapp text-lg"></i> WhatsApp
+                                </button>
+                                <button className="flex flex-1 min-w-[100px] items-center justify-center gap-2 h-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary font-medium text-sm hover:bg-primary/20 transition-colors">
+                                    <span className="material-symbols-outlined" style={{fontSize: "20px"}}>call</span> Ligar
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-2 px-1">
+                                <span className="material-symbols-outlined text-primary" style={{fontSize: "20px"}}>person</span>
+                                <h3 className="text-gray-900 dark:text-white text-base font-bold leading-tight">Dados Pessoais</h3>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                <label className="flex flex-col w-full">
+                                    <p className="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Nome Completo</p>
+                                    <input className="w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white h-12 px-4 text-base" defaultValue="João da Silva"/>
+                                </label>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        // Placeholder components for other routes to prevent crashes
+        const Placeholder = ({ title }) => (
+            <div className="min-h-screen flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 p-4 text-center">
+                <span className="material-symbols-outlined text-4xl mb-2">construction</span>
+                <h1 className="text-xl font-bold mb-2">{title}</h1>
+                <p>Esta tela é parte do protótipo completo, mas não foi solicitada explicitamente nesta demonstração rápida de navegação.</p>
+                <Link to="/" className="mt-4 text-primary font-bold">Voltar ao Início</Link>
+            </div>
+        );
+
+        // --- Main App Component ---
+        const App = () => {
+            return (
+                <MemoryRouter>
+                    <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/kanban" element={<KanbanOS />} />
+                        <Route path="/os-detalhes" element={<OSDetails />} />
+                        <Route path="/financeiro" element={<Financeiro />} />
+                        <Route path="/estoque" element={<Estoque />} />
+                        <Route path="/alertas" element={<Alertas />} />
+                        <Route path="/alerta-detalhes" element={<AlertaDetalhes />} />
+                        <Route path="/menu" element={<Menu />} />
+                        <Route path="/suporte" element={<Suporte />} />
+                        <Route path="/cliente-detalhes" element={<ClienteDetalhes />} />
+                        <Route path="/nova-os" element={<Placeholder title="Nova OS" />} />
+                        <Route path="/configuracoes" element={<Placeholder title="Configurações" />} />
+                        <Route path="/equipe" element={<Placeholder title="Equipe" />} />
+                    </Routes>
+                    <DarkModeToggle />
+                </MemoryRouter>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

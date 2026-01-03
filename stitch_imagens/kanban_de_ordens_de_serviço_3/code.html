@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalhes da Ordem de Serviço</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-dark": "#0f65bd",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e293b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display h-screen flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
+<header class="flex-none bg-surface-light dark:bg-surface-dark px-4 py-3 shadow-sm z-10 border-b border-slate-200 dark:border-slate-700">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center w-10 h-10 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex flex-col">
+<h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">OS #4019</h1>
+<span class="text-xs text-slate-500 dark:text-slate-400">Detalhes do Serviço</span>
+</div>
+<div class="ml-auto flex gap-1">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors" title="Cancelar OS">
+<span class="material-symbols-outlined text-red-500 dark:text-red-400">cancel</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-5 pb-32">
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-primary dark:text-blue-300 text-sm font-bold shadow-sm">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+</span>
+                    Em Execução
+                </span>
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 bg-white dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700 shadow-sm">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span> 11/10/2023
+                </span>
+</div>
+<div>
+<div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 font-semibold px-1 mb-1.5">
+<span>Progresso do serviço</span>
+<span>65%</span>
+</div>
+<div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+<div class="bg-primary h-2.5 rounded-full relative overflow-hidden" style="width: 65%">
+<div class="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite] -translate-x-full"></div>
+</div>
+</div>
+</div>
+</div>
+<section class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<button class="text-primary hover:text-primary-dark p-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+<h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">person</span> Cliente
+            </h3>
+<div class="flex items-start gap-3 relative z-0">
+<div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700">
+<span class="material-symbols-outlined text-2xl">person</span>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-0.5">
+<span class="text-base font-bold text-slate-900 dark:text-white">João Souza</span>
+<span class="px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600 text-[9px] font-bold text-slate-500 uppercase tracking-wide bg-slate-50 dark:bg-slate-800">Pessoa Física</span>
+</div>
+<div class="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[14px] text-slate-400">call</span>
+                        (11) 99876-5432
+                    </div>
+<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
+<span class="material-symbols-outlined text-[14px] text-slate-400">mail</span>
+                        joao.souza@email.com
+                    </div>
+</div>
+</div>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative">
+<div class="absolute top-0 right-0 p-4">
+<button class="text-primary hover:text-primary-dark p-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+<h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">directions_car</span> Veículo
+            </h3>
+<div class="flex gap-4 mb-4">
+<div class="w-20 h-20 rounded-xl bg-cover bg-center shrink-0 shadow-sm border border-slate-100 dark:border-slate-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPpCteUh3lV8Xpud1DM8GMpsVtz-rd1zotJx57oMrKvURqGHTi0QTCDjJ4WDUDZwpkTpdDhdyJm1oxXGK_19watXub3r6d1z8fpTwAo0fCmRkHHven3TJ4QrBbm3n24Df5bu4YjPcP78gajsVZG2BfN1Kgc04r18ZDR6alJMI6DoKk7XFv65WgQTCYDc1tZr-VridmpWbQTT1pTxYYY3SnJ6oEGrQGwaUbMy3FOFcNG3X4609eZ-oTf6j22Bvg41OvbBavRRyHNOuV');"></div>
+<div class="flex flex-col justify-center">
+<div class="text-base font-bold text-slate-900 dark:text-white leading-tight">Honda Civic LXR</div>
+<div class="text-sm text-slate-500 dark:text-slate-400 mb-2">2.0 Flex - 2016</div>
+<div class="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 inline-block self-start">XYZ-9876</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+<div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+<span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Quilometragem</span>
+<span class="text-sm font-semibold text-slate-700 dark:text-slate-200">115.420 km</span>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+<span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Próx. Revisão</span>
+<span class="text-sm font-semibold text-slate-700 dark:text-slate-200">125.000 km</span>
+</div>
+</div>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">engineering</span> Técnico
+                </h3>
+<button class="text-primary hover:text-primary-dark text-xs font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Alterar</button>
+</div>
+<div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+<div class="w-10 h-10 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center text-primary font-bold border border-slate-200 dark:border-slate-600 shadow-sm text-sm">
+                    CM
+                </div>
+<div>
+<div class="text-sm font-bold text-slate-900 dark:text-white">Carlos Mendes</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">Mecânico Sênior • Desde 08:30</div>
+</div>
+<div class="ml-auto">
+<span class="w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white dark:border-slate-800 shadow-sm block"></span>
+</div>
+</div>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+<div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+<h3 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">build</span> Serviços e Peças
+                </h3>
+<button class="w-7 h-7 flex items-center justify-center rounded-full bg-primary hover:bg-primary-dark text-white shadow-sm shadow-primary/30 transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="divide-y divide-slate-100 dark:divide-slate-700/50">
+<div class="p-4 flex gap-3 group active:bg-slate-50 dark:active:bg-slate-800 transition-colors">
+<div class="flex flex-col items-center gap-1 pt-0.5">
+<div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700">3x</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-0.5">
+<div class="text-sm font-bold text-slate-900 dark:text-white truncate pr-2">Óleo Sintético 5W30</div>
+<div class="text-sm font-bold text-slate-900 dark:text-white">R$ 135,00</div>
+</div>
+<div class="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+<span>Lubrificantes</span>
+<span>R$ 45,00 un.</span>
+</div>
+</div>
+</div>
+<div class="p-4 flex gap-3 group active:bg-slate-50 dark:active:bg-slate-800 transition-colors">
+<div class="flex flex-col items-center gap-1 pt-0.5">
+<div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700">1x</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-0.5">
+<div class="text-sm font-bold text-slate-900 dark:text-white truncate pr-2">Filtro de Óleo - PH5949</div>
+<div class="text-sm font-bold text-slate-900 dark:text-white">R$ 35,00</div>
+</div>
+<div class="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+<span>Peças</span>
+<span>R$ 35,00 un.</span>
+</div>
+</div>
+</div>
+<div class="p-4 flex gap-3 group active:bg-slate-50 dark:active:bg-slate-800 transition-colors">
+<div class="flex flex-col items-center gap-1 pt-0.5">
+<div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-600 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700">1.5</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-0.5">
+<div class="text-sm font-bold text-slate-900 dark:text-white truncate pr-2">Mão de Obra Mecânica</div>
+<div class="text-sm font-bold text-slate-900 dark:text-white">R$ 180,00</div>
+</div>
+<div class="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+<span>Serviços (Horas)</span>
+<span>R$ 120,00/h</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/30 p-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
+<div class="flex justify-between items-center text-xs font-medium text-slate-500 dark:text-slate-400">
+<span>Subtotal</span>
+<span>R$ 350,00</span>
+</div>
+<div class="flex justify-between items-center text-xs font-medium text-green-600 dark:text-green-400">
+<span>Desconto</span>
+<span>- R$ 0,00</span>
+</div>
+<div class="flex justify-between items-center pt-3 mt-1 border-t border-slate-200 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-300">Total</span>
+<span class="text-xl font-bold text-slate-900 dark:text-white">R$ 350,00</span>
+</div>
+</div>
+</section>
+</main>
+<footer class="fixed bottom-0 left-0 right-0 bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 p-4 pb-8 z-20 shadow-[0_-4px_20px_-1px_rgba(0,0,0,0.05)]">
+<div class="grid grid-cols-2 gap-3 max-w-lg mx-auto">
+<button class="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[20px]">description</span>
+                Orçamento
+            </button>
+<button class="flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 active:scale-[0.98] shadow-lg shadow-green-500/20 transition-all">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+                Finalizar
+            </button>
+</div>
+</footer>
+<div aria-modal="true" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" role="dialog">
+<div class="bg-surface-light dark:bg-surface-dark w-full max-w-sm rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in zoom-in duration-200 relative">
+<div class="flex justify-center pt-8 pb-4">
+<div class="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-4xl text-amber-600 dark:text-amber-500">warning</span>
+</div>
+</div>
+<div class="px-6 text-center mb-6">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Reabrir OS #4010?</h3>
+<div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 rounded-lg p-3">
+<p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed text-left">
+<strong class="block text-amber-700 dark:text-amber-400 mb-1">Impacto no Estoque</strong>
+                        A reabertura desta Ordem de Serviço poderá reverter baixas de produtos já realizadas e afetar o balanço atual do estoque.
+                    </p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+<button class="w-full py-3 px-4 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:ring-2 focus:ring-slate-200">
+                    Cancelar
+                </button>
+<button class="w-full py-3 px-4 rounded-xl text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-colors focus:ring-2 focus:ring-amber-600 focus:ring-offset-2">
+                    Confirmar Reabertura
+                </button>
+</div>
+</div>
+</div>
+
+</body></html>

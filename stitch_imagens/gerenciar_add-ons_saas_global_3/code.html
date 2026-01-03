@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gerenciar Planos SaaS Global</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1b2733",
+                        "text-main-light": "#111827",
+                        "text-main-dark": "#ffffff",
+                        "text-sec-light": "#6b7280",
+                        "text-sec-dark": "#94a3b8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex justify-center">
+<div class="w-full max-w-md bg-background-light dark:bg-background-dark min-h-screen shadow-2xl relative overflow-hidden flex flex-col">
+<header class="sticky top-0 z-20 bg-background-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between transition-colors duration-200">
+<button class="flex items-center justify-center p-2 -ml-2 rounded-full text-text-main-light dark:text-text-main-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-text-main-light dark:text-text-main-dark flex-1 text-center pr-2">
+                Planos Globais
+            </h1>
+<button class="flex items-center justify-center p-2 -mr-2 rounded-full text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</header>
+<div class="px-4 py-3 bg-background-light dark:bg-background-dark">
+<div class="relative flex w-full items-center">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-sec-light dark:text-text-sec-dark">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="block w-full rounded-xl border-none bg-surface-light dark:bg-surface-dark py-3 pl-10 pr-4 text-text-main-light dark:text-text-main-dark placeholder-text-sec-light dark:placeholder-text-sec-dark focus:ring-2 focus:ring-primary shadow-sm text-base" placeholder="Buscar planos..." type="text"/>
+</div>
+</div>
+<div class="flex gap-3 px-4 pb-4 overflow-x-auto no-scrollbar bg-background-light dark:bg-background-dark">
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-primary text-white text-sm font-medium transition-colors shadow-md shadow-primary/20">
+                Todos
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-text-sec-light dark:text-text-sec-dark text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                Ativos
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-text-sec-light dark:text-text-sec-dark text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                Inativos
+            </button>
+</div>
+<div class="flex-1 overflow-y-auto pb-24 px-4 space-y-3">
+<div class="group relative flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-base font-semibold leading-tight">Plano Start</p>
+<span class="flex h-2 w-2 rounded-full bg-green-500"></span>
+</div>
+<p class="text-primary text-sm font-bold">R$ 89,90<span class="text-xs font-normal text-text-sec-light dark:text-text-sec-dark">/mês</span></p>
+</div>
+<button class="text-text-sec-light dark:text-text-sec-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+</div>
+<p class="text-text-sec-light dark:text-text-sec-dark text-sm leading-relaxed line-clamp-2">
+                    Ideal para pequenas oficinas. Gestão de OS, Clientes e Estoque básico. 1 Usuário.
+                </p>
+</div>
+<div class="group relative flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-base font-semibold leading-tight">Plano Business</p>
+<span class="flex h-2 w-2 rounded-full bg-green-500"></span>
+</div>
+<p class="text-primary text-sm font-bold">R$ 159,90<span class="text-xs font-normal text-text-sec-light dark:text-text-sec-dark">/mês</span></p>
+</div>
+<button class="text-text-sec-light dark:text-text-sec-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+</div>
+<p class="text-text-sec-light dark:text-text-sec-dark text-sm leading-relaxed line-clamp-2">
+                    Para oficinas em crescimento. Inclui módulo financeiro, emissão de NF-e e 5 usuários.
+                </p>
+</div>
+<div class="group relative flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-base font-semibold leading-tight">Plano Enterprise</p>
+<span class="flex h-2 w-2 rounded-full bg-green-500"></span>
+</div>
+<p class="text-primary text-sm font-bold">R$ 299,90<span class="text-xs font-normal text-text-sec-light dark:text-text-sec-dark">/mês</span></p>
+</div>
+<button class="text-text-sec-light dark:text-text-sec-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+</div>
+<p class="text-text-sec-light dark:text-text-sec-dark text-sm leading-relaxed line-clamp-2">
+                    Gestão completa para redes. Múltiplos usuários, API aberta, suporte prioritário 24/7.
+                </p>
+</div>
+<div class="group relative flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer opacity-75">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-base font-semibold leading-tight">Plano Free (Legacy)</p>
+<span class="flex h-2 w-2 rounded-full bg-gray-400"></span>
+</div>
+<p class="text-text-sec-light dark:text-text-sec-dark text-sm font-bold">Grátis</p>
+</div>
+<button class="text-text-sec-light dark:text-text-sec-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+</div>
+<p class="text-text-sec-light dark:text-text-sec-dark text-sm leading-relaxed line-clamp-2">
+                    Versão descontinuada mantida para clientes antigos. Não aceita novas adesões.
+                </p>
+</div>
+</div>
+<div class="absolute inset-0 z-30 flex flex-col justify-end pointer-events-none">
+<div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity"></div>
+<div class="bg-surface-light dark:bg-surface-dark w-full rounded-t-2xl p-6 pointer-events-auto transform transition-transform shadow-[0_-8px_30px_rgba(0,0,0,0.3)] border-t border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+<div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6"></div>
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-bold text-text-main-light dark:text-text-main-dark">Novo Plano</h2>
+<button class="text-text-sec-light dark:text-text-sec-dark hover:text-text-main-light dark:hover:text-text-main-dark">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="space-y-5" onsubmit="event.preventDefault();">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Nome do Plano</label>
+<input class="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:bg-background-light dark:focus:bg-black/20 focus:ring-0 text-text-main-light dark:text-text-main-dark p-3 placeholder-text-sec-light dark:placeholder-text-sec-dark" placeholder="Ex: Plano Intermediário" type="text"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Descrição Curta</label>
+<input class="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:bg-background-light dark:focus:bg-black/20 focus:ring-0 text-text-main-light dark:text-text-main-dark p-3 placeholder-text-sec-light dark:placeholder-text-sec-dark" placeholder="Breve resumo para listagem (max 100 caracteres)" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Custo Mensal</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-sec-light dark:text-text-sec-dark">R$</span>
+<input class="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:bg-background-light dark:focus:bg-black/20 focus:ring-0 text-text-main-light dark:text-text-main-dark p-3 pl-10 placeholder-text-sec-light dark:placeholder-text-sec-dark" placeholder="0,00" step="0.01" type="number"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Custo Anual <span class="text-xs font-normal text-text-sec-light dark:text-text-sec-dark">(Opcional)</span></label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-sec-light dark:text-text-sec-dark">R$</span>
+<input class="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:bg-background-light dark:focus:bg-black/20 focus:ring-0 text-text-main-light dark:text-text-main-dark p-3 pl-10 placeholder-text-sec-light dark:placeholder-text-sec-dark" placeholder="0,00" step="0.01" type="number"/>
+</div>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Limite de Usuários</label>
+<input class="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:bg-background-light dark:focus:bg-black/20 focus:ring-0 text-text-main-light dark:text-text-main-dark p-3 placeholder-text-sec-light dark:placeholder-text-sec-dark" min="1" placeholder="Ex: 5" type="number"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Recursos Incluídos</label>
+<div class="flex flex-col gap-2">
+<div class="flex gap-2">
+<input class="flex-1 rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:bg-background-light dark:focus:bg-black/20 focus:ring-0 text-text-main-light dark:text-text-main-dark p-3 placeholder-text-sec-light dark:placeholder-text-sec-dark text-sm" placeholder="Ex: Módulo Financeiro" type="text"/>
+<button class="flex items-center justify-center w-10 h-11 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+<div class="flex flex-col gap-2 mt-1">
+<div class="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark border border-gray-100 dark:border-gray-800">
+<span class="text-sm text-text-main-light dark:text-text-main-dark pl-2">Gestão de OS</span>
+<button class="p-1 text-text-sec-light hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-background-light dark:bg-background-dark border border-gray-100 dark:border-gray-800">
+<span class="text-sm text-text-main-light dark:text-text-main-dark pl-2">Controle de Estoque</span>
+<button class="p-1 text-text-sec-light hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-800">
+<div class="flex items-center justify-between py-1">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Status Ativo</span>
+<span class="text-xs text-text-sec-light dark:text-text-sec-dark">Disponível para contratação</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between py-1">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Plano em Destaque</span>
+<span class="text-xs text-text-sec-light dark:text-text-sec-dark">Exibir com ênfase na página de vendas</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-5 h-5 text-primary bg-background-light dark:bg-background-dark border-gray-300 rounded focus:ring-primary focus:ring-2 dark:border-gray-600 dark:focus:ring-offset-gray-800" type="checkbox"/>
+</div>
+</div>
+</div>
+<div class="pt-4 flex gap-3">
+<button class="flex-1 py-3.5 px-4 bg-transparent border border-gray-300 dark:border-gray-600 text-text-main-light dark:text-text-main-dark font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                            Cancelar
+                        </button>
+<button class="flex-1 py-3.5 px-4 bg-primary text-white font-semibold rounded-lg shadow-lg shadow-primary/30 hover:bg-blue-600 transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">check</span> Salvar
+                        </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</body></html>

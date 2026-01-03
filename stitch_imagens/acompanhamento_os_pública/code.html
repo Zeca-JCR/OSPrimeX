@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Acompanhamento OS Pública</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display min-h-screen flex flex-col items-center">
+<!-- Mobile Container -->
+<div class="w-full max-w-md min-h-screen bg-background-light dark:bg-background-dark shadow-xl overflow-hidden relative flex flex-col">
+<!-- Top App Bar -->
+<header class="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#111a22] border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[24px]">garage_home</span>
+</div>
+<div>
+<h1 class="text-sm font-medium text-gray-500 dark:text-gray-400 leading-none mb-1">Oficina</h1>
+<h2 class="text-base font-bold text-gray-900 dark:text-white leading-none">Auto Center Premium</h2>
+</div>
+</div>
+<!-- OS Badge -->
+<div class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-semibold text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                #OS-8942
+            </div>
+</header>
+<!-- Main Content Scrollable -->
+<main class="flex-1 overflow-y-auto pb-20">
+<!-- Status Hero Section -->
+<section class="flex flex-col items-center pt-8 pb-6 px-4 bg-white dark:bg-[#111a22]">
+<div class="relative mb-4">
+<!-- Pulsing effect behind icon -->
+<div class="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
+<div class="relative flex items-center justify-center size-20 rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[40px]">build_circle</span>
+</div>
+</div>
+<h1 class="text-[28px] font-bold text-center text-gray-900 dark:text-white mb-1">Em Execução</h1>
+<p class="text-sm text-gray-500 dark:text-[#92adc9] text-center mb-6">Atualizado há 2 horas</p>
+<!-- Progress Bar Component -->
+<div class="w-full max-w-xs bg-gray-100 dark:bg-[#192633] p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+<div class="flex justify-between items-end mb-2">
+<span class="text-sm font-medium text-gray-900 dark:text-white">Progresso</span>
+<span class="text-xs font-medium text-primary">60%</span>
+</div>
+<div class="h-2 w-full bg-gray-200 dark:bg-[#324d67] rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 60%"></div>
+</div>
+<div class="flex justify-between mt-3 text-xs text-gray-500 dark:text-[#92adc9]">
+<span>Etapa 3 de 5</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                            Previsão: 14/10 às 17h
+                        </span>
+</div>
+</div>
+</section>
+<!-- Divider -->
+<div class="h-2 bg-gray-100 dark:bg-[#0d141c]"></div>
+<!-- Vehicle Details Card -->
+<section class="px-4 py-6 bg-white dark:bg-[#111a22]">
+<h3 class="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">directions_car</span>
+                    Veículo
+                </h3>
+<div class="flex flex-col sm:flex-row gap-4 p-4 rounded-xl bg-gray-50 dark:bg-[#192633] border border-gray-100 dark:border-gray-800 shadow-sm">
+<!-- Vehicle Image -->
+<div class="w-full sm:w-1/3 aspect-video bg-cover bg-center rounded-lg bg-gray-200 dark:bg-gray-700 relative overflow-hidden" data-alt="silver chevrolet hatchback parked in studio lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBsrO1JjINpWuA8I3N7BtJTOxxj8_rnIlo-Q3a7ZjA4joEchVDzaVBgMA78K141q6_Q11W9SJFyDxAdnu2fSHcRwNhXws--grMe3CsjEpTq82Ghq_RptePS3-mBg9kPd6WGohDijYFbs0YIDdZah5cskeb6q4rzTI-zaifyWUqC-dS5MIdKaV6E7uhliB53FFsi3IO5ngiY-DTS346KELmC8QQUflA8azaJ4IxRObVxSEmAol3prspMGjJ2C-MBM_8t2EwbtLekWvXk');">
+<div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+<div class="absolute bottom-2 left-2 text-white text-xs font-bold px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded">ABC-1234</div>
+</div>
+<!-- Vehicle Info -->
+<div class="flex-1 flex flex-col justify-center gap-1">
+<p class="text-lg font-bold text-gray-900 dark:text-white">Chevrolet Onix LT</p>
+<p class="text-sm text-gray-500 dark:text-[#92adc9]">1.0 Turbo Flex Automatico</p>
+<div class="flex items-center gap-2 mt-2">
+<span class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-[#233648] text-gray-700 dark:text-gray-300">Prata</span>
+<span class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-[#233648] text-gray-700 dark:text-gray-300">2021/2022</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Divider -->
+<div class="h-2 bg-gray-100 dark:bg-[#0d141c]"></div>
+<!-- Timeline Section -->
+<section class="px-4 py-6 bg-white dark:bg-[#111a22]">
+<h3 class="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+                    Histórico
+                </h3>
+<div class="relative pl-2 space-y-8">
+<!-- Vertical Line -->
+<div class="absolute top-2 left-[19px] h-[calc(100%-24px)] w-0.5 bg-gray-200 dark:bg-[#233648]"></div>
+<!-- Step 1: Current -->
+<div class="relative flex gap-4 group">
+<div class="relative z-10 flex-none size-10 bg-white dark:bg-[#111a22] flex items-center justify-center rounded-full border-2 border-primary">
+<div class="size-3 bg-primary rounded-full animate-pulse"></div>
+</div>
+<div class="flex-1 pt-1 pb-4">
+<div class="flex justify-between items-start mb-1">
+<p class="text-sm font-bold text-primary">Serviço em andamento</p>
+<span class="text-xs text-primary font-medium bg-primary/10 px-2 py-0.5 rounded">Agora</span>
+</div>
+<p class="text-sm text-gray-600 dark:text-[#92adc9] leading-snug">Troca de pastilhas de freio e discos dianteiros iniciada.</p>
+</div>
+</div>
+<!-- Step 2: Completed -->
+<div class="relative flex gap-4">
+<div class="relative z-10 flex-none size-10 bg-primary flex items-center justify-center rounded-full shadow-md shadow-primary/20">
+<span class="material-symbols-outlined text-white text-[20px]">check</span>
+</div>
+<div class="flex-1 pt-1 pb-4">
+<div class="flex justify-between items-start mb-1">
+<p class="text-sm font-semibold text-gray-900 dark:text-white">Peças chegaram</p>
+<span class="text-xs text-gray-400">10:42</span>
+</div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Todas as peças solicitadas foram entregues pelo fornecedor.</p>
+</div>
+</div>
+<!-- Step 3: Completed -->
+<div class="relative flex gap-4">
+<div class="relative z-10 flex-none size-10 bg-gray-100 dark:bg-[#233648] flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-[20px]">assignment_turned_in</span>
+</div>
+<div class="flex-1 pt-1 pb-4">
+<div class="flex justify-between items-start mb-1">
+<p class="text-sm font-semibold text-gray-900 dark:text-white">Orçamento Aprovado</p>
+<span class="text-xs text-gray-400">Ontem</span>
+</div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Aprovação realizada via WhatsApp.</p>
+</div>
+</div>
+<!-- Step 4: Completed -->
+<div class="relative flex gap-4">
+<div class="relative z-10 flex-none size-10 bg-gray-100 dark:bg-[#233648] flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-[20px]">garage</span>
+</div>
+<div class="flex-1 pt-1">
+<div class="flex justify-between items-start mb-1">
+<p class="text-sm font-semibold text-gray-900 dark:text-white">Veículo Recebido</p>
+<span class="text-xs text-gray-400">12/10</span>
+</div>
+<p class="text-sm text-gray-500 dark:text-gray-400">Entrada na oficina para diagnóstico.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Safe area spacer -->
+<div class="h-8"></div>
+</main>
+<!-- Sticky Footer Contact -->
+<footer class="fixed bottom-0 w-full max-w-md bg-white dark:bg-[#111a22] border-t border-gray-200 dark:border-gray-800 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
+<div class="flex gap-3">
+<button class="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-gray-100 dark:bg-[#233648] text-gray-900 dark:text-white font-semibold text-sm transition-colors hover:bg-gray-200 dark:hover:bg-[#324d67]">
+<span class="material-symbols-outlined text-[20px]">call</span>
+                    Ligar
+                </button>
+<button class="flex-[2] flex items-center justify-center gap-2 h-12 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/30 transition-all hover:bg-blue-600 active:scale-[0.98]">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+                    Contato WhatsApp
+                </button>
+</div>
+</footer>
+</div>
+</body></html>

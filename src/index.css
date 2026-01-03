@@ -1,0 +1,430 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   OSPrimeX - White Label CSS Variables
+   Para trocar a identidade visual, altere apenas estas variáveis
+   ============================================ */
+
+:root {
+  /* Cores primárias da marca - WHITE LABEL */
+  --color-primary: #137fec;
+  --color-primary-hover: #0d6ecc;
+  --color-primary-light: rgba(19, 127, 236, 0.1);
+  --color-primary-shadow: rgba(19, 127, 236, 0.4);
+
+  /* Light Mode */
+  --color-bg-light: #f6f7f8;
+  --color-surface-light: #ffffff;
+  --color-text-light: #111a22;
+  --color-text-secondary-light: #64748b;
+
+  /* Dark Mode - Premium Midnight */
+  --color-bg-dark: #0f172a;
+  /* Slate 900 */
+  --color-surface-dark: rgba(30, 41, 59, 0.7);
+  /* Slate 800 with opacity for glass */
+  --color-text-dark: #f1f5f9;
+  /* Slate 100 */
+  --color-text-secondary-dark: #94a3b8;
+  /* Slate 400 */
+
+  /* Borders */
+  --color-border-light: #e2e8f0;
+  --color-border-dark: rgba(255, 255, 255, 0.1);
+  /* Subtle white border for glass */
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(at 0% 0%, hsla(215, 98%, 61%, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(256, 96%, 67%, 0.03) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Light Mode */
+body {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-light);
+  background-image:
+    radial-gradient(at 0% 0%, hsla(215, 98%, 61%, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(256, 96%, 67%, 0.05) 0px, transparent 50%);
+}
+
+/* Dark Mode */
+.dark body,
+html.dark body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+/* ============================================
+   Scrollbar Styles
+   ============================================ */
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-secondary-light);
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-text-secondary-dark);
+}
+
+/* ============================================
+   Material Symbols Configuration
+   ============================================ */
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ============================================
+   Component Base Classes
+   ============================================ */
+
+@layer components {
+
+  /* Card padrão - Glassmorphism */
+  .card {
+    @apply bg-surface-light dark:bg-surface-dark backdrop-blur-md rounded-2xl shadow-sm border border-[var(--color-border-light)] dark:border-[var(--color-border-dark)];
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card:hover {
+    @apply shadow-md transform -translate-y-[2px];
+    border-color: rgba(19, 127, 236, 0.3);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Dark mode specific hover glow */
+  .dark .card:hover {
+    box-shadow: 0 10px 40px -10px rgba(19, 127, 236, 0.15);
+  }
+
+  /* Botão primário */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5;
+    @apply bg-primary text-white font-medium rounded-xl;
+    @apply hover:bg-[var(--color-primary-hover)] active:scale-[0.98];
+    @apply transition-all;
+    box-shadow: 0 4px 14px 0 rgba(19, 127, 236, 0.4);
+  }
+
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.3);
+  }
+
+  /* Botão secundário */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5;
+    @apply bg-surface-light dark:bg-surface-dark;
+    @apply text-text-light dark:text-text-dark font-medium rounded-xl;
+    @apply border border-[var(--color-border-light)] dark:border-[var(--color-border-dark)];
+    @apply hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[0.98];
+    @apply transition-all focus:outline-none;
+  }
+
+  .btn-secondary:focus {
+    box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.2);
+  }
+
+  /* Botão ghost */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5;
+    @apply text-text-secondary-light dark:text-text-secondary-dark font-medium rounded-xl;
+    @apply hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[0.98];
+    @apply transition-all;
+  }
+
+  /* Input padrão */
+  .input {
+    @apply block w-full p-3 text-sm rounded-xl;
+    @apply bg-surface-light dark:bg-surface-dark;
+    @apply border-none ring-1 ring-[var(--color-border-light)] dark:ring-[var(--color-border-dark)];
+    @apply focus:ring-2 focus:ring-primary;
+    @apply text-text-light dark:text-text-dark;
+    @apply placeholder-text-secondary-light dark:placeholder-text-secondary-dark;
+    @apply transition-shadow shadow-sm;
+  }
+
+  /* FAB (Floating Action Button) */
+  .fab {
+    @apply flex items-center justify-center w-14 h-14 rounded-full;
+    @apply bg-primary text-white;
+    box-shadow: 0 10px 15px -3px rgba(19, 127, 236, 0.4);
+  }
+
+  .fab:hover {
+    background-color: var(--color-primary-hover);
+  }
+
+  .fab:active {
+    transform: scale(0.95);
+  }
+
+  .fab:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.3);
+  }
+
+  /* Badge/Tag */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+  }
+
+  .badge-warning {
+    @apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
+  }
+
+  .badge-error {
+    @apply badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  }
+
+  .badge-info {
+    @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400;
+  }
+
+  /* Section Header */
+  .section-header {
+    @apply text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider;
+  }
+}
+
+/* ============================================
+   Utilities
+   ============================================ */
+
+@layer utilities {
+
+  /* Safe area padding for mobile */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm;
+  }
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* ============================================
+   React Big Calendar Customization
+   ============================================ */
+
+/* Dark Mode Overrides */
+.dark .rbc-calendar {
+  color: var(--color-text-dark);
+}
+
+.dark .rbc-off-range-bg {
+  background-color: #1a2634;
+  /* Darker than surface */
+}
+
+.dark .rbc-off-range {
+  color: #475569;
+}
+
+.dark .rbc-header {
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-month-view,
+.dark .rbc-time-view,
+.dark .rbc-agenda-view {
+  border: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-day-bg {
+  border-left: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-month-row+.rbc-month-row {
+  border-top: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-date-cell {
+  padding-right: 10px;
+}
+
+/* Today highlight */
+.dark .rbc-day-bg.rbc-today {
+  background-color: rgba(19, 127, 236, 0.1);
+  /* Primary color low opacity */
+}
+
+/* Time Grid */
+.dark .rbc-timeslot-group {
+  border-bottom: 1px solid var(--color-border-dark);
+  min-height: 60px;
+  /* Better click area */
+}
+
+.dark .rbc-time-content {
+  border-top: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-time-content>*+*>* {
+  border-left: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-time-header-content {
+  border-left: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-time-gutter .rbc-timeslot-group {
+  border-color: var(--color-border-dark);
+}
+
+.dark .rbc-label {
+  color: var(--color-text-secondary-dark);
+}
+
+/* Toolbar */
+.dark .rbc-toolbar button {
+  color: var(--color-text-dark);
+  border: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-toolbar button:hover {
+  background-color: var(--color-surface-dark);
+}
+
+.dark .rbc-toolbar button.rbc-active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.dark .rbc-toolbar button:focus {
+  outline: none;
+  background-color: var(--color-primary-light);
+}
+
+/* Event Styles */
+.rbc-event {
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none !important;
+  padding: 2px 5px !important;
+}
+
+.rbc-event-content {
+  font-size: 0.85rem;
+}
+
+.striped-bg {
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.05) 75%, transparent 75%, transparent);
+  background-size: 10px 10px;
+}

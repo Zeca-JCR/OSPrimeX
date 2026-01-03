@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalhes do Veículo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+<div class="sticky top-0 z-50 flex items-center bg-background-light dark:bg-background-dark p-4 border-b border-gray-200 dark:border-gray-800">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full active:bg-gray-200 dark:active:bg-gray-800 transition-colors cursor-pointer text-gray-900 dark:text-white">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+</div>
+<h2 class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-2">Detalhes do Veículo</h2>
+<div class="flex items-center justify-end">
+<button class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0 hover:opacity-80 transition-opacity">
+                    Salvar
+                </button>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-6 p-4 pb-24">
+<div class="flex flex-col items-center gap-4 py-2">
+<div class="relative">
+<div class="flex items-center justify-center bg-gray-200 dark:bg-[#1f2e3d] rounded-full h-24 w-24 ring-4 ring-white dark:ring-[#192633] shadow-lg text-gray-500 dark:text-gray-400">
+<span class="material-symbols-outlined" style="font-size: 48px;">directions_car</span>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 shadow-md flex items-center justify-center border-2 border-background-light dark:border-background-dark cursor-pointer hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center">
+<p class="text-gray-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] text-center">Honda Civic</p>
+<div class="mt-1 flex items-center justify-center px-2 py-0.5 bg-gray-200 dark:bg-[#253646] rounded text-sm font-mono font-bold text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700">
+                        ABC-1234
+                    </div>
+</div>
+</div>
+<div class="w-full">
+<p class="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider pb-2 ml-1">Veículo vinculado a</p>
+<div class="group flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#192633] border border-gray-200 dark:border-gray-800 shadow-sm cursor-pointer active:scale-[0.99] transition-all">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 shrink-0 border border-gray-200 dark:border-gray-700" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDtYB3miaMJVX4AGFtOy32tB51foxVmFbQXG3q5yeIgErMWJhvqFMI9Fw9aakLTIu1T8QYMltPwC2PF5G4E_iHmfy5_ovvJa1TzzPBv5hsicjpe9Fa6mPVSMWjliUenT-X4zCa8GTe4l7rUPVdo3z-kuHPODsY3KE__drmQRxm-TenIbaFIyJJOURyIk5CsxTseCNW_PUDJOGkTYzlosPO_J0CUh2Fv_lcVkBuYhV_b6FtKqOis5wKQSi_xMlBlwj3PSQropn9nDlpK");'>
+</div>
+<div class="flex flex-col flex-1">
+<p class="text-gray-900 dark:text-white text-sm font-bold leading-tight">João da Silva</p>
+<p class="text-gray-500 dark:text-gray-400 text-xs font-normal">Ver cadastro do cliente</p>
+</div>
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">arrow_forward</span>
+</div>
+</div>
+<hr class="border-gray-200 dark:border-gray-800 w-full"/>
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">info</span>
+<h3 class="text-gray-900 dark:text-white text-base font-bold leading-tight">Dados do Veículo</h3>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Marca</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="Honda"/>
+</label>
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Modelo</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="Civic"/>
+</label>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Placa</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base font-mono uppercase placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="ABC-1234"/>
+</label>
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Ano</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" type="number" value="2020"/>
+</label>
+</div>
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Cor</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" value="Prata"/>
+</label>
+</div>
+<div class="flex flex-col gap-4 mt-2">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" style="font-size: 20px;">build</span>
+<h3 class="text-gray-900 dark:text-white text-base font-bold leading-tight">Status e Manutenção</h3>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Quilometragem Atual (km)</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" type="number" value="45230"/>
+</label>
+<label class="flex flex-col w-full">
+<p class="text-gray-700 dark:text-gray-300 text-xs font-medium uppercase tracking-wider pb-1.5 ml-1">Próxima Revisão Sugerida</p>
+<input class="form-input flex w-full rounded-xl border border-gray-300 dark:border-[#324d67] bg-white dark:bg-[#192633] text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary focus:border-transparent h-12 px-4 text-base placeholder:text-gray-400 dark:placeholder:text-[#92adc9] transition-all" type="date" value="2024-06-15"/>
+</label>
+</div>
+</div>
+<button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 dark:bg-red-900/10 border border-transparent p-4 text-red-600 dark:text-red-400 font-medium hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors mt-4">
+<span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                Remover Veículo
+            </button>
+</div>
+</div>
+
+</body></html>

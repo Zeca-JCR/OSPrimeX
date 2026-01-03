@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OSPrimeX - Login</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body>
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden font-display transition-colors duration-200">
+<!-- Header Image with Gradient Overlay -->
+<div class="relative w-full h-[260px] shrink-0">
+<div class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background-light dark:to-background-dark z-10"></div>
+<!-- Image describing a modern mechanic workshop environment -->
+<div class="w-full h-full bg-center bg-no-repeat bg-cover" data-alt="Modern auto repair workshop interior with blue lighting and organized tool cabinets" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBmbkVCNPyZnu14zZgeFIgyD1-fMo3RVEVsBoqZU5PJkSqXUX2Mp8wkQ8HHs7aTSiEE6q8KSaglps4k4Nj6Ln6fZhgWL4_pRgN0RutPXy8cIBDPjAVDE5z2tWJtZTT8wtOm-r4_o0tZO6tBGdFFwJTS9NCWfwgH-0epVOY_vOTF4DfDOIrN5Y8AnzIlieY_CGIBYXWMXVyQhmOoDDm7309lUcsD1uwyocLwID2pwpJqJ7A1gf7_acGKj29GDqHgGGsMDjlaBdh5nuLT");'>
+</div>
+</div>
+<!-- Main Content Area - Overlapping the image slightly -->
+<div class="flex flex-col flex-1 px-5 -mt-16 z-20 pb-6 w-full max-w-lg mx-auto">
+<!-- Brand Logo Card -->
+<div class="self-center bg-white dark:bg-[#192633] p-4 rounded-2xl shadow-xl shadow-black/5 mb-6 border border-slate-100 dark:border-slate-800 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">build_circle</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-slate-900 dark:text-white leading-none">OSPrimeX</h1>
+<span class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Auto Center</span>
+</div>
+</div>
+<!-- Headlines -->
+<div class="mb-8 text-center">
+<h2 class="text-slate-900 dark:text-white text-3xl font-bold leading-tight mb-2">Bem-vindo de volta</h2>
+<p class="text-slate-500 dark:text-[#92adc9] text-sm font-normal">
+                    Gerencie sua oficina com eficiência e segurança.
+                </p>
+</div>
+<!-- Login Form -->
+<form class="flex flex-col gap-5 w-full">
+<!-- Email Input -->
+<div class="flex flex-col gap-2">
+<label class="text-slate-700 dark:text-white text-sm font-medium leading-normal ml-1">E-mail</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-[#92adc9]">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<input class="form-input flex w-full rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#92adc9] border border-slate-200 dark:border-[#324d67] bg-white dark:bg-[#192633] focus:border-primary focus:ring-4 focus:ring-primary/20 h-14 pl-12 pr-4 text-base transition-all shadow-sm" placeholder="seu@email.com" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end ml-1">
+<label class="text-slate-700 dark:text-white text-sm font-medium leading-normal">Senha</label>
+</div>
+<div class="relative flex w-full items-center rounded-xl">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-[#92adc9]">
+<span class="material-symbols-outlined">lock</span>
+</div>
+<input class="form-input flex w-full rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#92adc9] border border-slate-200 dark:border-[#324d67] bg-white dark:bg-[#192633] focus:border-primary focus:ring-4 focus:ring-primary/20 h-14 pl-12 pr-12 text-base transition-all shadow-sm" placeholder="Digite sua senha" type="password"/>
+<div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer text-slate-400 dark:text-[#92adc9] hover:text-primary transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</div>
+</div>
+<div class="flex justify-end mt-1">
+<a class="text-primary text-sm font-medium hover:underline hover:text-primary/80 transition-colors" href="#">
+                            Esqueci minha senha
+                        </a>
+</div>
+</div>
+<!-- Primary Button -->
+<button class="mt-2 w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white text-base font-bold shadow-lg shadow-primary/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2" type="button">
+<span>Entrar</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<!-- Divider & Biometrics -->
+<div class="relative my-4">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-slate-200 dark:border-[#324d67]"></div>
+</div>
+<div class="relative flex justify-center text-sm">
+<span class="px-4 bg-background-light dark:bg-background-dark text-slate-400 dark:text-[#92adc9] text-xs uppercase tracking-wider font-medium">Ou acesse com</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="h-12 rounded-lg border border-slate-200 dark:border-[#324d67] bg-white dark:bg-[#192633] hover:bg-slate-50 dark:hover:bg-[#1e2e3d] flex items-center justify-center gap-2 transition-colors group" type="button">
+<span class="material-symbols-outlined text-slate-600 dark:text-[#92adc9] group-hover:text-primary transition-colors">fingerprint</span>
+<span class="text-sm font-medium text-slate-600 dark:text-[#92adc9]">Biometria</span>
+</button>
+<button class="h-12 rounded-lg border border-slate-200 dark:border-[#324d67] bg-white dark:bg-[#192633] hover:bg-slate-50 dark:hover:bg-[#1e2e3d] flex items-center justify-center gap-2 transition-colors group" type="button">
+<span class="material-symbols-outlined text-slate-600 dark:text-[#92adc9] group-hover:text-primary transition-colors">face</span>
+<span class="text-sm font-medium text-slate-600 dark:text-[#92adc9]">Face ID</span>
+</button>
+</div>
+</form>
+<!-- Sign Up Footer -->
+<div class="mt-auto pt-10 text-center">
+<p class="text-slate-500 dark:text-[#92adc9] text-sm">
+                    Novo na OSPrimeX? 
+                    <a class="text-primary font-bold hover:text-primary/80 ml-1" href="#">Criar conta</a>
+</p>
+<div class="mt-8 flex justify-center gap-4 text-xs text-slate-400 dark:text-slate-600">
+<a class="hover:text-slate-500 dark:hover:text-slate-400" href="#">Termos de Uso</a>
+<span>•</span>
+<a class="hover:text-slate-500 dark:hover:text-slate-400" href="#">Privacidade</a>
+</div>
+</div>
+</div>
+</div>
+</body></html>

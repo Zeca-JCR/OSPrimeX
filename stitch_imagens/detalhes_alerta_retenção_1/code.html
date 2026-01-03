@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalhes Alerta Retenção</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#192633",
+                        "text-secondary-light": "#64748b",
+                        "text-secondary-dark": "#92adc9",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen flex flex-col pb-24">
+<header class="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-surface-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 shadow-sm">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-slate-900 dark:text-white">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">
+            Alerta #1023
+        </h1>
+</header>
+<main class="flex-1 flex flex-col gap-5 p-4 max-w-lg mx-auto w-full">
+<section class="flex flex-col gap-3">
+<h2 class="text-sm font-semibold uppercase tracking-wider text-text-secondary-light dark:text-text-secondary-dark ml-1">Cliente</h2>
+<div class="flex items-center justify-between gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-gray-200 dark:border-gray-800">
+<div class="flex items-center gap-4 flex-1">
+<div class="size-12 rounded-full bg-center bg-cover bg-no-repeat shadow-inner shrink-0" data-alt="Profile picture of the customer Joao Silva" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAswvUFJ2-zpp7cxEqAbg5MIlN59m-_g06y5yBTv5H8V-GyiSRxsHEZNwyRosEFcvp7IErqzeZkl0w8DECy6nFXqVDiSkjkPivbAkYJsQqh37Zi7kG9xAtfkjNF038jn9igPk9SeE502OdPuv3LKEY4pVgRnDpd_4nV8iPKm88LiveoJG8PXqOWnrYGc-ju1I5cUJKzIDBtWcJkCbN4v6-QsvZP63h2x5w4NvBpQYcY7pUuaN6XuUpKQRB1vNkZz8EMLqOgfyhJyW5L");'></div>
+<div class="flex flex-col">
+<p class="text-base font-bold leading-tight">João Silva</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">(11) 99999-9999</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="size-10 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+<button class="size-10 flex items-center justify-center rounded-full bg-[#25D366]/20 text-[#25D366] hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[20px] font-variation-settings-filled">chat_bubble</span>
+</button>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-3">
+<h2 class="text-sm font-semibold uppercase tracking-wider text-text-secondary-light dark:text-text-secondary-dark ml-1">Veículo</h2>
+<div class="flex items-stretch gap-4 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+<div class="flex flex-col gap-1 flex-1 z-10">
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium uppercase tracking-wide">Modelo</p>
+<p class="text-lg font-bold leading-tight">VW Gol 1.6 MSI</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono border border-gray-200 dark:border-gray-600">
+                            ABC-1234
+                        </span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">45.000 km</span>
+</div>
+</div>
+<div class="w-24 bg-center bg-no-repeat bg-cover rounded-lg shrink-0 z-10 bg-gray-200 dark:bg-gray-700" data-alt="Side view of a white Volkswagen Gol car" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDrKy4yn12P1XgAAWyH8o2Q6qEUVrKVymvyK64CKrXaPacOcN7GJ9KNHpdtdUqKtnH0Fbl0PCiDIO_FLQrLZxEJlXZGmosKoV8oK7_WnxIMkLX9AKS02gYTyrD0yQzcInH2q3OwdVBDrtiBbvMpD5lsruPT_u42tCoZPnSWqCo5n9kfXnEQDahzE6f9MHrcPp8ji7_vpp8fdHJcnlUvh4b7R42h2Wr5tJsefSs61Vw7PP5_gNLHO2fp0SPMUYc6JFc4tdVKTLGypfqd");'>
+</div>
+<div class="absolute right-0 top-0 bottom-0 w-1/2 bg-gradient-to-l from-white/5 to-transparent pointer-events-none"></div>
+</div>
+</section>
+<section class="flex flex-col gap-3">
+<h2 class="text-sm font-semibold uppercase tracking-wider text-text-secondary-light dark:text-text-secondary-dark ml-1">Detalhes da Oportunidade</h2>
+<div class="grid grid-cols-2 rounded-xl bg-surface-light dark:bg-surface-dark shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden divide-x divide-y divide-gray-200 dark:divide-gray-700">
+<div class="flex flex-col gap-1 p-4">
+<div class="flex items-center gap-1.5 text-text-secondary-light dark:text-text-secondary-dark mb-1">
+<span class="material-symbols-outlined text-[16px]">notifications_active</span>
+<span class="text-xs font-medium uppercase">Motivo</span>
+</div>
+<p class="text-sm font-semibold text-primary">Troca de Óleo</p>
+</div>
+<div class="flex flex-col gap-1 p-4">
+<div class="flex items-center gap-1.5 text-text-secondary-light dark:text-text-secondary-dark mb-1">
+<span class="material-symbols-outlined text-[16px]">event</span>
+<span class="text-xs font-medium uppercase">Criado em</span>
+</div>
+<p class="text-sm font-medium">12/10/2023</p>
+</div>
+<div class="flex flex-col gap-1 p-4">
+<div class="flex items-center gap-1.5 text-text-secondary-light dark:text-text-secondary-dark mb-1">
+<span class="material-symbols-outlined text-[16px]">update</span>
+<span class="text-xs font-medium uppercase">Próx. Revisão</span>
+</div>
+<p class="text-sm font-medium text-orange-500">20/10/2023</p>
+</div>
+<div class="flex flex-col gap-1 p-4">
+<div class="flex items-center gap-1.5 text-text-secondary-light dark:text-text-secondary-dark mb-1">
+<span class="material-symbols-outlined text-[16px]">speed</span>
+<span class="text-xs font-medium uppercase">KM Estimado</span>
+</div>
+<p class="text-sm font-medium">45.000 km</p>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-4 mt-2">
+<h3 class="text-lg font-bold leading-tight px-1">Registrar Contato</h3>
+<div class="rounded-xl bg-surface-light dark:bg-surface-dark p-5 shadow-md border border-gray-200 dark:border-gray-800 flex flex-col gap-5">
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Resultado</label>
+<div class="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-900/50 rounded-lg">
+<button class="flex flex-col items-center justify-center gap-1 py-2 rounded-md bg-white dark:bg-gray-700 shadow-sm text-primary font-semibold text-xs transition-all border border-gray-200 dark:border-gray-600">
+<span class="material-symbols-outlined text-lg">event_available</span>
+                            Agendou
+                        </button>
+<button class="flex flex-col items-center justify-center gap-1 py-2 rounded-md hover:bg-white/50 dark:hover:bg-gray-800 text-text-secondary-light dark:text-gray-400 font-medium text-xs transition-all">
+<span class="material-symbols-outlined text-lg">phone_missed</span>
+                            Sem Resp.
+                        </button>
+<button class="flex flex-col items-center justify-center gap-1 py-2 rounded-md hover:bg-white/50 dark:hover:bg-gray-800 text-text-secondary-light dark:text-gray-400 font-medium text-xs transition-all">
+<span class="material-symbols-outlined text-lg">cancel</span>
+                            Perda/Vendeu
+                        </button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark flex items-center justify-between">
+                        Data do Agendamento
+                        <span class="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">Obrigatório</span>
+</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400">calendar_month</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-slate-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Selecione data e hora" type="datetime-local" value="2023-10-21T09:00"/>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Observações</label>
+<textarea class="block w-full p-3 border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-slate-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none" placeholder="Detalhes adicionais sobre o agendamento..." rows="3"></textarea>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-gray-200 dark:border-gray-800 z-50 flex gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+<button class="flex-1 py-3.5 px-4 rounded-xl text-text-secondary-light dark:text-white font-semibold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+            Voltar
+        </button>
+<button class="flex-[2] py-3.5 px-4 rounded-xl text-white font-bold bg-primary hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">save</span>
+            Salvar Resultado
+        </button>
+</div>
+</body></html>

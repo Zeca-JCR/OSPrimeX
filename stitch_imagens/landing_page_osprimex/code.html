@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OSPrimeX - Sistema de Gestão para Oficinas</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1c2e3e",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased overflow-x-hidden selection:bg-primary selection:text-white pb-24">
+<header class="sticky top-0 z-50 w-full backdrop-blur-md bg-background-light/90 dark:bg-background-dark/90 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+<div class="flex items-center p-4 justify-between max-w-2xl mx-auto">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 28px;">build_circle</span>
+<h2 class="text-xl font-black leading-tight tracking-tight">OSPrimeX</h2>
+</div>
+<div>
+<button class="text-sm font-bold text-primary hover:text-blue-400 transition-colors">Entrar</button>
+</div>
+</div>
+</header>
+<main class="flex flex-col w-full max-w-2xl mx-auto">
+<section class="p-4 pt-6">
+<div class="relative overflow-hidden rounded-2xl bg-surface-dark shadow-xl min-h-[500px] flex flex-col items-center justify-end text-center p-6 bg-cover bg-center group" data-alt="Dark modern mechanic workshop interior with blue lighting" style='background-image: linear-gradient(to top, rgba(16, 25, 34, 1) 10%, rgba(16, 25, 34, 0.4) 60%, rgba(16, 25, 34, 0.2) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuC2HYxAXWABAyFyqcreraIW5hAiAfK5NBXZocl7C4QkDEeHL6BNCx_WoLGaOBLa63DQsN9y_a_L9BEn4w3__a1VDk9WPajmYop-MOZVMoUIKloGP3mA1Vx302rlbIVzvFUwzSwv9TmWkeznnsOzq9nTtwQzmZ15-RrO4ESHEiwzfue6yMKMawr6jwLYxAM_LNKxrAMd1ICANp0gQxUWkCh8zqM8nrgdq_VSHWeiwlZ4PwhviTXehX5UFkuFCDggC15OVeasV2CcPz8e");'>
+<div class="relative z-10 flex flex-col gap-4 mb-4">
+<span class="inline-block px-3 py-1 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30 text-blue-200 text-xs font-bold uppercase tracking-wider w-fit mx-auto">
+                        #1 para Auto Centers
+                    </span>
+<h1 class="text-white text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight">
+                        Transforme a gestão da sua oficina!
+                    </h1>
+<p class="text-slate-300 text-base sm:text-lg font-medium leading-relaxed max-w-md mx-auto">
+                        O sistema de gestão tudo-em-um. Organize Ordens de Serviço, controle estoque e automatize o financeiro sem esforço.
+                    </p>
+</div>
+<div class="relative z-10 w-full mt-4">
+<button class="w-full bg-primary hover:bg-blue-600 text-white h-12 rounded-lg font-bold text-base shadow-lg shadow-blue-900/50 transition-all active:scale-95 flex items-center justify-center gap-2">
+                        Experimente Grátis
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+<p class="text-slate-400 text-xs mt-3 font-medium">Sem cartão de crédito • 14 dias grátis</p>
+</div>
+</div>
+</section>
+<div class="px-4 pb-2 pt-8">
+<h3 class="text-2xl font-bold leading-tight tracking-tight">Tudo o que você precisa</h3>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Gerencie toda a sua operação em um só app.</p>
+</div>
+<section class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
+<div class="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-5 shadow-sm">
+<div class="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">view_kanban</span>
+</div>
+<div>
+<h2 class="text-lg font-bold leading-tight mb-1">Kanban de O.S.</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Arraste e solte ordens de serviço. Visualize o status da oficina em tempo real.</p>
+</div>
+</div>
+<div class="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-5 shadow-sm">
+<div class="size-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<div>
+<h2 class="text-lg font-bold leading-tight mb-1">Estoque Inteligente</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Alertas de estoque baixo e rastreamento de peças vinculado às reparações.</p>
+</div>
+</div>
+<div class="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-5 shadow-sm">
+<div class="size-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<div>
+<h2 class="text-lg font-bold leading-tight mb-1">Financeiro Descomplicado</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Acompanhe receitas, despesas e margens de lucro com relatórios automáticos.</p>
+</div>
+</div>
+<div class="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-5 shadow-sm">
+<div class="size-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
+<span class="material-symbols-outlined">forum</span>
+</div>
+<div>
+<h2 class="text-lg font-bold leading-tight mb-1">CRM e Clientes</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Envie lembretes de manutenção e orçamentos via WhatsApp.</p>
+</div>
+</div>
+</section>
+<div class="px-4 pb-2 pt-8">
+<h3 class="text-2xl font-bold leading-tight tracking-tight">Confiança de +500 Oficinas</h3>
+</div>
+<section class="flex overflow-x-auto gap-4 p-4 pb-6 snap-x snap-mandatory hide-scrollbar">
+<div class="min-w-[85%] sm:min-w-[300px] snap-center rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<div class="flex gap-1 text-yellow-400 mb-3">
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-sm mb-4 leading-relaxed">"O OSPrimeX mudou a forma como gerenciamos! Paramos de perder dinheiro com peças esquecidas e os clientes adoram as atualizações automáticas."</p>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Portrait of a smiling mechanic" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC8ZhNnFEFjjnLgRfolqbRefGcpxj4UPqh5_1ysk7Q4GzmL-3T6lHbOasL-VschObMWaimDH6-8l9tFYTspo9z6bUTwGkuIPDRMHVNEVNGSRm7zzjwzZ3iCSR-nxvyTfFAbhIA2j1mUA7gk-ga8HTjArtVsp8bX3z1dvWqWRoqHoeNNy0igfwdFDBkLUPNboNjjr3UYXfjxA1TpeHI3yoj5KAvwcrsCBlABczry_em35pENDhTb5hX7fjEY_u4roSyD99fi4PYGIILH')"></div>
+<div>
+<p class="text-sm font-bold">Carlos M.</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">AutoCenter Veloz</p>
+</div>
+</div>
+</div>
+<div class="min-w-[85%] sm:min-w-[300px] snap-center rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<div class="flex gap-1 text-yellow-400 mb-3">
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star</span>
+<span class="material-symbols-outlined text-[20px] fill-current">star_half</span>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-sm mb-4 leading-relaxed">"O painel financeiro é um divisor de águas. Finalmente sei exatamente de onde vem meu lucro todo mês com precisão."</p>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Portrait of a female workshop manager" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCu_wgWBh9SV5yW5DI2IMi1AxP9OAQYrvrzCKaYya1TNQzA-Tzc4YgYJRt-TJ1VirPJev8_0SfK0i-974FX8ln3p_oUN3fOH2dmvdYQxAwpGTvjb5qNjNF0D6vq5aP4iyKVKsfb-3HQxdu3CibI-FYTNUWiSrfajK1-w-688UIcAdVzXA4svLu22F0rbiN1iDcpJG46JuPT8YqQ_96skXs1pdmcy-4BTSVoZnJKrQ2TKYv9_MjpRCgm5UaDd2umcoZy6nFRi6bUdlFx')"></div>
+<div>
+<p class="text-sm font-bold">Sara J.</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Oficina TechFix</p>
+</div>
+</div>
+</div>
+</section>
+<div class="px-4 pb-2 pt-8">
+<h3 class="text-2xl font-bold leading-tight tracking-tight">Nossos Planos</h3>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Escolha o plano ideal para o tamanho da sua oficina.</p>
+</div>
+<div class="px-4 mt-4 mb-6">
+<div class="bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-800 p-1 rounded-lg flex relative">
+<button class="flex-1 py-2 text-sm font-bold rounded text-white bg-primary shadow-sm z-10">Mensal</button>
+<button class="flex-1 py-2 text-sm font-medium rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Anual (-20%)</button>
+</div>
+</div>
+<section class="flex flex-col gap-4 px-4 pb-10">
+<div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-6">
+<h4 class="text-lg font-bold text-slate-900 dark:text-white">Iniciante</h4>
+<div class="mt-2 flex items-baseline gap-1">
+<span class="text-3xl font-black text-slate-900 dark:text-white">R$ 149</span>
+<span class="text-sm font-medium text-slate-500 dark:text-slate-400">/mês</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Para oficinas pequenas se organizando.</p>
+<ul class="mt-6 space-y-3">
+<li class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-green-500 text-[20px]">check</span>
+                        Até 100 Ordens de Serviço/mês
+                    </li>
+<li class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-green-500 text-[20px]">check</span>
+                        Estoque Básico
+                    </li>
+<li class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-green-500 text-[20px]">check</span>
+                        1 Usuário
+                    </li>
+</ul>
+<button class="w-full mt-6 py-3 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-primary/5 transition-colors">Selecionar Iniciante</button>
+</div>
+<div class="relative rounded-xl border-2 border-primary bg-surface-light dark:bg-surface-dark p-6 shadow-lg shadow-primary/10">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-xs font-bold rounded-full uppercase tracking-wider">Mais Popular</div>
+<h4 class="text-lg font-bold text-primary">Profissional</h4>
+<div class="mt-2 flex items-baseline gap-1">
+<span class="text-3xl font-black text-slate-900 dark:text-white">R$ 299</span>
+<span class="text-sm font-medium text-slate-500 dark:text-slate-400">/mês</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Tudo o que oficinas em crescimento precisam.</p>
+<ul class="mt-6 space-y-3">
+<li class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-green-500 text-[20px]">check</span>
+                        Ordens de Serviço Ilimitadas
+                    </li>
+<li class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-green-500 text-[20px]">check</span>
+                        Estoque e Financeiro Avançado
+                    </li>
+<li class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-green-500 text-[20px]">check</span>
+                        Integração com WhatsApp
+                    </li>
+<li class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-green-500 text-[20px]">check</span>
+                        5 Usuários
+                    </li>
+</ul>
+<button class="w-full mt-6 py-3 rounded-lg bg-primary text-white font-bold text-sm hover:bg-blue-600 shadow-md shadow-blue-500/30 transition-all">Selecionar Profissional</button>
+</div>
+</section>
+<footer class="mt-8 border-t border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark pt-10 pb-28 px-4">
+<div class="flex flex-col gap-6 text-center">
+<div class="flex items-center justify-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 24px;">build_circle</span>
+<h2 class="text-lg font-black tracking-tight">OSPrimeX</h2>
+</div>
+<div class="flex flex-wrap justify-center gap-6 text-sm font-medium text-slate-500 dark:text-slate-400">
+<a class="hover:text-primary transition-colors" href="#">Funcionalidades</a>
+<a class="hover:text-primary transition-colors" href="#">Planos</a>
+<a class="hover:text-primary transition-colors" href="#">Suporte</a>
+<a class="hover:text-primary transition-colors" href="#">Termos</a>
+</div>
+<div class="mt-4">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Fale Conosco</h3>
+<div class="flex justify-center gap-4">
+<a class="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-primary hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">mail</span>
+</a>
+<a class="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-primary hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">chat</span>
+</a>
+</div>
+</div>
+<p class="text-xs text-slate-400 dark:text-slate-600 mt-4">© 2024 OSPrimeX Sistemas. Todos os direitos reservados.</p>
+</div>
+</footer>
+</main>
+<div class="fixed bottom-6 left-4 right-4 z-40 max-w-2xl mx-auto">
+<button class="w-full bg-primary hover:bg-blue-600 text-white h-14 rounded-xl font-bold text-lg shadow-xl shadow-blue-900/40 border border-white/10 backdrop-blur flex items-center justify-between px-6 transition-transform active:scale-95">
+<span>Começar Agora</span>
+<div class="flex items-center gap-2">
+<span class="text-xs font-normal opacity-80">Teste Grátis</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</div>
+</button>
+</div>
+
+</body></html>

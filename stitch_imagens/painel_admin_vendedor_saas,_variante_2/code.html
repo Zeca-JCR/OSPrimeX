@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Painel Admin Vendedor SaaS - Variante 2</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f8fafc", /* Slate 50 */
+                        "background-dark": "#101922",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1e293b",
+                        "text-main-light": "#0f172a",
+                        "text-main-dark": "#ffffff",
+                        "text-sub-light": "#64748b",
+                        "text-sub-dark": "#94a3b8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for horizontal chips */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark font-display antialiased transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden pb-20">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-30 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden border border-slate-300 dark:border-slate-600">
+<div class="bg-center bg-no-repeat w-full h-full bg-cover" data-alt="User profile avatar showing a smiling professional man" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBhbH0xIvmWFnNx6cM9jSEVpBz36Ei4WLP50UbgrFry_PXUVHQ5_Z0jiPitwc8KFHH1os_QIdrxRLuKcBb5mXuCVqk4TlomlUZmlWNBRBsvWVeHOiYYEtutQ7FJ5HZ7B8TLajSomLa1LQmRkYUSOrX_W7SyW7T0p-qGv_pcQUfJf5emUg5nhp37b4Q4zxnNKVNNa85V-P1cYSmb1e5H3KKIkam_rUEfW8KDmUq14Ca9-J3lnZfPlNg6iq1LLhwCm8mEWgudnUzoyRu_");'>
+</div>
+</div>
+<div>
+<h2 class="text-text-main-light dark:text-white text-lg font-bold leading-tight tracking-tight">OSPrimeX</h2>
+<p class="text-xs text-text-sub-light dark:text-text-sub-dark font-medium">Vendor Admin</p>
+</div>
+</div>
+<button class="relative flex items-center justify-center size-10 rounded-full bg-slate-100 dark:bg-slate-800 text-text-main-light dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-2xl">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
+</button>
+</header>
+<!-- Main Content Area -->
+<main class="flex flex-col gap-5 p-4">
+<!-- Action Section: Search & Filter -->
+<section class="flex flex-col gap-4">
+<!-- Search Bar -->
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<span class="material-symbols-outlined text-text-sub-light dark:text-text-sub-dark">search</span>
+</div>
+<input class="block w-full p-3 pl-10 text-sm rounded-xl bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-text-main-light dark:text-white placeholder-text-sub-light dark:placeholder-text-sub-dark focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm" placeholder="Search workshops, CNPJ, or ID..." type="text"/>
+</div>
+<!-- Chips / Categories -->
+<div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+<button class="flex h-9 shrink-0 items-center justify-center px-4 rounded-full bg-primary text-white text-sm font-semibold shadow-md shadow-primary/20 transition-transform active:scale-95">
+                        All
+                    </button>
+<button class="flex h-9 shrink-0 items-center justify-center px-4 rounded-full bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-text-sub-light dark:text-text-sub-dark hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium transition-colors">
+                        Active
+                        <span class="ml-1.5 flex size-1.5 rounded-full bg-emerald-500"></span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center px-4 rounded-full bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-text-sub-light dark:text-text-sub-dark hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium transition-colors">
+                        Premium
+                        <span class="ml-1.5 material-symbols-outlined text-[14px] text-amber-500">star</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center px-4 rounded-full bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-text-sub-light dark:text-text-sub-dark hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium transition-colors">
+                        Pending
+                    </button>
+</div>
+</section>
+<!-- Add Button -->
+<button class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl h-12 bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25 hover:bg-blue-600 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">add_circle</span>
+                Add New Company
+            </button>
+<!-- Cards Grid -->
+<section class="flex flex-col gap-4">
+<!-- Card 1: Active, Premium -->
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-slate-700/50">
+<!-- Visual Header with Banner -->
+<div class="h-24 w-full bg-gradient-to-r from-blue-900 to-slate-900 relative" data-alt="Abstract blue gradient header background for workshop card">
+<div class="absolute inset-0 bg-black/20"></div>
+<div class="absolute top-3 right-3">
+<span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 px-2 py-1 text-xs font-bold text-emerald-100">
+<span class="size-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
+                            </span>
+</div>
+</div>
+<div class="px-4 pb-4 relative">
+<!-- Logo Overlay -->
+<div class="relative -mt-10 mb-3 flex justify-between items-end">
+<div class="size-16 rounded-xl bg-white dark:bg-slate-800 p-1 shadow-md">
+<div class="w-full h-full rounded-lg bg-cover bg-center" data-alt="Auto Center Silva company logo showing a gear icon" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDbJi5DxvlrBEYMKCf6p_SCwf2xGc33_PaNZdv2Wbux1wfH-eAmtS67hTFRITiFBGre5Xon44G9_wIamqT8PMjRvFc10g38o6ZYy6FlVZKQbrn9r-QXc4BFYNJmFCtbtGGyfMYLH5MGkxo5Qo1IW_4gnAHncSf5RFDt3gmWMUhXldjHnLe-wDwJa7vU84aZKV2XfuJGx_SMh8NlhCMjWv6S3JMP9HxDvDtb-Yw1GXg6uteZckzzSAv_lkitylHy_PKbZaie0k87VKQw')">
+</div>
+</div>
+<button class="text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Card Body -->
+<div class="mb-4">
+<h3 class="text-lg font-bold text-text-main-light dark:text-white leading-tight">Auto Center Silva</h3>
+<p class="text-sm text-text-sub-light dark:text-text-sub-dark mt-0.5">ID: #8832 • São Paulo, SP</p>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-3 gap-2 mb-4">
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Plan</span>
+<span class="text-sm font-bold text-amber-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">stars</span> Gold
+                                </span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Users</span>
+<span class="text-sm font-bold text-text-main-light dark:text-white">12/15</span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Add-ons</span>
+<span class="text-sm font-bold text-primary">3</span>
+</div>
+</div>
+<!-- Action -->
+<button class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-text-main-light dark:text-white h-9 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                            Manage Company
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Card 2: Pending, Basic -->
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-slate-700/50">
+<div class="h-24 w-full bg-slate-200 dark:bg-slate-800 relative" data-alt="Abstract grey geometric pattern background">
+<!-- Fallback Pattern using CSS -->
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#444 1px, transparent 1px); background-size: 10px 10px;"></div>
+<div class="absolute top-3 right-3">
+<span class="inline-flex items-center gap-1 rounded-full bg-slate-500/20 backdrop-blur-md border border-slate-500/30 px-2 py-1 text-xs font-bold text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[12px]">hourglass_empty</span> Pending
+                            </span>
+</div>
+</div>
+<div class="px-4 pb-4 relative">
+<div class="relative -mt-10 mb-3 flex justify-between items-end">
+<div class="size-16 rounded-xl bg-white dark:bg-slate-800 p-1 shadow-md flex items-center justify-center text-xl font-bold text-slate-400 border border-slate-100 dark:border-slate-700">
+                                MR
+                            </div>
+<button class="text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="mb-4">
+<h3 class="text-lg font-bold text-text-main-light dark:text-white leading-tight">Mecânica Rápida</h3>
+<p class="text-sm text-text-sub-light dark:text-text-sub-dark mt-0.5">ID: #9102 • Curitiba, PR</p>
+</div>
+<div class="grid grid-cols-3 gap-2 mb-4">
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Plan</span>
+<span class="text-sm font-bold text-text-sub-light dark:text-slate-300">Basic</span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Users</span>
+<span class="text-sm font-bold text-text-main-light dark:text-white">2/5</span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Add-ons</span>
+<span class="text-sm font-bold text-text-sub-light dark:text-slate-400">0</span>
+</div>
+</div>
+<button class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-text-main-light dark:text-white h-9 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                            Complete Setup
+                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</article>
+<!-- Card 3: Warning, Standard -->
+<article class="flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-slate-700/50 opacity-90">
+<div class="h-24 w-full bg-slate-800 relative" data-alt="Dark workshop interior showing a car on a lift">
+<div class="absolute inset-0 bg-cover bg-center opacity-50" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB7X2eYuwYe-SEdx3S2iDw1j9TdoE66F4Y7jGoOX7Zv7ZSdix6_kjgRk8WCC2NqI-rUSGANKaBqjOoff4ra5SANJHbgXjExIZvgvre4BCC1qBQSayJrL3FqgNfR_3YeTEUnunDxHtT-yYVtoGZB19aTP9XPsJnCOTGmXM22Os5Qhi_Gar1y4a_of5Fcuw-XN8IBCK9o5IdAtt_Ew_kQGtN6UrdswRlAr5zQeIE0pfhLQiXFQ4zofd1rO10kAFFl0iEr7FSmE9P9uQqL');"></div>
+<div class="absolute top-3 right-3">
+<span class="inline-flex items-center gap-1 rounded-full bg-red-500/20 backdrop-blur-md border border-red-500/30 px-2 py-1 text-xs font-bold text-red-200">
+<span class="material-symbols-outlined text-[12px]">error</span> Payment
+                            </span>
+</div>
+</div>
+<div class="px-4 pb-4 relative">
+<div class="relative -mt-10 mb-3 flex justify-between items-end">
+<div class="size-16 rounded-xl bg-white dark:bg-slate-800 p-1 shadow-md">
+<div class="w-full h-full rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xl">
+                                    ZP
+                                </div>
+</div>
+<button class="text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="mb-4">
+<h3 class="text-lg font-bold text-text-main-light dark:text-white leading-tight">Zone Parts &amp; Services</h3>
+<p class="text-sm text-text-sub-light dark:text-text-sub-dark mt-0.5">ID: #4021 • Rio de Janeiro, RJ</p>
+</div>
+<div class="grid grid-cols-3 gap-2 mb-4">
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Plan</span>
+<span class="text-sm font-bold text-text-main-light dark:text-white">Silver</span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Users</span>
+<span class="text-sm font-bold text-text-main-light dark:text-white">8/10</span>
+</div>
+<div class="flex flex-col items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800/50 p-2 border border-slate-100 dark:border-slate-700/50">
+<span class="text-[10px] uppercase font-bold text-text-sub-light dark:text-text-sub-dark tracking-wider">Add-ons</span>
+<span class="text-sm font-bold text-text-main-light dark:text-white">1</span>
+</div>
+</div>
+<button class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 h-9 text-sm font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                            Resolve Issue
+                            <span class="material-symbols-outlined text-[18px]">warning</span>
+</button>
+</div>
+</article>
+</section>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 w-full bg-white dark:bg-card-dark border-t border-slate-200 dark:border-slate-800 pb-safe z-40">
+<div class="flex justify-around items-center h-16">
+<a class="flex flex-col items-center justify-center w-full h-full text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors gap-1" href="#">
+<span class="material-symbols-outlined text-2xl">dashboard</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-primary gap-1" href="#">
+<span class="material-symbols-outlined text-2xl fill-current">grid_view</span>
+<span class="text-[10px] font-bold">Clients</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors gap-1" href="#">
+<span class="material-symbols-outlined text-2xl">bar_chart</span>
+<span class="text-[10px] font-medium">Reports</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-text-sub-light dark:text-text-sub-dark hover:text-primary dark:hover:text-primary transition-colors gap-1" href="#">
+<span class="material-symbols-outlined text-2xl">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Safe Area Spacer for Mobile -->
+<div class="h-6"></div>
+</div>
+</body></html>

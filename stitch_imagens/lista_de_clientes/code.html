@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lista de Clientes</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#233648",
+                        "text-light": "#111a22",
+                        "text-dark": "#ffffff",
+                        "text-secondary-light": "#64748b",
+                        "text-secondary-dark": "#92adc9",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased min-h-screen flex flex-col relative overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+<div class="flex items-center justify-between px-4 py-3">
+<h1 class="text-text-light dark:text-text-dark text-xl font-bold tracking-tight">Clientes</h1>
+<button aria-label="Filtrar" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-primary">
+<span class="material-symbols-outlined text-[24px]">filter_list</span>
+</button>
+</div>
+<!-- Search Bar -->
+<div class="px-4 pb-4">
+<div class="relative flex w-full items-center">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="block w-full p-3 pl-10 text-sm rounded-xl bg-surface-light dark:bg-surface-dark border-none ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-text-secondary-light dark:placeholder-text-secondary-dark transition-shadow shadow-sm" placeholder="Buscar por nome, telefone ou placa..." type="text"/>
+</div>
+</div>
+</header>
+<!-- Main Content: Client List -->
+<main class="flex-1 overflow-y-auto no-scrollbar pb-24 px-4 pt-2">
+<!-- Section Header: Recent -->
+<div class="mb-2 mt-2 px-1">
+<p class="text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">Recentes</p>
+</div>
+<!-- Client Item 1 -->
+<div class="group flex items-center gap-4 p-3 mb-3 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-transparent hover:border-primary/20 active:scale-[0.99] transition-all cursor-pointer">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 border-2 border-white dark:border-gray-700 shadow-sm" data-alt="Portrait of a middle-aged man smiling" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA6bZzOnO6V2xN6dpDHAF08zRyL6JiJvchUOM7ADcxjV7zoG3Fr6AkX7PBt3UMXjTU2YxKgPg_DxiCU-klF3UEGxXact9gbhZg4T08l7qgkS2_YiWom5aD_Uaz7E51gmnJaKO2Q-DJYcxCXHj-NAWoHf7oE3HzSZPAxG-r66fr4Pk6rS1-L705DscCSqED15-QRwhtFBJ7JCkSbcZ14-p0YycsGTCzh6BNgysnL_eJv1kZeNHJfcRQCkaYffOrtY6kAho8tS2oh8zZq");'></div>
+<div class="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-surface-light dark:border-surface-dark rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-text-light dark:text-text-dark text-base font-semibold leading-tight truncate">João da Silva</p>
+<div class="flex items-center gap-1 mt-1 text-text-secondary-light dark:text-text-secondary-dark text-sm">
+<span class="material-symbols-outlined text-[16px]">call</span>
+<span class="truncate">(11) 99999-9999</span>
+</div>
+</div>
+<div class="shrink-0 text-gray-400 dark:text-gray-600 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">chevron_right</span>
+</div>
+</div>
+<!-- Client Item 2 -->
+<div class="group flex items-center gap-4 p-3 mb-3 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-transparent hover:border-primary/20 active:scale-[0.99] transition-all cursor-pointer">
+<div class="relative shrink-0">
+<div class="flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-full h-12 w-12 text-primary border-2 border-white dark:border-gray-700 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">local_shipping</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-text-light dark:text-text-dark text-base font-semibold leading-tight truncate">Transportadora Rápida Ltda</p>
+<div class="flex items-center gap-1 mt-1 text-text-secondary-light dark:text-text-secondary-dark text-sm">
+<span class="material-symbols-outlined text-[16px]">mail</span>
+<span class="truncate">contato@rapida.com.br</span>
+</div>
+</div>
+<div class="shrink-0 text-gray-400 dark:text-gray-600 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">chevron_right</span>
+</div>
+</div>
+<!-- Section Header: All Clients -->
+<div class="mb-2 mt-4 px-1">
+<p class="text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">Todos</p>
+</div>
+<!-- Client Item 3 -->
+<div class="group flex items-center gap-4 p-3 mb-3 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-transparent hover:border-primary/20 active:scale-[0.99] transition-all cursor-pointer">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 border-2 border-white dark:border-gray-700 shadow-sm" data-alt="Portrait of a young woman with curly hair" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAGm9uqpuknCbff9j5tLCPKZyHmqn2Gh27B6UVPq7gV7zfM1Xkat4EeDQWqVcyZaPdmZ94KvSibLfwH_Zv_u0xCUvbvVsEPvia49mJqpjoH-oRCBXFF3dTUOACEhKmjutxSMTf2YzHmJ51W8D6dI6oxsNHc4sN3zn1Gbo33JJznYmbfDY_hVtil_PMuIwjsR4qxZJea1xwwN9AIByATYwRwgJmPTAhPfJtKmcWHMpuz6aOXYRVYJLhEy-NMQbbv1C6IrQ-7aJH-3boe");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-text-light dark:text-text-dark text-base font-semibold leading-tight truncate">Maria Oliveira</p>
+<div class="flex items-center gap-1 mt-1 text-text-secondary-light dark:text-text-secondary-dark text-sm">
+<span class="material-symbols-outlined text-[16px]">call</span>
+<span class="truncate">(21) 98888-8888</span>
+</div>
+</div>
+<div class="shrink-0 text-gray-400 dark:text-gray-600 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">chevron_right</span>
+</div>
+</div>
+<!-- Client Item 4 -->
+<div class="group flex items-center gap-4 p-3 mb-3 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-transparent hover:border-primary/20 active:scale-[0.99] transition-all cursor-pointer">
+<div class="relative shrink-0">
+<div class="flex items-center justify-center bg-purple-100 dark:bg-purple-900/30 rounded-full h-12 w-12 text-purple-600 dark:text-purple-400 border-2 border-white dark:border-gray-700 shadow-sm">
+<span class="font-bold text-lg">AS</span>
+</div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-text-light dark:text-text-dark text-base font-semibold leading-tight truncate">Auto Center Silva</p>
+<div class="flex items-center gap-1 mt-1 text-text-secondary-light dark:text-text-secondary-dark text-sm">
+<span class="material-symbols-outlined text-[16px]">call</span>
+<span class="truncate">(31) 97777-7777</span>
+</div>
+</div>
+<div class="shrink-0 text-gray-400 dark:text-gray-600 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">chevron_right</span>
+</div>
+</div>
+<!-- Client Item 5 -->
+<div class="group flex items-center gap-4 p-3 mb-3 bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-transparent hover:border-primary/20 active:scale-[0.99] transition-all cursor-pointer">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 border-2 border-white dark:border-gray-700 shadow-sm" data-alt="Portrait of an older man with glasses" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDHhjBaaRuX1ApxB88GMr9q1XvVqTC3sVon69vq7_nRA8pNuvMWw_sd75SGPU2PPB386mO9Z15tdQh5UWeWFx6fzFkLmtP3f_tFbI0HZpNHVhvZhT8kz7-YIXT38IsdLhQDztL2BjQ_hBOsgHTup0gSmRog-T47BSel7dPd6e_EVxs6lpYCZUjoRqAZ61e4QSLMIvt16ttHh23bJ1SnV46tD0SyULQUDjpdCRRWPfGwWmcxUZEMT5R1PSDwMKcq4W2oekIEIgZe--0b");'></div>
+<div class="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-surface-light dark:border-surface-dark rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-text-light dark:text-text-dark text-base font-semibold leading-tight truncate">Carlos Eduardo Mendes</p>
+<div class="flex items-center gap-1 mt-1 text-text-secondary-light dark:text-text-secondary-dark text-sm">
+<span class="material-symbols-outlined text-[16px]">call</span>
+<span class="truncate">(41) 96666-6666</span>
+</div>
+</div>
+<div class="shrink-0 text-gray-400 dark:text-gray-600 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">chevron_right</span>
+</div>
+</div>
+<!-- Bottom padding for scrolling past FAB -->
+<div class="h-20"></div>
+</main>
+<!-- Floating Action Button (FAB) -->
+<div class="absolute bottom-6 right-6 z-30">
+<button class="flex items-center justify-center w-14 h-14 rounded-full bg-primary text-white shadow-lg shadow-primary/40 hover:bg-blue-600 active:scale-95 transition-all focus:outline-none focus:ring-4 focus:ring-primary/30">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+</div>
+<!-- Bottom Navigation Bar (Optional, for context/platform feel) -->
+<nav class="sticky bottom-0 z-20 w-full bg-surface-light dark:bg-surface-dark border-t border-gray-200 dark:border-gray-800 pb-safe">
+<div class="flex justify-around items-center h-16">
+<button class="flex flex-col items-center justify-center w-full h-full text-text-secondary-light dark:text-text-secondary-dark hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-medium mt-1">Início</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-primary">
+<span class="material-symbols-outlined text-[24px] fill-current">group</span>
+<span class="text-[10px] font-medium mt-1">Clientes</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-text-secondary-light dark:text-text-secondary-dark hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-[24px]">build</span>
+<span class="text-[10px] font-medium mt-1">Serviços</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-text-secondary-light dark:text-text-secondary-dark hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<span class="text-[10px] font-medium mt-1">Ajustes</span>
+</button>
+</div>
+</nav>
+<style>
+        /* Safe area padding for iPhones with notch/home bar */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</body></html>

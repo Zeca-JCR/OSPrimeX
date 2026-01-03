@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard da Oficina</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#192633",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen pb-20">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/30">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="Profile picture of the workshop manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHuWfHudeGkxLq5vgQ16_QNdUiDpQV-4ufMfaIA6r786qkVXwSX2WnPDafJQlxe2TvEqUZamXfEEZhhqW5-F8D-KtEfg0kPtFl74uhkhN2XOcFx-f1NF85B7r_6INudhpztX6dmp8L8nAdT0W19O6ZOcih4Iz_XxKmEY_32tbIQdkWgFl-9sxd4AGH6m3nsBByne8iXbvFHH4ev5Fl72V_qTJgtPe_MrCdgezCL0d7pfSR688yKiFCDQcpGemYugOdMNoIVer6kA2y"/>
+</div>
+<div class="flex flex-col">
+<h1 class="text-sm text-gray-500 dark:text-gray-400 font-medium leading-none">Olá, Admin</h1>
+<span class="text-lg font-bold text-slate-900 dark:text-white leading-tight">Oficina do João</span>
+</div>
+</div>
+<button class="size-10 rounded-full hover:bg-gray-200 dark:hover:bg-surface-dark flex items-center justify-center transition-colors relative">
+<span class="material-symbols-outlined text-gray-600 dark:text-gray-300">notifications</span>
+<span class="absolute top-2 right-2 size-2.5 bg-red-500 rounded-full border-2 border-background-light dark:border-background-dark"></span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="w-full max-w-md mx-auto flex flex-col gap-6 p-4">
+<!-- Quick Actions / Status Row -->
+<section class="grid grid-cols-2 gap-3">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+<div class="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+<span class="material-symbols-outlined">assignment</span>
+</div>
+<div>
+<p class="text-xs text-gray-500 dark:text-gray-400 font-medium">OS Abertas</p>
+<p class="text-xl font-bold">12</p>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+<div class="size-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div>
+<p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Finalizadas</p>
+<p class="text-xl font-bold">5</p>
+</div>
+</div>
+</section>
+<!-- OS em Destaque (Carousel) -->
+<section>
+<div class="flex items-center justify-between mb-3 px-1">
+<h2 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">build_circle</span>
+                    Em Execução
+                </h2>
+<a class="text-sm font-medium text-primary hover:text-blue-400" href="#">Ver todas</a>
+</div>
+<div class="flex overflow-x-auto hide-scrollbar gap-4 pb-2 -mx-4 px-4 snap-x">
+<!-- Card 1 -->
+<div class="snap-center shrink-0 w-[85%] bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-3 relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg">Chevrolet Onix</h3>
+<span class="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-300">ABC-1234</span>
+</div>
+<span class="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">Em Andamento</span>
+</div>
+<div class="flex items-center gap-3 mt-1">
+<div class="size-12 rounded-lg bg-gray-200 dark:bg-gray-700 bg-cover bg-center" data-alt="Chevrolet Onix car front view" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCPJhGsz2M9QT7k7FQCekz1exyZlLqJ87xi8-qnETGJIGLbSwwmeJssfe3aujqomzRkmhz2BH9zx9uvwvZu__ARG0t0DgYQ0EYo0mZmyXPF6fyxrT6n-Cs29YdapLW49B_dpc2ZKlIKo3SQsW2xYyVWJEYW2Zxr6oiEmV3QGfEzjitHE5fpdPzTBu5fhX83cpWbbIQzS621sYe9HG_ay045nRnrQx6g6P_Y34M8B0-uBNztGgwJ8k1H5xNcT9U54zWaTbr3B8DIZQ1L')"></div>
+<div class="flex-1">
+<p class="text-sm text-gray-600 dark:text-gray-300">Troca de Óleo e Filtros</p>
+<div class="flex items-center gap-1 text-xs text-gray-500 mt-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>Iniciado há 45m</span>
+</div>
+</div>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-yellow-500 h-full rounded-full" style="width: 60%"></div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="snap-center shrink-0 w-[85%] bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-3 relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg">Fiat Strada</h3>
+<span class="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-300">XYZ-9876</span>
+</div>
+<span class="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">Diagnóstico</span>
+</div>
+<div class="flex items-center gap-3 mt-1">
+<div class="size-12 rounded-lg bg-gray-200 dark:bg-gray-700 bg-cover bg-center" data-alt="Fiat Strada car side view" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCx-amz_UVXMhbBJsppmA7lThieON7FIaz5958mgbrgXvlM7mHhQ1GStEjtx1I3X8zyiX1p4rXboPJU6rLTuBkRO8OnhzJFFe8benJPd67w-8dwwb3SEBoH9uKkKoZp1iXnyGUoJ0vgN7-jv74i8_maSL35F5FydHBQVB08r_J4mba4P8YnZY5ToC5OFr_wW7I7L6mDpWvP4aeXIqGmDKNP9t65xhZc6gZx7jtK8a2JJk5TEM566Pt1zB74B_H4lsLKH9sk479r6bJY')"></div>
+<div class="flex-1">
+<p class="text-sm text-gray-600 dark:text-gray-300">Ruído na suspensão</p>
+<div class="flex items-center gap-1 text-xs text-gray-500 mt-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>Aguardando Aprovação</span>
+</div>
+</div>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-blue-500 h-full rounded-full" style="width: 30%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Resumo Financeiro -->
+<section class="bg-surface-light dark:bg-surface-dark rounded-xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden">
+<!-- Background Decoration -->
+<div class="absolute -right-6 -top-6 size-24 bg-primary/5 rounded-full blur-2xl"></div>
+<div class="flex justify-between items-center mb-4 relative z-10">
+<h2 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">payments</span>
+                    Financeiro Hoje
+                </h2>
+<button class="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium hover:bg-primary/20 transition-colors">Ver Detalhes</button>
+</div>
+<div class="grid grid-cols-2 gap-4 relative z-10">
+<div class="flex flex-col gap-1">
+<span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Receitas</span>
+<span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">R$ 2.500</span>
+<span class="text-xs text-green-500 font-bold flex items-center gap-0.5 bg-green-500/10 w-fit px-1.5 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +15%
+                    </span>
+</div>
+<div class="flex flex-col gap-1 border-l border-gray-200 dark:border-gray-700 pl-4">
+<span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Despesas</span>
+<span class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">R$ 450</span>
+<span class="text-xs text-gray-400 font-medium">Previsto: R$ 600</span>
+</div>
+</div>
+</section>
+<!-- CRM & Estoque Grid -->
+<section class="grid grid-cols-2 gap-4">
+<!-- CRM Alert -->
+<div class="bg-orange-50 dark:bg-[#2a1e12] border border-orange-100 dark:border-orange-900/30 p-4 rounded-xl flex flex-col justify-between gap-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="size-8 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400">
+<span class="material-symbols-outlined text-lg">campaign</span>
+</div>
+<span class="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+</div>
+<div>
+<h3 class="font-bold text-orange-900 dark:text-orange-100">CRM Alertas</h3>
+<p class="text-xs text-orange-700 dark:text-orange-300/70 mt-1">Clientes para retorno de revisão.</p>
+</div>
+</div>
+<!-- Stock Alert -->
+<div class="bg-red-50 dark:bg-[#2a1215] border border-red-100 dark:border-red-900/30 p-4 rounded-xl flex flex-col justify-between gap-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="size-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400">
+<span class="material-symbols-outlined text-lg">inventory_2</span>
+</div>
+<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">5</span>
+</div>
+<div>
+<h3 class="font-bold text-red-900 dark:text-red-100">Estoque Baixo</h3>
+<p class="text-xs text-red-700 dark:text-red-300/70 mt-1">Óleo 5W30 e pastilhas de freio.</p>
+</div>
+</div>
+</section>
+<!-- Próximos Agendamentos -->
+<section class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calendar_clock</span>
+                    Agenda
+                </h2>
+<a class="text-sm font-medium text-primary hover:text-blue-400" href="#">Ver Calendário</a>
+</div>
+<div class="flex flex-col gap-4 relative">
+<!-- Timeline Line -->
+<div class="absolute left-[53px] top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700 border-l border-dashed border-gray-300 dark:border-gray-600"></div>
+<!-- Item 1 -->
+<div class="flex items-start gap-3 relative">
+<div class="flex flex-col items-center w-12 pt-1 shrink-0">
+<span class="font-bold text-sm">14:00</span>
+</div>
+<div class="z-10 mt-2 size-2.5 rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark shrink-0"></div>
+<div class="flex-1 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+<p class="font-semibold text-sm">Revisão 10.000km</p>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Mariana Silva • Honda Civic</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-start gap-3 relative">
+<div class="flex flex-col items-center w-12 pt-1 shrink-0">
+<span class="font-bold text-sm text-gray-400">15:30</span>
+</div>
+<div class="z-10 mt-2 size-2.5 rounded-full bg-gray-300 dark:bg-gray-600 ring-4 ring-white dark:ring-surface-dark shrink-0"></div>
+<div class="flex-1 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50 opacity-80">
+<p class="font-semibold text-sm">Alinhamento e Balanc.</p>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Carlos Almeida • VW Gol</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-20 right-4 z-40 bg-primary hover:bg-blue-600 text-white rounded-full p-4 shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 w-full bg-background-light dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 z-50 pb-safe">
+<div class="flex justify-around items-center h-16">
+<a class="flex flex-col items-center gap-1 w-full text-primary" href="#">
+<span class="material-symbols-outlined filled">dashboard</span>
+<span class="text-[10px] font-medium">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 w-full text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-[10px] font-medium">OS</span>
+</a>
+<div class="w-full"></div> <!-- Spacer for FAB -->
+<a class="flex flex-col items-center gap-1 w-full text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-[10px] font-medium">Caixa</span>
+</a>
+<a class="flex flex-col items-center gap-1 w-full text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">menu</span>
+<span class="text-[10px] font-medium">Menu</span>
+</a>
+</div>
+</nav>
+<!-- FAB Overlay background fix for navigation spacing -->
+<div class="fixed bottom-0 left-1/2 transform -translate-x-1/2 mb-8 size-16 pointer-events-none"></div>
+</body></html>

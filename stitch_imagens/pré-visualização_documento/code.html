@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pré-visualização Documento</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+              "surface-dark": "#1a2632", 
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem", 
+              "lg": "0.5rem", 
+              "xl": "0.75rem", 
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* Custom Document Styles to mimic paper */
+        .document-paper {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-image: 
+                linear-gradient(#f1f1f1 1px, transparent 1px),
+                linear-gradient(90deg, #f1f1f1 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: white;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-hidden">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto shadow-2xl">
+<!-- Top Navigation -->
+<header class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between z-20 shrink-0">
+<button class="text-slate-900 dark:text-white flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Pré-visualização</h2>
+<button class="flex size-10 cursor-pointer items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[24px] text-slate-900 dark:text-white">share</span>
+</button>
+</header>
+<!-- Meta Info -->
+<div class="bg-background-light dark:bg-background-dark px-4 pb-3 shrink-0 z-20 border-b border-black/5 dark:border-white/5">
+<div class="flex items-center justify-center gap-2">
+<span class="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">Em aberto</span>
+<p class="text-slate-500 dark:text-[#92adc9] text-sm font-normal leading-normal text-center">Orçamento #4022 • João Silva</p>
+</div>
+</div>
+<!-- Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto overflow-x-hidden relative bg-[#2a3036] p-4 no-scrollbar">
+<!-- Document Container (Simulating A4 Paper) -->
+<div class="document-paper w-full min-h-[600px] bg-white rounded-sm p-6 text-slate-800 text-[11px] leading-relaxed relative mx-auto max-w-[360px]">
+<!-- Document Header -->
+<div class="flex justify-between items-start mb-6 border-b border-slate-200 pb-4">
+<div class="flex flex-col gap-1">
+<div class="size-10 bg-slate-900 rounded flex items-center justify-center mb-1">
+<span class="material-symbols-outlined text-white text-lg">car_repair</span>
+</div>
+<h1 class="font-bold text-sm text-slate-900">AutoCenter Premium</h1>
+<p class="text-slate-500">Rua das Oficinas, 123<br/>São Paulo, SP</p>
+</div>
+<div class="text-right">
+<h2 class="font-bold text-lg text-slate-900">ORÇAMENTO</h2>
+<p class="text-slate-500">#4022</p>
+<p class="text-slate-500 mt-1">Data: 15/10/2023</p>
+</div>
+</div>
+<!-- Client Info -->
+<div class="mb-6 bg-slate-50 p-3 rounded border border-slate-100">
+<h3 class="font-bold text-xs text-slate-700 mb-2 uppercase tracking-wide">Cliente</h3>
+<div class="flex justify-between">
+<div>
+<p class="font-bold">João Silva</p>
+<p>CPF: 123.456.789-00</p>
+<p>(11) 99999-9999</p>
+</div>
+<div class="text-right">
+<p class="font-bold">Veículo</p>
+<p>VW Gol 1.6 MSI</p>
+<p>Placa: ABC-1234</p>
+</div>
+</div>
+</div>
+<!-- Items Table -->
+<div class="mb-6">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b-2 border-slate-200 text-slate-500">
+<th class="py-2 font-semibold">Descrição</th>
+<th class="py-2 text-center">Qtd</th>
+<th class="py-2 text-right">Preço</th>
+<th class="py-2 text-right">Total</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr>
+<td class="py-2">Troca de Óleo 5W30</td>
+<td class="py-2 text-center">4</td>
+<td class="py-2 text-right">R$ 45,00</td>
+<td class="py-2 text-right font-medium">R$ 180,00</td>
+</tr>
+<tr>
+<td class="py-2">Filtro de Óleo</td>
+<td class="py-2 text-center">1</td>
+<td class="py-2 text-right">R$ 35,00</td>
+<td class="py-2 text-right font-medium">R$ 35,00</td>
+</tr>
+<tr>
+<td class="py-2">Pastilha de Freio (Par)</td>
+<td class="py-2 text-center">1</td>
+<td class="py-2 text-right">R$ 120,00</td>
+<td class="py-2 text-right font-medium">R$ 120,00</td>
+</tr>
+<tr>
+<td class="py-2">Mão de Obra (Revisão)</td>
+<td class="py-2 text-center">1.5h</td>
+<td class="py-2 text-right">R$ 100,00</td>
+<td class="py-2 text-right font-medium">R$ 150,00</td>
+</tr>
+<tr>
+<td class="py-2">Alinhamento 3D</td>
+<td class="py-2 text-center">1</td>
+<td class="py-2 text-right">R$ 80,00</td>
+<td class="py-2 text-right font-medium">R$ 80,00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Totals -->
+<div class="flex justify-end mb-8">
+<div class="w-1/2 space-y-2">
+<div class="flex justify-between text-slate-500">
+<span>Subtotal</span>
+<span>R$ 565,00</span>
+</div>
+<div class="flex justify-between text-slate-500">
+<span>Desconto (5%)</span>
+<span>- R$ 28,25</span>
+</div>
+<div class="flex justify-between font-bold text-sm text-slate-900 border-t border-slate-200 pt-2">
+<span>Total</span>
+<span>R$ 536,75</span>
+</div>
+</div>
+</div>
+<!-- Footer / Terms -->
+<div class="mt-auto pt-6 border-t border-slate-200 text-[9px] text-slate-400 text-center">
+<p class="mb-2">Este orçamento é válido por 7 dias. A aprovação deste orçamento implica na aceitação dos serviços descritos.</p>
+<div class="mt-8 border-t border-slate-300 w-40 mx-auto pt-1">
+<p>Assinatura do Responsável</p>
+</div>
+</div>
+</div>
+<div class="h-24"></div> <!-- Spacer for scrolling behind bottom bar -->
+</main>
+<!-- Page Indicator Overlay -->
+<div class="absolute bottom-[100px] left-0 right-0 flex justify-center pointer-events-none z-10">
+<div class="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                Página 1 de 1
+            </div>
+</div>
+<!-- Sticky Bottom Actions -->
+<div class="bg-surface-dark dark:bg-background-dark border-t border-white/5 p-4 z-30 pb-8">
+<div class="flex flex-col gap-3">
+<!-- Primary Action -->
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold h-12 rounded-lg shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[20px]">send</span>
+<span>Enviar ao Cliente</span>
+</button>
+<!-- Secondary Actions Row -->
+<div class="flex gap-3">
+<button class="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold h-10 rounded-lg text-sm border border-white/5 active:bg-slate-700/80 transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Baixar PDF</span>
+</button>
+<button class="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold h-10 rounded-lg text-sm border border-white/5 active:bg-slate-700/80 transition-colors">
+<span class="material-symbols-outlined text-[18px]">print</span>
+<span>Imprimir</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Optional: Add a backdrop pattern to the main body to make the centered mobile view look nice on desktop -->
+<style>
+        @media (min-width: 768px) {
+            body {
+                background-color: #050505;
+                background-image: radial-gradient(#1a2632 1px, transparent 1px);
+                background-size: 24px 24px;
+            }
+        }
+    </style>
+</body></html>

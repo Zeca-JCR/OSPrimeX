@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Configurações da Oficina</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#192633",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#324d67",
+                        "text-secondary-light": "#6b7280",
+                        "text-secondary-dark": "#92adc9",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #324d67;
+            border-radius: 3px;
+        }input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white min-h-screen flex flex-col transition-colors duration-200">
+<header class="sticky top-0 z-50 bg-surface-light dark:bg-[#111a22] border-b border-border-light dark:border-border-dark px-4 py-3 flex items-center justify-between shadow-sm">
+<button class="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-white">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold leading-tight flex-1 text-center pr-8">Configurações</h1>
+<button class="text-primary font-bold text-base px-2 py-1 hover:bg-primary/10 rounded transition-colors">
+            Salvar
+        </button>
+</header>
+<main class="flex-1 flex flex-col gap-6 p-4 pb-24 w-full max-w-md mx-auto">
+<section class="flex flex-col gap-4">
+<div class="flex flex-col items-center justify-center gap-3 py-2">
+<div class="relative group cursor-pointer">
+<div class="h-28 w-28 rounded-full bg-cover bg-center border-2 border-border-dark shadow-lg" data-alt="Abstract gradient representing workshop logo placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2bdFdQjPkU4yuT79C6KNjb7NbEOF-cy67rkndLOwuNcXEhHtvua2dagHU2aOKCPxw0gRxorMBdmpBIcI0QEkn8PcoPorlWV2RnQgJ6o1A-P1eAd5d0yOREAAI-60go5FCJBBNynQwrskBndTwRyMzVMr3KdVJjTlyi8uvXhMm-V_T7ps3p5Y8pnZBMn4eYyGCL3lsPFsZjeG58ExQEGx6eYhPd6s5wP_Ph55Cg0JBuDwjlIu5jqbLO0jJv0ssPLJRj13nkjvnbNs8');">
+</div>
+<div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white">edit</span>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full border-2 border-surface-dark flex items-center shadow-md">
+<span class="material-symbols-outlined text-[16px]">photo_camera</span>
+</div>
+</div>
+<div class="text-center">
+<p class="text-sm font-medium text-primary">Alterar Logomarca</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">Recomendado: 500x500px</p>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark space-y-4">
+<h3 class="font-bold text-base border-b border-border-light dark:border-border-dark pb-2 mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">storefront</span>
+                    Dados da Oficina
+                </h3>
+<label class="block">
+<span class="text-sm font-medium mb-1 block text-text-secondary-light dark:text-text-secondary-dark">Nome da Oficina</span>
+<input class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm" placeholder="Ex: Auto Center Silva" type="text"/>
+</label>
+<label class="block">
+<span class="text-sm font-medium mb-1 block text-text-secondary-light dark:text-text-secondary-dark">Endereço Completo</span>
+<input class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm" placeholder="Rua, Número, Bairro, Cidade" type="text"/>
+</label>
+<div class="grid grid-cols-2 gap-3">
+<label class="block">
+<span class="text-sm font-medium mb-1 block text-text-secondary-light dark:text-text-secondary-dark">Telefone</span>
+<input class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm" placeholder="(00) 0000-0000" type="tel"/>
+</label>
+<label class="block">
+<span class="text-sm font-medium mb-1 block text-text-secondary-light dark:text-text-secondary-dark">Chave PIX</span>
+<input class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm" placeholder="CPF/CNPJ/Email" type="text"/>
+</label>
+</div>
+</div>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark space-y-4">
+<h3 class="font-bold text-base border-b border-border-light dark:border-border-dark pb-2 mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">chat</span>
+                Mensagens Padrão
+            </h3>
+<label class="block">
+<div class="flex justify-between items-center mb-1">
+<span class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Mensagem WhatsApp (Orçamento)</span>
+<span class="text-xs text-primary cursor-pointer hover:underline">Ver variáveis</span>
+</div>
+<textarea class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm resize-none" placeholder="Olá, seu orçamento está pronto..." rows="3"></textarea>
+</label>
+<label class="block">
+<div class="flex flex-col mb-2">
+<span class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Template CRM (WhatsApp)</span>
+<div class="flex flex-wrap items-center gap-2 mt-1.5">
+<span class="text-[10px] uppercase font-bold text-text-secondary-light dark:text-text-secondary-dark">Variáveis:</span>
+<code class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-primary/10 text-primary border border-primary/20">{nome_cliente}</code>
+<code class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-primary/10 text-primary border border-primary/20">{veiculo}</code>
+<code class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-primary/10 text-primary border border-primary/20">{nome_oficina}</code>
+</div>
+</div>
+<textarea class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm resize-none" rows="4">Olá {nome_cliente}! Percebemos que faz tempo que não revisamos seu {veiculo}. Vamos agendar uma revisão para garantir sua segurança? Atenciosamente, {nome_oficina}.</textarea>
+</label>
+<label class="block">
+<span class="text-sm font-medium mb-1 block text-text-secondary-light dark:text-text-secondary-dark">Termos de Garantia (Rodapé da OS)</span>
+<textarea class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm resize-none" placeholder="Garantia de 90 dias para serviços..." rows="3"></textarea>
+</label>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark space-y-4">
+<div class="flex justify-between items-center border-b border-border-light dark:border-border-dark pb-2 mb-2">
+<h3 class="font-bold text-base flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">checklist</span>
+                    Checklist de Entrada
+                </h3>
+<button class="text-primary text-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Adicionar
+                </button>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between bg-background-light dark:bg-background-dark p-3 rounded-lg border border-transparent hover:border-border-light dark:hover:border-border-dark group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[20px]">drag_indicator</span>
+<span class="text-sm">Nível de Combustível</span>
+</div>
+<div class="flex items-center gap-1 opacity-60 group-hover:opacity-100">
+<button class="p-1 hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 hover:text-red-500"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+<div class="flex items-center justify-between bg-background-light dark:bg-background-dark p-3 rounded-lg border border-transparent hover:border-border-light dark:hover:border-border-dark group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[20px]">drag_indicator</span>
+<span class="text-sm">Luzes do Painel</span>
+</div>
+<div class="flex items-center gap-1 opacity-60 group-hover:opacity-100">
+<button class="p-1 hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 hover:text-red-500"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+<div class="flex items-center justify-between bg-background-light dark:bg-background-dark p-3 rounded-lg border border-transparent hover:border-border-light dark:hover:border-border-dark group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[20px]">drag_indicator</span>
+<span class="text-sm">Funilaria / Riscos</span>
+</div>
+<div class="flex items-center gap-1 opacity-60 group-hover:opacity-100">
+<button class="p-1 hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 hover:text-red-500"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark space-y-5">
+<h3 class="font-bold text-base border-b border-border-light dark:border-border-dark pb-2 mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">settings_applications</span>
+                Preferências
+            </h3>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium">Tema da Aplicação</span>
+<div class="flex bg-background-light dark:bg-background-dark p-1 rounded-lg border border-border-light dark:border-border-dark">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">light_mode</span> Claro
+                    </button>
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-white text-xs font-medium shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[16px]">dark_mode</span> Escuro
+                    </button>
+</div>
+</div>
+<div>
+<span class="text-sm font-medium mb-2 block text-text-secondary-light dark:text-text-secondary-dark">Visualização de OS</span>
+<div class="grid grid-cols-2 gap-2">
+<label class="cursor-pointer border border-primary bg-primary/20 dark:bg-primary/10 rounded-lg p-2 flex items-center justify-center gap-2 transition-all">
+<input checked="" class="hidden" name="os_view" type="radio"/>
+<span class="material-symbols-outlined text-primary text-[18px]">view_list</span>
+<span class="text-sm font-semibold text-primary">Lista</span>
+</label>
+<label class="cursor-pointer border border-border-light dark:border-border-dark hover:border-primary/50 bg-background-light dark:bg-background-dark rounded-lg p-2 flex items-center justify-center gap-2 transition-all">
+<input class="hidden" name="os_view" type="radio"/>
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[18px]">view_kanban</span>
+<span class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Kanban</span>
+</label>
+</div>
+</div>
+<div>
+<span class="text-sm font-medium mb-2 block text-text-secondary-light dark:text-text-secondary-dark">Visualização Padrão da Agenda</span>
+<div class="relative">
+<select class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2.5 appearance-none focus:outline-none focus:border-primary text-sm pr-8">
+<option>Semanal</option>
+<option>Mensal</option>
+<option>Diária</option>
+<option>Lista</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<span class="text-sm font-medium block">Lembrete de Agendamento</span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Dias antes do serviço</span>
+</div>
+<div class="flex items-center gap-3 bg-background-light dark:bg-background-dark rounded-lg border border-border-light dark:border-border-dark px-2 py-1">
+<button class="w-6 h-6 flex items-center justify-center bg-surface-light dark:bg-surface-dark rounded border border-border-light dark:border-border-dark hover:bg-gray-100 dark:hover:bg-gray-800 text-primary font-bold">-</button>
+<span class="text-sm w-4 text-center">1</span>
+<button class="w-6 h-6 flex items-center justify-center bg-surface-light dark:bg-surface-dark rounded border border-border-light dark:border-border-dark hover:bg-gray-100 dark:hover:bg-gray-800 text-primary font-bold">+</button>
+</div>
+</div>
+</section>
+<section class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark space-y-4">
+<h3 class="font-bold text-base border-b border-border-light dark:border-border-dark pb-2 mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">handshake</span>
+                CRM &amp; Retenção
+            </h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between gap-4">
+<div class="flex-1">
+<span class="text-sm font-medium block">Intervalo de Revisão</span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Meses padrão</span>
+</div>
+<input class="w-16 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-2 py-2 text-center text-sm font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none" type="number" value="6"/>
+</div>
+<div class="flex items-center justify-between gap-4">
+<div class="flex-1">
+<span class="text-sm font-medium block">Retorno s/ Resposta</span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Dias após contato</span>
+</div>
+<input class="w-16 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-2 py-2 text-center text-sm font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none" type="number" value="3"/>
+</div>
+<div class="flex items-center justify-between gap-4">
+<div class="flex-1">
+<span class="text-sm font-medium block">Prazo de Reagendamento</span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Dias p/ alerta</span>
+</div>
+<input class="w-16 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg px-2 py-2 text-center text-sm font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none" type="number" value="15"/>
+</div>
+</div>
+</section>
+<div class="pt-2">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-[0.98]">
+<span class="material-symbols-outlined">save</span>
+                Salvar Todas Configurações
+            </button>
+<p class="text-center text-xs text-text-secondary-light dark:text-text-secondary-dark mt-4">
+                Última sincronização: Hoje às 09:42
+            </p>
+</div>
+</main>
+<script>
+        // Simple script to toggle dark mode for demonstration
+        // In a real app, this would be handled by system preference or user setting logic
+        const toggleButtons = document.querySelectorAll('button');
+        toggleButtons.forEach(btn => {
+            if(btn.innerHTML.includes('light_mode')) {
+                btn.addEventListener('click', () => {
+                    document.documentElement.classList.remove('dark');
+                    updateToggleUI(false);
+                });
+            }
+            if(btn.innerHTML.includes('dark_mode')) {
+                btn.addEventListener('click', () => {
+                    document.documentElement.classList.add('dark');
+                    updateToggleUI(true);
+                });
+            }
+        });
+        function updateToggleUI(isDark) {
+            // simplistic selector for demo, would be more robust in production
+        }
+    </script>
+
+</body></html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cadastro Cliente - Oficina</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-dark": "#0f66be",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2a38",
+                        "input-light": "#ffffff",
+                        "input-dark": "#15202b",
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#2d3b4b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "soft": "0 2px 10px rgba(0, 0, 0, 0.03)",
+                        "glow": "0 0 15px rgba(19, 127, 236, 0.15)"
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for cleaner mobile look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased overflow-x-hidden min-h-screen relative flex flex-col">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-border-light dark:border-border-dark transition-colors duration-200">
+<div class="flex items-center justify-between px-4 h-14 max-w-md mx-auto">
+<button class="text-primary text-base font-medium hover:text-primary-dark transition-colors" type="button">
+                Cancelar
+            </button>
+<h1 class="text-base font-bold text-slate-900 dark:text-white absolute left-1/2 transform -translate-x-1/2">
+                Novo Cliente
+            </h1>
+<button class="text-primary text-base font-medium hover:text-primary-dark transition-colors opacity-0 pointer-events-none" type="button">
+                Salvar
+            </button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-md mx-auto pt-16 pb-32 px-4 space-y-6">
+<!-- Segmented Control (Pessoa Física / Jurídica) -->
+<div class="w-full">
+<div class="flex h-10 w-full items-center rounded-lg bg-gray-200 dark:bg-surface-dark p-1">
+<label class="flex-1 cursor-pointer h-full relative">
+<input checked="" class="peer sr-only" name="customer_type" type="radio" value="pf"/>
+<div class="w-full h-full flex items-center justify-center rounded-md text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 peer-checked:bg-white dark:peer-checked:bg-background-dark peer-checked:text-primary peer-checked:shadow-sm transition-all duration-200">
+                        Pessoa Física
+                    </div>
+</label>
+<label class="flex-1 cursor-pointer h-full relative">
+<input class="peer sr-only" name="customer_type" type="radio" value="pj"/>
+<div class="w-full h-full flex items-center justify-center rounded-md text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 peer-checked:bg-white dark:peer-checked:bg-background-dark peer-checked:text-primary peer-checked:shadow-sm transition-all duration-200">
+                        Pessoa Jurídica
+                    </div>
+</label>
+</div>
+</div>
+<!-- Dados Pessoais Section -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 pb-1 border-b border-border-light dark:border-border-dark">
+<span class="material-symbols-outlined text-primary text-xl">person</span>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Dados Pessoais</h3>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Nome Completo</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="Ex: João da Silva" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">CPF</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="000.000.000-00" type="tel"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Celular</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="(00) 90000-0000" type="tel"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">E-mail</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[20px]">mail</span>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 pl-11 pr-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="cliente@exemplo.com" type="email"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Endereço Section (Collapsed view by default logic, but expanded here for form) -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 pb-1 border-b border-border-light dark:border-border-dark">
+<span class="material-symbols-outlined text-primary text-xl">location_on</span>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Endereço</h3>
+</div>
+<div class="grid grid-cols-[1fr_auto] gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">CEP</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="00000-000" type="tel"/>
+</div>
+<div class="flex items-end pb-1">
+<button class="text-primary text-sm font-medium hover:underline" type="button">Buscar</button>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Endereço</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="Rua, Avenida..." type="text"/>
+</div>
+<div class="grid grid-cols-[100px_1fr] gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Número</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="123" type="text"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Bairro</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-surface-light dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="Centro" type="text"/>
+</div>
+</div>
+</section>
+<!-- Veículo Section -->
+<section class="space-y-4 pt-2">
+<div class="flex items-center justify-between pb-1 border-b border-border-light dark:border-border-dark">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">directions_car</span>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Veículo</h3>
+</div>
+<button class="text-xs font-bold text-primary border border-primary/30 rounded-full px-3 py-1 hover:bg-primary/10 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-base">add</span> Adicionar
+                </button>
+</div>
+<!-- Vehicle Card (Expanded) -->
+<div class="rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-soft overflow-hidden">
+<div class="bg-gray-50 dark:bg-black/20 px-4 py-2 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Veículo Principal</span>
+<button class="text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</div>
+<div class="p-4 space-y-4">
+<div class="grid grid-cols-[1fr_1.5fr] gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Placa</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 font-mono font-medium focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="ABC1D23" style="text-transform: uppercase;" type="text"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Marca</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="Ex: Chevrolet" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Modelo</label>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-input-dark text-slate-900 dark:text-white h-12 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="Ex: Onix 1.0" type="text"/>
+</div>
+<div class="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">KM Atual</label>
+<div class="relative">
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-input-dark text-slate-900 dark:text-white h-12 pl-4 pr-10 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder="0" type="number"/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">KM</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-slate-600 dark:text-slate-300">Próxima Revisão (Sugestão)</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[20px]">calendar_month</span>
+<input class="w-full rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-input-dark text-slate-900 dark:text-white h-12 pl-11 pr-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all [color-scheme:light] dark:[color-scheme:dark]" type="date"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Sticky Footer -->
+<footer class="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-background-dark border-t border-border-light dark:border-border-dark z-40 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
+<div class="max-w-md mx-auto">
+<button class="w-full h-12 bg-primary hover:bg-primary-dark active:scale-[0.98] rounded-xl text-white font-bold text-base shadow-glow transition-all duration-200 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">check</span>
+                Salvar Cliente e Veículo
+            </button>
+</div>
+</footer>
+</body></html>

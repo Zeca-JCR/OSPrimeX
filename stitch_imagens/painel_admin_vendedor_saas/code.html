@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Painel Admin Vendedor SaaS</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1c2a36",
+                        "text-secondary-light": "#64748b",
+                        "text-secondary-dark": "#94a3b8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen relative pb-[80px]">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-30 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+<div class="flex items-center justify-between px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-gradient-to-tr from-primary to-blue-400 p-[2px]">
+<div class="h-full w-full rounded-full bg-card-light dark:bg-card-dark flex items-center justify-center overflow-hidden">
+<img alt="Vendor Profile Avatar" class="h-full w-full object-cover" data-alt="Vendor Profile Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDkiTUUkL7WOqKinwkSTPoU8X8O34ILmIQD4nOqAXCN3XItQKevES5VFOlARu6jPIbTJ8LJr-5aiDgIt1S9BO_cbHTD2rC3iZ4I31hlStBD0FqcSA3x_nsC-syXmdHiOYiQzGTeJEtwSFAM61vMmKrhbKSpVljnNSDSH0Fm117FuJ9vXqwpa_jYKpiWqOeA01VWthHJz5ugFHQT3kS8dPInvUk7oU0y6nA-0WMkTdVdua2y8HN3add9OU2_bgd7SWxvlddnZ8wKZ-r"/>
+</div>
+</div>
+<div>
+<h1 class="text-base font-bold leading-tight">Olá, Ricardo</h1>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Gerenciar Oficinas</p>
+</div>
+</div>
+<button class="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">notifications</span>
+<span class="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-background-light dark:border-background-dark"></span>
+</button>
+</div>
+</header>
+<!-- Stats Carousel -->
+<section class="mt-4 px-4">
+<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+<!-- Stat Card 1 -->
+<div class="min-w-[160px] flex-1 flex flex-col gap-1 rounded-xl p-4 bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-2">
+<div class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-primary">
+<span class="material-symbols-outlined text-[20px]">store</span>
+</div>
+<p class="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">Total Ativos</p>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<p class="text-2xl font-bold tracking-tight">142</p>
+<span class="text-xs font-medium text-emerald-500 flex items-center">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> 5%
+                    </span>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="min-w-[160px] flex-1 flex flex-col gap-1 rounded-xl p-4 bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-2">
+<div class="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+<span class="material-symbols-outlined text-[20px]">new_releases</span>
+</div>
+<p class="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">Novos (Mês)</p>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<p class="text-2xl font-bold tracking-tight">12</p>
+<span class="text-xs font-medium text-emerald-500 flex items-center">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> 2%
+                    </span>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="min-w-[160px] flex-1 flex flex-col gap-1 rounded-xl p-4 bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-2">
+<div class="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+<p class="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">Pendentes</p>
+</div>
+<div class="flex items-baseline gap-2 mt-1">
+<p class="text-2xl font-bold tracking-tight">5</p>
+<span class="text-xs font-medium text-red-500 flex items-center">
+<span class="material-symbols-outlined text-[14px]">priority_high</span> Ação
+                    </span>
+</div>
+</div>
+</div>
+</section>
+<!-- Search & Filters -->
+<section class="px-4 mt-2 sticky top-[73px] z-20 py-2 bg-background-light dark:bg-background-dark transition-colors duration-300">
+<div class="flex gap-2 mb-3">
+<div class="relative flex-1 group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="block w-full p-3 pl-10 text-sm text-slate-900 dark:text-white rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary focus:border-primary placeholder-text-secondary-light dark:placeholder-text-secondary-dark transition-all shadow-sm" placeholder="Buscar oficina, CNPJ..." type="text"/>
+</div>
+<button class="flex items-center justify-center w-12 rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">tune</span>
+</button>
+</div>
+<!-- Chips -->
+<div class="flex gap-2 overflow-x-auto hide-scrollbar">
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-primary text-white text-xs font-semibold shadow-md shadow-primary/20 transition-transform active:scale-95">
+                Todos
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                Ativos
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                Pendentes
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                Inadimplentes
+            </button>
+</div>
+</section>
+<!-- Client List -->
+<main class="px-4 mt-2 space-y-3">
+<!-- List Item 1 -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-card-light dark:bg-card-dark p-4 shadow-sm border border-slate-200 dark:border-slate-800 transition-all hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md active:scale-[0.99]">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="h-full w-full object-cover opacity-90" data-alt="Auto Center Raposo Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaXJ0mby5L9cViprXNmQ-6dCEFu6FHsjOdhzw6HeVaASZ3j5oh8_5m-NDEUn8asgz05BX26eCB7m5tFKjbrSdXceTz13vt4k003k3PjanHV57_hra7f3YVLAlWCJc5mv4-miZdDE-ET5amNcuNaxlj1qw50ROmw87DElnuC2kHG9qZO4-xeRY0K7QBjwd_ljDXq0tSg86spDVvmvs-LjF9uzItmUkvzOwowQTEce-STH3idZ935UrADRxhWt7z88jxukvWRxubrcxO"/>
+</div>
+<div>
+<h3 class="text-base font-semibold text-slate-900 dark:text-white leading-tight">Auto Center Raposo</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">Plano Ouro</span>
+<span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Ativo</span>
+</div>
+</div>
+</div>
+<button class="text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700/50 w-full"></div>
+<div class="flex items-center gap-4 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">group</span>
+<span>12 Usuários</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">extension</span>
+<span>3 Add-ons</span>
+</div>
+<div class="ml-auto font-medium text-slate-900 dark:text-slate-300">R$ 450/mês</div>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-card-light dark:bg-card-dark p-4 shadow-sm border border-slate-200 dark:border-slate-800 transition-all hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md active:scale-[0.99]">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="h-full w-full object-cover opacity-90" data-alt="Mecânica Silva Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaCDmmUm8eWbVndNKnrltUjlTvdYHzxpPQGgg8g1t3CSESmetpFtSqmRrGwSSQQ-IyYE4GRWrblwkAB2A3ZaYlc5TNH5gIp8LjmwdY6oayyC44SRomkE9TIcgymVDGLaHToeyjj66LFmxVWtsGj-btlgL1Ye3i3fT2OOV9WeYQbC4f3OmJ3APG9HKhu7fCLCpEQ68IwckxsH-d0nHvkoJr53Xa3wxCAozI9mZmPsJUbbhd3kPSzDRlgGqgC5VauEWK0MnAiFxAZT9u"/>
+</div>
+<div>
+<h3 class="text-base font-semibold text-slate-900 dark:text-white leading-tight">Mecânica Silva</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-slate-50 dark:bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-400 ring-1 ring-inset ring-slate-500/10 dark:ring-slate-400/20">Plano Básico</span>
+<span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Ativo</span>
+</div>
+</div>
+</div>
+<button class="text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700/50 w-full"></div>
+<div class="flex items-center gap-4 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">group</span>
+<span>3 Usuários</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">extension</span>
+<span>0 Add-ons</span>
+</div>
+<div class="ml-auto font-medium text-slate-900 dark:text-slate-300">R$ 120/mês</div>
+</div>
+</div>
+<!-- List Item 3 (Warning State) -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-card-light dark:bg-card-dark p-4 shadow-sm border border-slate-200 dark:border-slate-800 transition-all hover:border-red-500/50 dark:hover:border-red-500/50 hover:shadow-md active:scale-[0.99]">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="h-full w-full object-cover opacity-90" data-alt="Oficina do Zé Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDc9dtLxlago_yHexiANDPa5d4ltR6asW5lrQCOjzmW7LuCUtM7iFye9SrDJUFx3oo8E8HMbSuLP6i0KpdmIjv8XOW1SDXwjDFQk0mtrkU-5NAj6JL2hQ5Rhg-o9H34KDKqaMZogFM3oROAaLJRTyyD-DXQGSU6SG0eM2eECtID4TRCsEXNYToKtFyRTD8Jo0nJdufZ-YNXhD4QDSmJtfnB2F4XgYW_xVirAw9spNDzfprHg7ooTpkz9mPJ6FfpiQ_z1Ii0fWdh0Giw"/>
+</div>
+<div>
+<h3 class="text-base font-semibold text-slate-900 dark:text-white leading-tight">Oficina do Zé</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400 ring-1 ring-inset ring-purple-700/10 dark:ring-purple-400/20">Plano Pro</span>
+<span class="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>
+<span class="text-xs text-red-500 font-medium">Inadimplente</span>
+</div>
+</div>
+</div>
+<button class="text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700/50 w-full"></div>
+<div class="flex items-center gap-4 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">group</span>
+<span>5 Usuários</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">extension</span>
+<span>1 Add-on</span>
+</div>
+<div class="ml-auto font-medium text-red-500">Vencido há 5 dias</div>
+</div>
+</div>
+<!-- List Item 4 -->
+<div class="group relative flex flex-col gap-3 rounded-2xl bg-card-light dark:bg-card-dark p-4 shadow-sm border border-slate-200 dark:border-slate-800 transition-all hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md active:scale-[0.99]">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="h-12 w-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="h-full w-full object-cover opacity-90" data-alt="Premium Motors Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIOieJN3TStu7fgPzViCA_VR7YTy4ZuY3QlWSonMtO0J-iMEWkh2qn--RLYwGzAi-Gpcf8_5HFVhR8-l9YqkZrvVEJXMz4X8bj_IPjbwhUxWasBo4zS9zySr79VvC2EXYzJ9FLZF7pldFi-MMi4IgVtrriweIEEvDFxY7cYKQ7wJc_qKFs6WbVJOW6WaDIyML6yo6wk_veu-loJkpBfkeOsL97Gl4wiN8cGyp-aZKCFm3MHujUQlADKgn4qOETr-Ni69LTH2C5AXO8"/>
+</div>
+<div>
+<h3 class="text-base font-semibold text-slate-900 dark:text-white leading-tight">Premium Motors</h3>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-700/10 dark:ring-amber-400/20">Plano Diamante</span>
+<span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Ativo</span>
+</div>
+</div>
+</div>
+<button class="text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700/50 w-full"></div>
+<div class="flex items-center gap-4 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">group</span>
+<span>25 Usuários</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">extension</span>
+<span>5 Add-ons</span>
+</div>
+<div class="ml-auto font-medium text-slate-900 dark:text-slate-300">R$ 890/mês</div>
+</div>
+</div>
+<div class="h-16"></div> <!-- Spacer for FAB -->
+</main>
+<!-- FAB -->
+<button class="fixed bottom-[80px] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/40 transition-transform active:scale-90 hover:scale-105">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 z-50 w-full bg-card-light dark:bg-card-dark border-t border-slate-200 dark:border-slate-800 pb-safe pt-1">
+<div class="flex h-16 items-center justify-around px-2">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 p-1 text-primary" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px] font-medium">Clientes</span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 p-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">attach_money</span>
+<span class="text-[10px] font-medium">Financeiro</span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 p-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Ajustes</span>
+</a>
+</div>
+</nav>
+<script>
+        // Optional: Simple script to toggle visual active states for demonstration if needed, 
+        // though CSS active states are handled. 
+        // Real logic would go here.
+    </script>
+</body></html>

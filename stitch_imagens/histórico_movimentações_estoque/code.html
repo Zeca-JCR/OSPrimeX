@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Histórico de Movimentações</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "success": "#10b981", // Emerald 500
+                        "danger": "#ef4444",  // Red 500
+                        "warning": "#f59e0b", // Amber 500
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for horizontal scroll areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto overflow-hidden bg-background-light dark:bg-background-dark shadow-xl">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-900 dark:text-white">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center">
+                Histórico de Estoque
+            </h1>
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-primary relative">
+<span class="material-symbols-outlined text-[24px]">filter_list</span>
+<!-- Badge indicator for active filter -->
+<span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary border-2 border-background-light dark:border-background-dark"></span>
+</button>
+</header>
+<!-- Search Bar -->
+<div class="px-4 pt-4 pb-2">
+<div class="relative flex w-full items-center">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="block w-full rounded-xl border-none bg-white dark:bg-slate-800 py-3 pl-10 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary shadow-sm" placeholder="Buscar por produto, código..." type="text"/>
+</div>
+</div>
+<!-- Chips (Quick Filters) -->
+<div class="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar items-center">
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary text-white px-4 shadow-sm transition-transform active:scale-95">
+<span class="text-sm font-medium">Todas</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 transition-transform active:scale-95">
+<span class="text-sm font-medium text-slate-600 dark:text-slate-300">Entradas</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 transition-transform active:scale-95">
+<span class="text-sm font-medium text-slate-600 dark:text-slate-300">Saídas</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 transition-transform active:scale-95">
+<span class="text-sm font-medium text-slate-600 dark:text-slate-300">Ajustes</span>
+</button>
+</div>
+<!-- List Content -->
+<main class="flex-1 overflow-y-auto px-4 pb-6">
+<!-- Section: Hoje -->
+<div class="mt-4">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 ml-1">Hoje</h3>
+<div class="flex flex-col gap-3">
+<!-- Item 1: Saída por OS (Outbound) -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-3 active:bg-slate-50 dark:active:bg-slate-700 transition-colors cursor-pointer">
+<div class="flex justify-between items-start gap-3">
+<!-- Icon -->
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-danger">
+<span class="material-symbols-outlined text-[20px]">arrow_downward</span>
+</div>
+<!-- Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Óleo Sintético 5W30</p>
+<span class="text-sm font-bold text-danger">- 4 un</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col gap-0.5">
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Saída por OS #4092</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">14:35</p>
+</div>
+<div class="flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5">
+<span class="material-symbols-outlined text-[12px] text-slate-500 dark:text-slate-400">inventory_2</span>
+<span class="text-[10px] font-medium text-slate-600 dark:text-slate-300">Saldo: 42</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2: Entrada Manual (Inbound) -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-3 active:bg-slate-50 dark:active:bg-slate-700 transition-colors cursor-pointer">
+<div class="flex justify-between items-start gap-3">
+<!-- Icon -->
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-success">
+<span class="material-symbols-outlined text-[20px]">arrow_upward</span>
+</div>
+<!-- Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Filtro de Ar - Ford Ka</p>
+<span class="text-sm font-bold text-success">+ 20 un</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col gap-0.5">
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Entrada Manual (Nota Fiscal)</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">10:15</p>
+</div>
+<div class="flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5">
+<span class="material-symbols-outlined text-[12px] text-slate-500 dark:text-slate-400">inventory_2</span>
+<span class="text-[10px] font-medium text-slate-600 dark:text-slate-300">Saldo: 25</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3: Ajuste de Inventário (Correction) -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-3 active:bg-slate-50 dark:active:bg-slate-700 transition-colors cursor-pointer">
+<div class="flex justify-between items-start gap-3">
+<!-- Icon -->
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20 text-warning">
+<span class="material-symbols-outlined text-[20px]">edit_note</span>
+</div>
+<!-- Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Pastilha de Freio Diant.</p>
+<span class="text-sm font-bold text-warning">- 1 un</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col gap-0.5">
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Ajuste de Balanço</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">09:00</p>
+</div>
+<div class="flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5">
+<span class="material-symbols-outlined text-[12px] text-slate-500 dark:text-slate-400">inventory_2</span>
+<span class="text-[10px] font-medium text-slate-600 dark:text-slate-300">Saldo: 12</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Ontem -->
+<div class="mt-6">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 ml-1">Ontem</h3>
+<div class="flex flex-col gap-3">
+<!-- Item 4: Devolução (Return/Inbound) -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-3 active:bg-slate-50 dark:active:bg-slate-700 transition-colors cursor-pointer">
+<div class="flex justify-between items-start gap-3">
+<!-- Icon -->
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20 text-primary">
+<span class="material-symbols-outlined text-[20px]">keyboard_return</span>
+</div>
+<!-- Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Amortecedor Tras. Gol</p>
+<span class="text-sm font-bold text-primary">+ 2 un</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col gap-0.5">
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Devolução OS #4088</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">16:45</p>
+</div>
+<div class="flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5">
+<span class="material-symbols-outlined text-[12px] text-slate-500 dark:text-slate-400">inventory_2</span>
+<span class="text-[10px] font-medium text-slate-600 dark:text-slate-300">Saldo: 8</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 5: Saída -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-3 active:bg-slate-50 dark:active:bg-slate-700 transition-colors cursor-pointer">
+<div class="flex justify-between items-start gap-3">
+<!-- Icon -->
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-danger">
+<span class="material-symbols-outlined text-[20px]">arrow_downward</span>
+</div>
+<!-- Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Fluído de Freio DOT4</p>
+<span class="text-sm font-bold text-danger">- 1 un</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col gap-0.5">
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Saída por OS #4085</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">11:20</p>
+</div>
+<div class="flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5">
+<span class="material-symbols-outlined text-[12px] text-slate-500 dark:text-slate-400">inventory_2</span>
+<span class="text-[10px] font-medium text-slate-600 dark:text-slate-300">Saldo: 14</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: 12 Ago -->
+<div class="mt-6 mb-8">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 ml-1">12 Ago</h3>
+<div class="flex flex-col gap-3">
+<!-- Item 6: Entrada -->
+<div class="group flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50 p-3 active:bg-slate-50 dark:active:bg-slate-700 transition-colors cursor-pointer">
+<div class="flex justify-between items-start gap-3">
+<!-- Icon -->
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-success">
+<span class="material-symbols-outlined text-[20px]">arrow_upward</span>
+</div>
+<!-- Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-bold text-slate-900 dark:text-white truncate">Jogo de Velas NGK</p>
+<span class="text-sm font-bold text-success">+ 40 un</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col gap-0.5">
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Compra de Fornecedor</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500">17:15</p>
+</div>
+<div class="flex items-center gap-1 rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5">
+<span class="material-symbols-outlined text-[12px] text-slate-500 dark:text-slate-400">inventory_2</span>
+<span class="text-[10px] font-medium text-slate-600 dark:text-slate-300">Saldo: 45</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Loader / End of list -->
+<div class="py-4 flex justify-center opacity-60">
+<span class="material-symbols-outlined animate-spin text-primary">progress_activity</span>
+</div>
+</main>
+<!-- Floating Action Button (Optional for Manual Entry) -->
+<div class="absolute bottom-6 right-6 z-10">
+<button class="flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-blue-600 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div>
+</div>
+</body></html>

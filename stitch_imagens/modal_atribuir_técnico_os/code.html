@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Modal Atribuir Técnico</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        /* Custom scrollbar for better mobile feel */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-gray-500 flex justify-center items-center min-h-screen p-4">
+<!-- Mobile Screen Simulator -->
+<div class="relative w-full max-w-sm h-[800px] bg-white dark:bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-gray-800">
+<!-- Simulate Background App Content -->
+<div class="h-full w-full bg-slate-50 dark:bg-slate-900 overflow-hidden relative">
+<!-- Fake Header -->
+<div class="h-24 bg-primary p-6 flex items-end">
+<div class="h-8 w-8 rounded bg-white/20"></div>
+<div class="ml-4 h-6 w-32 rounded bg-white/20"></div>
+</div>
+<!-- Fake Content Lines -->
+<div class="p-6 space-y-4">
+<div class="h-32 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+<div class="h-32 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+<div class="h-32 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+</div>
+<!-- DARK OVERLAY / BACKDROP -->
+<div class="absolute inset-0 bg-[#141414]/60 backdrop-blur-sm z-10 flex flex-col justify-end transition-opacity duration-300">
+<!-- BOTTOM SHEET -->
+<div class="bg-background-light dark:bg-background-dark w-full rounded-t-[1.5rem] shadow-2xl flex flex-col max-h-[85%] animate-slide-up relative overflow-hidden">
+<!-- BottomSheetHandle -->
+<div class="w-full flex items-center justify-center pt-3 pb-2 shrink-0 bg-background-light dark:bg-background-dark z-20 sticky top-0">
+<div class="h-1.5 w-12 rounded-full bg-[#cfdbe7] dark:bg-slate-600"></div>
+</div>
+<!-- Header Section -->
+<div class="px-6 pb-2 shrink-0">
+<div class="flex items-start justify-between">
+<div>
+<!-- HeadlineText adapted -->
+<h2 class="text-[#0d141b] dark:text-white tracking-tight text-[24px] font-bold leading-tight text-left">
+                                    Atribuir Técnico
+                                </h2>
+<!-- BodyText adapted for Context -->
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal leading-normal pt-1">
+                                    Selecione o responsável pela <span class="font-medium text-[#0d141b] dark:text-slate-200">OS #4022 - Ford Ka</span>
+</p>
+</div>
+<button class="rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+<!-- SearchBar adapted -->
+<div class="px-6 py-4 shrink-0">
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-[#4c739a]" style="font-size: 20px;">search</span>
+</div>
+<input class="block w-full rounded-xl border-none bg-[#e7edf3] dark:bg-slate-800 py-3 pl-10 pr-3 text-[#0d141b] dark:text-white placeholder:text-[#4c739a] focus:ring-2 focus:ring-primary/50 text-base" placeholder="Buscar técnico..." type="text"/>
+</div>
+</div>
+<!-- Scrollable List Area -->
+<div class="flex-1 overflow-y-auto px-6 space-y-3 pb-4 scrollbar-hide">
+<!-- Option A: Selected State -->
+<label class="group relative flex items-center justify-between p-3 rounded-xl border-2 border-primary bg-primary/5 dark:bg-primary/10 cursor-pointer transition-all">
+<div class="flex items-center gap-4">
+<!-- Avatar Image -->
+<div class="h-12 w-12 rounded-full bg-center bg-cover border-2 border-white dark:border-slate-700 shadow-sm" data-alt="Portrait of technician João Silva smiling" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDVYZCCp7QPZ0CsG48UKWDHMxuQZbLf1bcXXLBSQ7HAIvyu0vMpVEpRLJzcpLP2iHK8yFxbMm_A2nr4h5MHK6p7Oe24E-8LkdeT-JC7R5S0a1yp5xvkrf0jvp9BUXqjicCmroAYhAYux4yxL9Z7xR0Hjc3UwJEQYILP9PoPk8wrVZmus8Q6HnggUKWoqHWJnu_-QQT9LOp4EAUMcjcJSBhzpEDfn0o0n8TzEtfgYN3mBSpI7h8jC7V1xFCH70vURHGKsFpHOvpFQODj');">
+</div>
+<div class="flex flex-col">
+<p class="text-[#0d141b] dark:text-white text-base font-semibold leading-none">João Silva</p>
+<div class="flex items-center gap-1 mt-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+<p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-none">Disponível</p>
+</div>
+</div>
+</div>
+<div class="shrink-0 pr-1">
+<input checked="" class="h-5 w-5 border-gray-300 text-primary focus:ring-primary bg-white" name="tech_select" type="radio"/>
+</div>
+</label>
+<!-- Option B: Default State -->
+<label class="group relative flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary/40 cursor-pointer transition-all">
+<div class="flex items-center gap-4">
+<!-- Avatar Image -->
+<div class="h-12 w-12 rounded-full bg-center bg-cover border border-slate-100 dark:border-slate-600" data-alt="Portrait of technician Pedro Santos" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD1fQe6mjgExPJf9osjKU1uMCD5NXB27U4sVuMonZj2kxMkWRxZ7IvWsCqTNMMjWs8q9JicaJQy3KvHGcMK59XPeXAMhgNojUb7hSRAk6EM-MWo_vWen6LdrJYxPKqA3BdBhRup8oZAZs52u0N7KIYhjXKR4N4LhzF56CoGnj2SS9lla9ST7yrFxQard4Rza5-fih15ZfCTDIS0cOPYgebKFltZl0XZezqA410pJ_Xcetr_6aI_55DF3o4BbgNMIoL1EZj0UECt9xbv');">
+</div>
+<div class="flex flex-col">
+<p class="text-[#0d141b] dark:text-white text-base font-medium leading-none">Pedro Santos</p>
+<div class="flex items-center gap-1 mt-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+<p class="text-amber-600 dark:text-amber-400 text-xs font-medium leading-none">Ocupado</p>
+</div>
+</div>
+</div>
+<div class="shrink-0 pr-1">
+<input class="h-5 w-5 border-gray-300 text-primary focus:ring-primary bg-transparent" name="tech_select" type="radio"/>
+</div>
+</label>
+<!-- Option C: Initials Fallback -->
+<label class="group relative flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary/40 cursor-pointer transition-all">
+<div class="flex items-center gap-4">
+<!-- Initials Avatar -->
+<div class="h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-200 dark:border-indigo-800">
+<span class="text-indigo-600 dark:text-indigo-300 font-bold text-lg">MO</span>
+</div>
+<div class="flex flex-col">
+<p class="text-[#0d141b] dark:text-white text-base font-medium leading-none">Marcos Oliveira</p>
+<div class="flex items-center gap-1 mt-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+<p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-none">Disponível</p>
+</div>
+</div>
+</div>
+<div class="shrink-0 pr-1">
+<input class="h-5 w-5 border-gray-300 text-primary focus:ring-primary bg-transparent" name="tech_select" type="radio"/>
+</div>
+</label>
+<!-- Option D: Busy/Long List -->
+<label class="group relative flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary/40 cursor-pointer transition-all">
+<div class="flex items-center gap-4">
+<div class="h-12 w-12 rounded-full bg-center bg-cover border border-slate-100 dark:border-slate-600" data-alt="Portrait of technician Ana Costa" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDikfbqLNbL1Ah80mcgkcWZep351LU_1_lqdbrBSWqHt7t6yNnKKsg10M2NNcft7Gr-YizTu_XIbl8IkDHZT_0Mil7gcOnCABY45NzR3jZiw1KRS49EoQWViHvY4xPr9tHyMOlfh-DiQnyRZLrFsSFbIrr94Vg3h8-AeAj8o_f_SwoPL0JEpM71u6ZzZn-MwHbcN6nQMO3I0TZyS2Q9sFjLECCQp-nkYi5D9_-5s4ymybJ5ampELlgd9gZ2P6T5SqVeTgsGknTWKox3');">
+</div>
+<div class="flex flex-col">
+<p class="text-[#0d141b] dark:text-white text-base font-medium leading-none">Ana Costa</p>
+<div class="flex items-center gap-1 mt-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium leading-none">Ausente</p>
+</div>
+</div>
+</div>
+<div class="shrink-0 pr-1">
+<input class="h-5 w-5 border-gray-300 text-primary focus:ring-primary bg-transparent" name="tech_select" type="radio"/>
+</div>
+</label>
+</div>
+<!-- Footer Actions -->
+<div class="p-6 bg-background-light dark:bg-background-dark border-t border-slate-100 dark:border-slate-800 shrink-0 pb-8">
+<button class="w-full flex items-center justify-center rounded-xl bg-primary h-12 text-white font-semibold text-base shadow-lg shadow-blue-500/25 hover:bg-blue-600 active:scale-[0.98] transition-all">
+                            Atribuir e Mover
+                        </button>
+<button class="w-full mt-3 flex items-center justify-center rounded-xl h-12 text-[#4c739a] dark:text-slate-400 font-medium text-sm hover:text-slate-700 dark:hover:text-slate-200 active:scale-[0.98] transition-all">
+                            Cancelar
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

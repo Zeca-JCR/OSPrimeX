@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kanban de Ordens de Serviço</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-dark": "#0f65bd",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e293b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display h-screen flex flex-col overflow-hidden text-slate-900 dark:text-slate-100">
+<header class="flex-none bg-surface-light dark:bg-surface-dark px-4 py-3 shadow-sm z-10 border-b border-slate-200 dark:border-slate-700">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400">Oficina Hub</span>
+<h1 class="text-xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight">Kanban de OS</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-primary hover:bg-primary-dark text-white shadow-md shadow-primary/30 transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<div class="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium whitespace-nowrap shadow-sm">
+<span>Todas</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap">
+<span>Minhas OS</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap">
+<span>Atrasadas</span>
+<span class="w-2 h-2 rounded-full bg-red-500"></span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap">
+<span>Alta Prioridade</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-x-auto snap-x snap-mandatory flex p-4 gap-4 items-start h-full">
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-slate-400"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Aberta</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold">3</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex justify-between items-center mb-3">
+<div class="font-mono text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded border border-primary/10">
+                            OS #4021
+                         </div>
+<span class="w-2.5 h-2.5 rounded-full bg-yellow-400 ring-2 ring-white dark:ring-surface-dark shadow-sm" title="Prioridade Média"></span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-slate-400">
+<span class="material-symbols-outlined">directions_car</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Ford Ka 1.0 SE</h3>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">ABC-1234</p>
+</div>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-3"></div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                               Maria Silva
+                            </span>
+<span class="text-[10px] text-slate-400 ml-6 mt-0.5">14/10/2023</span>
+</div>
+<div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 pl-1 pr-2 py-1 rounded-full border border-slate-100 dark:border-slate-700">
+<span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-[9px] font-bold">--</span>
+<span class="text-[10px] font-medium text-slate-400 italic">Técnico</span>
+</div>
+</div>
+</article>
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex justify-between items-center mb-3">
+<div class="font-mono text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded border border-primary/10">
+                            OS #4025
+                         </div>
+<span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-surface-dark shadow-sm"></span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-cover bg-center shrink-0 shadow-sm border border-slate-100 dark:border-slate-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtiTAu0psdfYQ7UFhUKVNgnA8GDkmX7Jrcb6qZg9mZAqVqWLSOp2YcYlVdKehAsaHuW966i9c4SzgNdYVEUXU78byMSvNF8kVRaH1qHcJXQfnMvcXWt3gc2-H1soCB9AXLGEX2sCO_Z-dPkvQ58w4X2BliDoZSKkev2XXxUubWZA-Dw8qLSa2e41qQQPJW71h8XgFzMgjOlU2KNsHNwG4Ckm6jKt9YzhGYFw_NE6H13aL_qxwtqwUIa14USaaCRvkRFXl0X_qY2NUB');"></div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Chevrolet Onix</h3>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">GHJ-4567</p>
+</div>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-3"></div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-slate-400">corporate_fare</span>
+                               Empresa Logística
+                            </span>
+<span class="text-[10px] text-slate-400 ml-6 mt-0.5">14/10/2023</span>
+</div>
+<div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 pl-1 pr-2 py-1 rounded-full border border-slate-100 dark:border-slate-700">
+<span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-[9px] font-bold">--</span>
+<span class="text-[10px] font-medium text-slate-400 italic">Técnico</span>
+</div>
+</div>
+</article>
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex justify-between items-center mb-3">
+<div class="font-mono text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded border border-primary/10">
+                            OS #4026
+                         </div>
+<span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-surface-dark shadow-sm"></span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-slate-400">
+<span class="material-symbols-outlined">two_wheeler</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Honda PCX 150</h3>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">MTB-9988</p>
+</div>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-3"></div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                               Roberto Dias
+                            </span>
+<span class="text-[10px] text-slate-400 ml-6 mt-0.5">13/10/2023</span>
+</div>
+<div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 pl-1 pr-2 py-1 rounded-full border border-slate-100 dark:border-slate-700">
+<span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-[9px] font-bold">--</span>
+<span class="text-[10px] font-medium text-slate-400 italic">Técnico</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Em Execução</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">2</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-md border-l-4 border-l-primary border-y border-r border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex justify-between items-center mb-3">
+<div class="font-mono text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded border border-primary/10">
+                            OS #4019
+                         </div>
+<span class="w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-surface-dark shadow-sm" title="Alta Prioridade"></span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-cover bg-center shrink-0 shadow-sm border border-slate-100 dark:border-slate-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPpCteUh3lV8Xpud1DM8GMpsVtz-rd1zotJx57oMrKvURqGHTi0QTCDjJ4WDUDZwpkTpdDhdyJm1oxXGK_19watXub3r6d1z8fpTwAo0fCmRkHHven3TJ4QrBbm3n24Df5bu4YjPcP78gajsVZG2BfN1Kgc04r18ZDR6alJMI6DoKk7XFv65WgQTCYDc1tZr-VridmpWbQTT1pTxYYY3SnJ6oEGrQGwaUbMy3FOFcNG3X4609eZ-oTf6j22Bvg41OvbBavRRyHNOuV');"></div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Honda Civic LXR</h3>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">XYZ-9876</p>
+</div>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-3 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-3"></div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                               João Souza
+                            </span>
+<span class="text-[10px] text-slate-400 ml-6 mt-0.5">11/10/2023</span>
+</div>
+<div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 pl-1 pr-2 py-1 rounded-full border border-slate-100 dark:border-slate-700">
+<div class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold ring-1 ring-primary/20">CM</div>
+<span class="text-[10px] font-bold text-slate-700 dark:text-slate-300">Carlos M.</span>
+</div>
+</div>
+</article>
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative active:scale-[0.98] transition-transform duration-200">
+<div class="flex justify-between items-center mb-3">
+<div class="font-mono text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded border border-primary/10">
+                            OS #4022
+                         </div>
+<span class="w-2.5 h-2.5 rounded-full bg-yellow-400 ring-2 ring-white dark:ring-surface-dark shadow-sm" title="Prioridade Média"></span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-slate-400">
+<span class="material-symbols-outlined">agriculture</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Fiat Toro Volc.</h3>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">TRK-2211</p>
+</div>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-3"></div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                               Fazenda Sta. Luzia
+                            </span>
+<span class="text-[10px] text-slate-400 ml-6 mt-0.5">10/10/2023</span>
+</div>
+<div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 pl-1 pr-2 py-1 rounded-full border border-slate-100 dark:border-slate-700">
+<div class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold ring-1 ring-primary/20">PH</div>
+<span class="text-[10px] font-bold text-slate-700 dark:text-slate-300">Pedro H.</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Finalizada</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold">1</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 opacity-90 hover:opacity-100 transition-opacity active:scale-[0.98]">
+<div class="flex justify-between items-center mb-3">
+<div class="flex items-center gap-1 font-mono text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-2 py-1 rounded border border-green-100 dark:border-green-800">
+                            OS #4010 <span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-surface-dark shadow-sm"></span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-cover bg-center shrink-0 shadow-sm border border-slate-100 dark:border-slate-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBnr6UaA3_DUK9TrYVOIBLhITUd4Chd4qQsZxPjM_wTZlnZ7vJzjgFGqyHkQxyrJwek8teOjKQNHz1c0oomJyhjdX5vJNVdsLwpdsPUeWIl3DDqCOZsAXVDmO4wQj63U8awST74gGh8BhYzo05YnaQn2ltiHn5KcsNKmHuEBZ7Vh9U2vhr8PsrbxkEy9W90ik_-DsSECJm4oum17t4XOjKF53RZ6RsnvS-ZzfC-35nEaoSKpwRS_ibHVp9mNUNlQEnrm7DD3O5jgYro');"></div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Toyota Corolla</h3>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">DEF-5678</p>
+</div>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-3"></div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                               Pedro Santos
+                            </span>
+<span class="text-[10px] text-slate-400 ml-6 mt-0.5">08/10/2023</span>
+</div>
+<div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 pl-1 pr-2 py-1 rounded-full border border-slate-100 dark:border-slate-700">
+<div class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center text-[9px] font-bold">AL</div>
+<span class="text-[10px] font-bold text-slate-600 dark:text-slate-400">Ana L.</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+<div class="snap-center shrink-0 w-[85vw] md:w-80 max-w-sm flex flex-col h-full max-h-full">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-red-500"></div>
+<h2 class="text-base font-bold text-slate-700 dark:text-slate-200">Cancelada</h2>
+<span class="px-1.5 py-0.5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-bold">1</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
+<article class="group bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 opacity-75 grayscale hover:grayscale-0 transition-all active:scale-[0.98]">
+<div class="flex justify-between items-center mb-3">
+<div class="flex items-center gap-1 font-mono text-xs font-bold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-1 rounded border border-red-100 dark:border-red-800">
+                            OS #4005 <span class="material-symbols-outlined text-[14px]">close</span>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-2 ring-white dark:ring-surface-dark shadow-sm"></span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-slate-400">
+<span class="material-symbols-outlined">no_crash</span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Fiat Uno Way</h3>
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit mt-1">GHI-9012</p>
+</div>
+</div>
+<div class="p-2 rounded bg-red-50 dark:bg-red-900/10 mb-3 border border-red-100 dark:border-red-900/20">
+<p class="text-[10px] text-red-700 dark:text-red-300 font-medium leading-tight">Motivo: Cliente não aprovou orçamento.</p>
+</div>
+<div class="h-px bg-slate-100 dark:bg-slate-700 my-3"></div>
+<div class="flex justify-between items-center">
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                               Marcos Lima
+                            </span>
+<span class="text-[10px] text-slate-400 ml-6 mt-0.5">05/10/2023</span>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<div class="fixed bottom-6 right-6 md:hidden z-20">
+<button class="flex items-center justify-center w-14 h-14 rounded-full bg-primary hover:bg-primary-dark text-white shadow-lg shadow-primary/40 transition-transform active:scale-90">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+</div>
+<div aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center px-4" role="dialog">
+<div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+<div class="relative w-full max-w-[340px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden transform transition-all border border-slate-100 dark:border-slate-700 flex flex-col max-h-[90vh]">
+<div class="bg-slate-50 dark:bg-slate-800/50 px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+<h3 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Finalizar OS</h3>
+<div class="text-xs font-bold text-white bg-primary px-2 py-0.5 rounded shadow-sm">OS #4019</div>
+</div>
+<div class="p-5 overflow-y-auto custom-scrollbar">
+<p class="text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                    Confirme a finalização do serviço para o veículo <strong class="text-slate-800 dark:text-white font-bold">Honda Civic LXR</strong>.
+                </p>
+<div class="mb-6">
+<label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Quilometragem Atual</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px] group-focus-within:text-primary transition-colors">speed</span>
+<input class="w-full pl-10 pr-9 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm" placeholder="0" type="number" value="125400"/>
+<span class="absolute right-3 top-3 text-[10px] font-bold text-slate-400 uppercase">km</span>
+</div>
+</div>
+<div class="flex gap-3 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-lg">
+<span class="material-symbols-outlined text-amber-500 text-xl shrink-0">warning</span>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-amber-800 dark:text-amber-500">Atenção: OS sem itens</span>
+<p class="text-[11px] text-amber-700 dark:text-amber-400/80 leading-snug mt-0.5">Nenhum serviço ou peça foi lançado nesta ordem de serviço.</p>
+</div>
+</div>
+</div>
+<div class="p-4 flex flex-col sm:flex-row gap-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+<button class="w-full sm:flex-1 py-3 sm:py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">Cancelar</button>
+<button class="w-full sm:flex-1 py-3 sm:py-2.5 text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-lg shadow-green-600/20 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+                    Confirmar Finalização
+                 </button>
+</div>
+</div>
+</div>
+
+</body></html>

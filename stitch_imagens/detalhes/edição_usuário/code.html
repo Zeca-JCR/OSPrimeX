@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Editar Usuário</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1e2832",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-4 py-3 bg-surface-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800">
+<button class="flex items-center justify-center w-10 h-10 -ml-2 rounded-full text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-gray-900 dark:text-white flex-1 text-center pr-8">Editar Usuário</h1>
+<button class="text-primary font-semibold text-base hover:opacity-80 transition-opacity">
+            Cancelar
+        </button>
+</header>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-md mx-auto p-4 pb-24">
+<!-- Avatar Section -->
+<div class="flex flex-col items-center justify-center py-6">
+<div class="relative group">
+<div class="w-28 h-28 rounded-full bg-gray-200 dark:bg-surface-dark bg-cover bg-center border-4 border-surface-light dark:border-surface-dark shadow-lg" data-alt="Profile picture of the user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD8UdRwVD0dBnA-GJcA3kaZa_E7rrZHKYV5aCp6C8ffXFunpwfX5rbJvXB-rcivMtWKyEX4pp65Ox90qXSReirtiKCWf3S41Yr7PYJEO1iSfliMyAUSz-psSBxYrXSlUOTFLdXRGXNDj1oCH1bAELptHeKP6Xs4SBYZY8mIYu235QcMVUExqh6Wg7YSkD8Py3VjfM9QUTkoKxowKjffEf1xD7tVK_3zEj5kLK5LfAAwgtCcViqFqahbnzXFrXR-EMn7Tzyzst9VmUZ1");'>
+</div>
+<button class="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-md hover:bg-blue-600 transition-colors border-2 border-surface-light dark:border-background-dark flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">photo_camera</span>
+</button>
+</div>
+<p class="mt-3 text-primary font-medium text-sm cursor-pointer hover:underline">Alterar foto de perfil</p>
+</div>
+<!-- Personal Info Form -->
+<div class="space-y-6">
+<!-- Section Title -->
+<div class="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-800">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-400 text-xl">person</span>
+<h2 class="text-base font-bold text-gray-900 dark:text-white">Informações Pessoais</h2>
+</div>
+<div class="space-y-4">
+<label class="block">
+<span class="text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5 block">Nome Completo</span>
+<input class="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-surface-light dark:bg-surface-dark text-gray-900 dark:text-white focus:border-primary focus:ring-primary h-12 px-4 shadow-sm" placeholder="Digite o nome completo" type="text" value="João da Silva"/>
+</label>
+<label class="block">
+<span class="text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5 block">E-mail</span>
+<div class="relative">
+<input class="w-full rounded-xl border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[#151e26] text-gray-500 dark:text-gray-400 h-12 px-4 pl-10 shadow-sm cursor-not-allowed opacity-80" disabled="" type="email" value="joao.silva@oficina.com"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">lock</span>
+</div>
+<p class="text-xs text-gray-500 dark:text-gray-500 mt-1.5">O e-mail não pode ser alterado diretamente.</p>
+</label>
+</div>
+<!-- Role Section -->
+<div class="pt-2 space-y-4">
+<div class="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-800">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-400 text-xl">badge</span>
+<h2 class="text-base font-bold text-gray-900 dark:text-white">Perfil de Acesso</h2>
+</div>
+<div class="grid gap-3">
+<!-- Option 1: Admin -->
+<label class="relative flex items-center p-4 rounded-xl border cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-[#1a232d] group border-gray-200 dark:border-gray-700 bg-surface-light dark:bg-surface-dark">
+<input class="peer h-5 w-5 border-gray-300 text-primary focus:ring-primary" name="role" type="radio" value="admin"/>
+<div class="ml-4 flex flex-col">
+<span class="block text-sm font-semibold text-gray-900 dark:text-white group-hover:text-primary">Administrador</span>
+<span class="block text-xs text-gray-500 dark:text-gray-400">Acesso total ao sistema e configurações.</span>
+</div>
+<span class="material-symbols-outlined absolute right-4 text-gray-400 peer-checked:text-primary text-xl">verified_user</span>
+</label>
+<!-- Option 2: Technician (Selected) -->
+<label class="relative flex items-center p-4 rounded-xl border cursor-pointer transition-all group border-primary bg-blue-50/10 dark:bg-primary/5 dark:border-primary">
+<input checked="" class="peer h-5 w-5 border-gray-300 text-primary focus:ring-primary" name="role" type="radio" value="tech"/>
+<div class="ml-4 flex flex-col">
+<span class="block text-sm font-semibold text-gray-900 dark:text-white">Técnico</span>
+<span class="block text-xs text-gray-500 dark:text-gray-400">Gestão de ordens de serviço e veículos.</span>
+</div>
+<span class="material-symbols-outlined absolute right-4 text-primary text-xl">build</span>
+</label>
+<!-- Option 3: Finance -->
+<label class="relative flex items-center p-4 rounded-xl border cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-[#1a232d] group border-gray-200 dark:border-gray-700 bg-surface-light dark:bg-surface-dark">
+<input class="peer h-5 w-5 border-gray-300 text-primary focus:ring-primary" name="role" type="radio" value="finance"/>
+<div class="ml-4 flex flex-col">
+<span class="block text-sm font-semibold text-gray-900 dark:text-white group-hover:text-primary">Financeiro</span>
+<span class="block text-xs text-gray-500 dark:text-gray-400">Acesso a faturamento e relatórios.</span>
+</div>
+<span class="material-symbols-outlined absolute right-4 text-gray-400 peer-checked:text-primary text-xl">attach_money</span>
+</label>
+</div>
+</div>
+<!-- Security Actions -->
+<div class="pt-4 border-t border-gray-200 dark:border-gray-800">
+<button class="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-surface-light dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-[#1a232d] transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">lock_reset</span>
+</div>
+<div class="text-left">
+<span class="block text-sm font-semibold text-gray-900 dark:text-white">Redefinir Senha</span>
+<span class="block text-xs text-gray-500 dark:text-gray-400">Enviar link de redefinição por e-mail</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary">chevron_right</span>
+</button>
+</div>
+<div class="pt-1">
+<button class="w-full flex items-center justify-start p-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+<span class="material-symbols-outlined mr-3 text-xl">block</span>
+<span class="text-sm font-semibold">Desativar Usuário</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Floating/Fixed Footer Action -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 z-40 backdrop-blur-md bg-opacity-90 dark:bg-opacity-90">
+<div class="max-w-md mx-auto">
+<button class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl">save</span>
+                Salvar Alterações
+            </button>
+</div>
+</div>
+</body></html>

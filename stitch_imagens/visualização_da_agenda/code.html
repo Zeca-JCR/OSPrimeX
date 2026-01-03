@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Visualização da Agenda</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1e2b38",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-hidden pb-[80px]"> <!-- Added padding-bottom for nav bar -->
+<!-- Top App Bar -->
+<header class="flex items-center bg-white dark:bg-[#111a22] p-4 pb-2 justify-between sticky top-0 z-20 border-b border-gray-200 dark:border-[#233648]">
+<div class="text-slate-900 dark:text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-[#233648] transition-colors cursor-pointer">
+<span class="material-symbols-outlined">menu</span>
+</div>
+<div class="flex flex-col items-center flex-1 mx-2">
+<h2 class="text-slate-900 dark:text-white text-base font-bold leading-tight tracking-tight">Agenda</h2>
+<span class="text-xs text-slate-500 dark:text-[#92adc9] font-medium">Oficina Central</span>
+</div>
+<div class="flex w-12 items-center justify-end">
+<button class="flex size-10 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-[#233648]">
+<!-- Using a placeholder avatar color since no image is provided, keeping data-alt for semantic correctness -->
+<div class="w-full h-full bg-gradient-to-br from-blue-400 to-primary flex items-center justify-center text-white font-bold text-sm" data-alt="User profile avatar gradient">
+                        JS
+                    </div>
+</button>
+</div>
+</header>
+<!-- Main Scrollable Area -->
+<div class="flex-1 overflow-y-auto no-scrollbar">
+<!-- Controls Section -->
+<div class="sticky top-0 z-10 bg-background-light dark:bg-background-dark pt-4 pb-2 shadow-sm">
+<!-- Segmented Buttons (View Selector) -->
+<div class="px-4 mb-4">
+<div class="flex h-10 w-full items-center justify-center rounded-lg bg-gray-200 dark:bg-[#233648] p-1">
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-[0.25rem] has-[:checked]:bg-white dark:has-[:checked]:bg-[#111a22] has-[:checked]:shadow-sm text-slate-500 dark:text-[#92adc9] has-[:checked]:text-primary dark:has-[:checked]:text-white text-sm font-medium transition-all">
+<span class="truncate">Dia</span>
+<input checked="" class="invisible w-0 absolute" name="view-selector" type="radio" value="Dia"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-[0.25rem] has-[:checked]:bg-white dark:has-[:checked]:bg-[#111a22] has-[:checked]:shadow-sm text-slate-500 dark:text-[#92adc9] has-[:checked]:text-primary dark:has-[:checked]:text-white text-sm font-medium transition-all">
+<span class="truncate">Semana</span>
+<input class="invisible w-0 absolute" name="view-selector" type="radio" value="Semana"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-[0.25rem] has-[:checked]:bg-white dark:has-[:checked]:bg-[#111a22] has-[:checked]:shadow-sm text-slate-500 dark:text-[#92adc9] has-[:checked]:text-primary dark:has-[:checked]:text-white text-sm font-medium transition-all">
+<span class="truncate">Mês</span>
+<input class="invisible w-0 absolute" name="view-selector" type="radio" value="Mês"/>
+</label>
+</div>
+</div>
+<!-- Date Navigator -->
+<div class="flex items-center justify-between px-6 mb-4">
+<button class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#233648] text-slate-600 dark:text-[#92adc9] transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<div class="flex flex-col items-center cursor-pointer">
+<span class="text-lg font-bold text-slate-900 dark:text-white">16 Outubro</span>
+<span class="text-xs text-slate-500 dark:text-[#92adc9] font-medium">Segunda-feira</span>
+</div>
+<button class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#233648] text-slate-600 dark:text-[#92adc9] transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<!-- Resource Filter (Mechanics) -->
+<div class="flex overflow-x-auto px-4 pb-2 gap-2 no-scrollbar mb-2">
+<button class="shrink-0 rounded-full bg-primary text-white px-4 py-1.5 text-xs font-semibold shadow-sm">
+                        Todos
+                    </button>
+<button class="shrink-0 rounded-full bg-white dark:bg-[#233648] border border-gray-200 dark:border-transparent text-slate-600 dark:text-[#92adc9] px-4 py-1.5 text-xs font-medium whitespace-nowrap">
+                        João Silva
+                    </button>
+<button class="shrink-0 rounded-full bg-white dark:bg-[#233648] border border-gray-200 dark:border-transparent text-slate-600 dark:text-[#92adc9] px-4 py-1.5 text-xs font-medium whitespace-nowrap">
+                        Maria Souza
+                    </button>
+<button class="shrink-0 rounded-full bg-white dark:bg-[#233648] border border-gray-200 dark:border-transparent text-slate-600 dark:text-[#92adc9] px-4 py-1.5 text-xs font-medium whitespace-nowrap">
+                        Pedro Santos
+                    </button>
+<button class="shrink-0 rounded-full bg-white dark:bg-[#233648] border border-gray-200 dark:border-transparent text-slate-600 dark:text-[#92adc9] px-4 py-1.5 text-xs font-medium whitespace-nowrap">
+                        Box 1 (Elevador)
+                    </button>
+</div>
+</div>
+<!-- Timeline Day View -->
+<div class="relative px-4 pt-2 pb-20">
+<!-- Current Time Indicator Line (Absolute positioning simulation) -->
+<div class="absolute left-0 right-0 top-[340px] z-0 pointer-events-none flex items-center px-4">
+<div class="w-[50px]"></div>
+<div class="h-px bg-red-500 w-full relative">
+<div class="absolute -left-1 -top-1 w-2 h-2 rounded-full bg-red-500"></div>
+</div>
+</div>
+<!-- 08:00 AM Slot -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">08:00</span>
+</div>
+<div class="relative">
+<!-- Card -->
+<div class="bg-white dark:bg-[#1e2b38] rounded-xl p-3 border-l-4 border-emerald-500 shadow-sm dark:shadow-none ring-1 ring-gray-100 dark:ring-white/5 active:scale-[0.98] transition-transform select-none cursor-grab">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Ford Ka • Revisão</h3>
+<span class="material-symbols-outlined text-slate-400 text-[18px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded">CONCLUÍDO</span>
+<span class="text-xs text-slate-500 dark:text-[#92adc9]">ABC-1234</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#92adc9]">
+<span class="material-symbols-outlined text-[14px]">person</span>
+                                João Silva
+                            </div>
+</div>
+</div>
+</div>
+<!-- 09:00 AM Slot (Empty) -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group h-12">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">09:00</span>
+</div>
+<div class="relative border-t border-dashed border-gray-200 dark:border-[#233648] w-full mt-3"></div>
+</div>
+<!-- 10:30 AM Slot -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">10:30</span>
+</div>
+<div class="relative">
+<div class="bg-white dark:bg-[#1e2b38] rounded-xl p-3 border-l-4 border-amber-500 shadow-sm dark:shadow-none ring-1 ring-gray-100 dark:ring-white/5 active:scale-[0.98] transition-transform select-none cursor-grab">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Fiat Toro • Troca de Óleo</h3>
+<span class="material-symbols-outlined text-slate-400 text-[18px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">EM ANDAMENTO</span>
+<span class="text-xs text-slate-500 dark:text-[#92adc9]">DEF-5678</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#92adc9]">
+<span class="material-symbols-outlined text-[14px]">person</span>
+                                Maria Souza
+                            </div>
+</div>
+</div>
+</div>
+<!-- 12:00 PM Slot (Break) -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">12:00</span>
+</div>
+<div class="relative flex items-center justify-center">
+<div class="bg-gray-100 dark:bg-[#15202b] w-full py-2 rounded-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[16px]">coffee</span>
+<span class="text-xs font-medium text-slate-400 uppercase tracking-wide">Almoço</span>
+</div>
+</div>
+</div>
+<!-- 14:00 PM Slot -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">14:00</span>
+</div>
+<div class="relative">
+<div class="bg-white dark:bg-[#1e2b38] rounded-xl p-3 border-l-4 border-primary shadow-sm dark:shadow-none ring-1 ring-gray-100 dark:ring-white/5 active:scale-[0.98] transition-transform select-none cursor-grab">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Honda Civic • Alinhamento</h3>
+<span class="material-symbols-outlined text-slate-400 text-[18px]">drag_indicator</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-1.5 py-0.5 rounded">AGENDADO</span>
+<span class="text-xs text-slate-500 dark:text-[#92adc9]">GHI-9012</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#92adc9]">
+<span class="material-symbols-outlined text-[14px]">person</span>
+                                Pedro Santos
+                            </div>
+</div>
+</div>
+</div>
+<!-- 15:00 PM Slot (Conflict Example) -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">15:30</span>
+</div>
+<div class="relative flex gap-2">
+<!-- Half width card -->
+<div class="bg-white dark:bg-[#1e2b38] w-1/2 rounded-xl p-3 border-l-4 border-rose-500 shadow-sm dark:shadow-none ring-1 ring-gray-100 dark:ring-white/5 active:scale-[0.98] transition-transform select-none cursor-grab">
+<div class="flex justify-between items-start mb-1">
+<h3 class="text-xs font-bold text-slate-900 dark:text-white leading-tight">VW Gol</h3>
+</div>
+<span class="text-[10px] text-rose-500 font-bold block mb-1">ATRASADO</span>
+<div class="flex items-center gap-1 text-[10px] text-slate-500 dark:text-[#92adc9]">
+<span class="material-symbols-outlined text-[12px]">build</span>
+                                Freios
+                            </div>
+</div>
+<!-- Ghost placeholder for drop target -->
+<div class="border-2 border-dashed border-primary/40 bg-primary/5 w-1/2 rounded-xl p-3 flex flex-col items-center justify-center text-primary/60">
+<span class="text-xs font-medium">Livre</span>
+</div>
+</div>
+</div>
+<!-- 16:00 PM Slot -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group h-12">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">16:00</span>
+</div>
+<div class="relative border-t border-dashed border-gray-200 dark:border-[#233648] w-full mt-3"></div>
+</div>
+<!-- 17:00 PM Slot -->
+<div class="grid grid-cols-[50px_1fr] gap-x-3 mb-6 relative group h-12">
+<div class="text-right pt-1">
+<span class="text-sm font-medium text-slate-500 dark:text-[#6a7e91]">17:00</span>
+</div>
+<div class="relative border-t border-dashed border-gray-200 dark:border-[#233648] w-full mt-3"></div>
+</div>
+</div>
+</div>
+<!-- FAB (Floating Action Button) -->
+<div class="fixed bottom-24 right-5 z-40">
+<button class="flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-size: 32px;">add</span>
+</button>
+</div>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-white dark:bg-[#192633] border-t border-gray-200 dark:border-[#233648] pb-safe">
+<div class="flex justify-between px-2 pt-2 pb-4">
+<a class="flex flex-1 flex-col items-center gap-1 text-primary cursor-pointer group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform filled">calendar_month</span>
+<span class="text-[10px] font-semibold tracking-wide">Agenda</span>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-slate-400 dark:text-[#92adc9] hover:text-primary dark:hover:text-white cursor-pointer group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">build</span>
+<span class="text-[10px] font-medium tracking-wide">Serviços</span>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-slate-400 dark:text-[#92adc9] hover:text-primary dark:hover:text-white cursor-pointer group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">groups</span>
+<span class="text-[10px] font-medium tracking-wide">Clientes</span>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-slate-400 dark:text-[#92adc9] hover:text-primary dark:hover:text-white cursor-pointer group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">settings</span>
+<span class="text-[10px] font-medium tracking-wide">Config</span>
+</a>
+</div>
+<!-- Safe Area Spacer for iPhone Home Bar -->
+<div class="h-2 w-full"></div>
+</nav>
+</div>
+</body></html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Feedback Público OS</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom styles for range slider track if needed, or specific interactions */
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #137fec; /* Primary color */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen font-display flex flex-col items-center justify-center p-4 antialiased selection:bg-primary/30">
+<!-- Main Container (Mobile Card Style) -->
+<div class="w-full max-w-md bg-white dark:bg-[#1c2936] rounded-xl shadow-lg overflow-hidden flex flex-col relative">
+<!-- Header Image Area -->
+<div class="relative h-32 w-full bg-cover bg-center" data-alt="Abstract dark blue mechanics workshop tools background" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCJW6IPa5MN0GxGu4P4oV8vHL7xRSb_UA9ZFl1wqFzLTdNY_Cf5MlPZefltWDV0Plu6UO4Ad71mzM0xLmxtAdwkRhwbEDwHlGpVExnQhQB3fIOKjFHbgb709MG7sgGaEv_nRn4WMgDkewAYk_SjZl5vyjg9WyJGUHbVtLLrt7Gh3nrufr3ag5qZdMWMCvts7Jec03ggioxtR_6ZC4LuQNxx5RwQfRLJvHBolYkQfSDQnRaPk2pf0tF2Hwy5h31REMdm7kMpEfMiuUcX");'>
+<div class="absolute inset-0 bg-gradient-to-t from-[#1c2936] to-transparent"></div>
+<!-- Shop Logo Placeholder -->
+<div class="absolute -bottom-8 left-1/2 -translate-x-1/2 size-16 bg-white dark:bg-[#233648] rounded-full p-1 shadow-md border-4 border-white dark:border-[#1c2936] flex items-center justify-center">
+<img alt="Shop Logo" class="size-10 object-contain opacity-80" data-alt="Generic Auto Repair Shop Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtET1ccm9738FGeDQaivkkEQSXVGCJyletYqGoi2I6dOYBnV2-rG6fldWFJJ9jWXT419aVCucIZc5OZDeBTtU6POKcDTvjVXVOPnZ3Pqn0GwOQt_4xtFfWguPIjgkP-ncEsu6Oa50QCbFTp__RNPQg3NK6aTjwMdd58hsnJwf4NdjfD5Qo1fpY01H9YTIwdWHPZjND4TX5QtpfywDMpilVjPac7oN2-ZgF4iaFOoeNGSc8PE_G5k0Xn18vt3oEePldr-ULkeDiAWbR"/>
+</div>
+</div>
+<!-- Top Navigation (Absolute for this layout) -->
+<div class="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-10">
+<button class="text-white bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</button>
+<div class="bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
+<span class="text-xs font-medium text-white tracking-wide">OS #12345</span>
+</div>
+</div>
+<!-- Content Body -->
+<div class="px-6 pb-8 pt-10 flex flex-col items-center text-center">
+<!-- Status Chip -->
+<div class="mb-4 inline-flex items-center gap-x-1.5 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 dark:text-green-400 border border-green-500/20">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                Serviço Finalizado
+            </div>
+<!-- Headline -->
+<h2 class="text-gray-900 dark:text-white text-2xl font-bold leading-tight mb-2">
+                Como foi sua experiência?
+            </h2>
+<!-- Body Text -->
+<p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-relaxed mb-8 max-w-[280px]">
+                Sua opinião é muito importante para melhorarmos nossos serviços na Oficina Master.
+            </p>
+<!-- Star Rating Component -->
+<div class="flex flex-col items-center gap-2 w-full mb-8">
+<div class="star-rating flex flex-row-reverse justify-center gap-2 group">
+<!-- Stars are reversed in HTML to allow CSS sibling selector trick for 'fill up to hovered' effect, visually displayed normally via flex-row-reverse -->
+<input class="peer/5" id="star5" name="rating" type="radio" value="5"/>
+<label class="text-gray-300 dark:text-gray-600 peer-checked/5:text-primary hover:text-primary transition-colors cursor-pointer" for="star5">
+<span class="material-symbols-outlined text-[40px] font-variation-settings-fill">star</span>
+</label>
+<input class="peer/4" id="star4" name="rating" type="radio" value="4"/>
+<label class="text-gray-300 dark:text-gray-600 peer-checked/4:text-primary peer-hover/5:text-primary hover:text-primary transition-colors cursor-pointer" for="star4">
+<span class="material-symbols-outlined text-[40px] font-variation-settings-fill">star</span>
+</label>
+<input class="peer/3" id="star3" name="rating" type="radio" value="3"/>
+<label class="text-gray-300 dark:text-gray-600 peer-checked/3:text-primary peer-hover/4:text-primary peer-hover/5:text-primary hover:text-primary transition-colors cursor-pointer" for="star3">
+<span class="material-symbols-outlined text-[40px] font-variation-settings-fill">star</span>
+</label>
+<input class="peer/2" id="star2" name="rating" type="radio" value="2"/>
+<label class="text-gray-300 dark:text-gray-600 peer-checked/2:text-primary peer-hover/3:text-primary peer-hover/4:text-primary peer-hover/5:text-primary hover:text-primary transition-colors cursor-pointer" for="star2">
+<span class="material-symbols-outlined text-[40px] font-variation-settings-fill">star</span>
+</label>
+<input class="peer/1" id="star1" name="rating" type="radio" value="1"/>
+<label class="text-gray-300 dark:text-gray-600 peer-checked/1:text-primary peer-hover/2:text-primary peer-hover/3:text-primary peer-hover/4:text-primary peer-hover/5:text-primary hover:text-primary transition-colors cursor-pointer" for="star1">
+<span class="material-symbols-outlined text-[40px] font-variation-settings-fill">star</span>
+</label>
+</div>
+<span class="text-xs text-gray-400 dark:text-gray-500 mt-1">Toque em uma estrela para avaliar</span>
+</div>
+<!-- Feedback Text Area -->
+<div class="w-full mb-6 text-left group">
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="comment">Comentários (Opcional)</label>
+<div class="relative">
+<textarea class="block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-none p-3 transition-colors" id="comment" placeholder="O que podemos fazer melhor na próxima vez?" rows="3"></textarea>
+<div class="absolute right-2 bottom-2 pointer-events-none">
+<span class="material-symbols-outlined text-gray-400 dark:text-gray-600 text-[18px]">edit_note</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col gap-3 w-full">
+<button class="w-full inline-flex justify-center items-center gap-2 rounded-lg bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all active:scale-[0.98]">
+<span>Enviar Feedback</span>
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+<button class="w-full inline-flex justify-center items-center rounded-lg bg-transparent px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition-colors">
+                    Pular por enquanto
+                </button>
+</div>
+</div>
+<!-- Footer/Legal (Subtle) -->
+<div class="bg-gray-50 dark:bg-[#16202a] py-3 px-6 text-center border-t border-gray-100 dark:border-gray-800">
+<p class="text-[10px] text-gray-400 dark:text-gray-600 uppercase tracking-wider font-semibold">
+                Powered by AutoSaaS
+            </p>
+</div>
+</div>
+<!-- Toast Notification (Hidden by default, for demo visualization of success state concept) -->
+<!-- 
+    <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+        <div class="bg-green-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            Feedback enviado com sucesso!
+        </div>
+    </div>
+    -->
+<style>
+        /* Specific override for Material Symbols to support 'filled' variation via font settings if loaded appropriately, 
+           or fallback to outlining. The standard google font link provided supports FILL axis. */
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* When input is checked, fill the star */
+        .peer-checked\/1 ~ label .material-symbols-outlined,
+        .peer-checked\/2 ~ label .material-symbols-outlined,
+        .peer-checked\/3 ~ label .material-symbols-outlined,
+        .peer-checked\/4 ~ label .material-symbols-outlined,
+        .peer-checked\/5 ~ label .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hover effects fill as well */
+        .star-rating:hover label:hover .material-symbols-outlined, 
+        .star-rating:hover label:hover ~ label .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</body></html>

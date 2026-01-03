@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard Admin Vendedor SaaS</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1c2630", // Slightly lighter than bg for cards
+                        "surface-border": "#2b3a4a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for clean horizontal scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-200">
+<!-- Mobile Container Wrapper -->
+<div class="relative flex min-h-screen w-full flex-col mx-auto max-w-md bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden">
+<!-- Header (Sticky) -->
+<header class="sticky top-0 z-40 flex items-center justify-between bg-white/90 dark:bg-background-dark/90 backdrop-blur-md px-4 py-3 border-b border-slate-200 dark:border-surface-border">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center p-1 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-surface-border transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">OSPrimeX Admin</h1>
+</div>
+<div class="flex items-center gap-3">
+<button class="relative flex items-center justify-center p-1 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-surface-border transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 border border-white dark:border-background-dark"></span>
+</button>
+<div class="h-9 w-9 rounded-full bg-slate-200 dark:bg-surface-dark overflow-hidden border border-slate-200 dark:border-surface-border">
+<img alt="Administrator profile picture showing a smiling man" class="h-full w-full object-cover" data-alt="Administrator profile picture showing a smiling man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfzprUm1sIwokftocJvGDOmdUjPiG_lxmrJhdcWxPeMRUPaXv0gIG6yV5b24BRu-1_Xuv-U5UN-oIGZZHmhB7ePr5rcr2vmcs3BeVg5DlQAMwQdUQTe_xq6ny6Su1M3aVgfeBaCPtJkVPlIFVHAgPOVK1fEpXAkeyL19t85tNHeFt3eu5fbB2Ht-ZLrwnOm9-gc_5mMYQKOg2mFsK_din9eGa0zHmCIBfAXdNIfy8mlIBO4nFcAR_WwaJX-OHj9uFlofdAf-1_PUN9"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Greeting Section -->
+<div class="px-5 pt-6 pb-2">
+<p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Visão Geral</p>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Olá, Admin</h2>
+</div>
+<!-- Primary Metric Card: MRR -->
+<div class="px-4 py-3">
+<div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-blue-600 p-6 text-white shadow-lg shadow-blue-500/20">
+<!-- Abstract Background Pattern -->
+<div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white opacity-10 blur-3xl"></div>
+<div class="relative z-10 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<p class="text-sm font-medium text-blue-100">MRR Atual</p>
+<span class="flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold text-white backdrop-blur-sm">
+<span class="material-symbols-outlined text-[14px] mr-1">trending_up</span> +12%
+                            </span>
+</div>
+<p class="text-3xl font-bold tracking-tight">R$ 42.500</p>
+<p class="text-xs text-blue-100 opacity-80 mt-1">Comparado ao mês anterior</p>
+</div>
+<!-- Sparkline (CSS/HTML representation) -->
+<div class="mt-5 flex h-12 w-full items-end gap-1 opacity-80">
+<div class="h-[40%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[50%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[45%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[60%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[55%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[75%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[65%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[80%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[70%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[85%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[90%] w-full rounded-t-sm bg-white/30"></div>
+<div class="h-[100%] w-full rounded-t-sm bg-white"></div>
+</div>
+</div>
+</div>
+<!-- Secondary Metrics Grid -->
+<div class="grid grid-cols-2 gap-3 px-4 py-2">
+<!-- Total Companies -->
+<div class="flex flex-col justify-between rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border p-4 shadow-sm">
+<div class="flex items-start justify-between">
+<div class="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+<span class="material-symbols-outlined text-xl">domain</span>
+</div>
+<span class="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center">
+                            +5%
+                        </span>
+</div>
+<div class="mt-3">
+<p class="text-2xl font-bold text-slate-900 dark:text-white">142</p>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Total de Empresas</p>
+</div>
+</div>
+<!-- New Companies -->
+<div class="flex flex-col justify-between rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border p-4 shadow-sm">
+<div class="flex items-start justify-between">
+<div class="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+<span class="material-symbols-outlined text-xl">group_add</span>
+</div>
+<span class="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center">
+                            +8%
+                        </span>
+</div>
+<div class="mt-3">
+<p class="text-2xl font-bold text-slate-900 dark:text-white">12</p>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Novas no Mês</p>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="mt-2 px-4">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Acesso Rápido</h3>
+<div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+<button class="flex shrink-0 items-center gap-2 rounded-lg bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border px-4 py-3 text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">list_alt</span>
+<span class="text-sm font-semibold">Empresas</span>
+</button>
+<button class="flex shrink-0 items-center gap-2 rounded-lg bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border px-4 py-3 text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">price_check</span>
+<span class="text-sm font-semibold">Planos</span>
+</button>
+<button class="flex shrink-0 items-center gap-2 rounded-lg bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border px-4 py-3 text-slate-700 dark:text-slate-200 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-xl">extension</span>
+<span class="text-sm font-semibold">Add-ons</span>
+</button>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="mt-4 px-4 space-y-4">
+<!-- Chart: Base Status -->
+<div class="rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border p-5 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-bold text-sm text-slate-900 dark:text-white">Status da Base</h3>
+<button class="text-slate-400"><span class="material-symbols-outlined text-lg">more_horiz</span></button>
+</div>
+<div class="flex items-center justify-around">
+<!-- CSS Donut Chart -->
+<!-- 85% Active (Primary), 15% Inactive (Gray) -->
+<div class="relative flex h-32 w-32 items-center justify-center rounded-full" style="background: conic-gradient(#137fec 0% 85%, #334155 85% 100%);">
+<div class="absolute h-24 w-24 rounded-full bg-white dark:bg-surface-dark"></div>
+<div class="absolute flex flex-col items-center">
+<span class="text-2xl font-bold text-slate-900 dark:text-white">142</span>
+<span class="text-[10px] uppercase font-bold text-slate-500">Total</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="flex flex-col gap-3">
+<div class="flex items-start gap-2">
+<span class="mt-1 h-2.5 w-2.5 rounded-full bg-primary shrink-0"></span>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">120</p>
+<p class="text-xs text-slate-500">Ativas (85%)</p>
+</div>
+</div>
+<div class="flex items-start gap-2">
+<span class="mt-1 h-2.5 w-2.5 rounded-full bg-slate-600 shrink-0"></span>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">22</p>
+<p class="text-xs text-slate-500">Inativas (15%)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Chart: Revenue by Plan -->
+<div class="rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border p-5 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-bold text-sm text-slate-900 dark:text-white">Receita por Planos</h3>
+</div>
+<div class="space-y-4">
+<!-- Enterprise -->
+<div class="space-y-1">
+<div class="flex justify-between text-xs">
+<span class="font-semibold text-slate-700 dark:text-slate-300">Enterprise</span>
+<span class="text-slate-500">R$ 21.250</span>
+</div>
+<div class="flex h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700/50">
+<div class="bg-primary h-full rounded-full" style="width: 50%"></div>
+</div>
+</div>
+<!-- Pro -->
+<div class="space-y-1">
+<div class="flex justify-between text-xs">
+<span class="font-semibold text-slate-700 dark:text-slate-300">Pro</span>
+<span class="text-slate-500">R$ 12.750</span>
+</div>
+<div class="flex h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700/50">
+<div class="bg-sky-400 h-full rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<!-- Basic -->
+<div class="space-y-1">
+<div class="flex justify-between text-xs">
+<span class="font-semibold text-slate-700 dark:text-slate-300">Básico</span>
+<span class="text-slate-500">R$ 8.500</span>
+</div>
+<div class="flex h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700/50">
+<div class="bg-indigo-300 h-full rounded-full" style="width: 20%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Add-ons List -->
+<div class="rounded-xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-surface-border p-5 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-bold text-sm text-slate-900 dark:text-white">Add-ons Populares</h3>
+<a class="text-xs text-primary font-medium" href="#">Ver todos</a>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Item 1 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-slate-900 dark:text-white">WhatsApp Integ.</p>
+<p class="text-xs text-slate-500">80 empresas ativas</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-slate-900 dark:text-white">56%</p>
+</div>
+</div>
+<!-- Separator -->
+<div class="h-px w-full bg-slate-100 dark:bg-slate-700/50"></div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+<span class="material-symbols-outlined">receipt_long</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Financeiro Pro</p>
+<p class="text-xs text-slate-500">45 empresas ativas</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-slate-900 dark:text-white">31%</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom spacing for scrolling past FAB/Nav -->
+<div class="h-6"></div>
+</main>
+<!-- Bottom Navigation Bar (App-like feel) -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-slate-200 dark:border-surface-border bg-white dark:bg-[#16202a] pb-safe pt-2 h-[60px] max-w-md mx-auto">
+<a class="group flex flex-col items-center gap-1 w-16" href="#">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform filled">dashboard</span>
+<span class="text-[10px] font-medium text-primary">Visão Geral</span>
+</a>
+<a class="group flex flex-col items-center gap-1 w-16 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">domain</span>
+<span class="text-[10px] font-medium">Empresas</span>
+</a>
+<a class="relative -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-blue-500/40 hover:scale-105 transition-transform" href="#">
+<span class="material-symbols-outlined">add</span>
+</a>
+<a class="group flex flex-col items-center gap-1 w-16 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">extension</span>
+<span class="text-[10px] font-medium">Add-ons</span>
+</a>
+<a class="group flex flex-col items-center gap-1 w-16 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">settings</span>
+<span class="text-[10px] font-medium">Ajustes</span>
+</a>
+</nav>
+</div>
+</body></html>

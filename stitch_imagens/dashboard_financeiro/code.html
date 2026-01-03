@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard Financeiro</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-dark": "#0f65bd",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e2936",
+                        "success": "#078838",
+                        "danger": "#e73908",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-20 flex items-center justify-between bg-surface-light/90 dark:bg-surface-dark/90 px-4 py-3 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+<div class="bg-center bg-no-repeat bg-cover h-full w-full" data-alt="Logo da oficina mecânica com ferramentas estilizadas" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCk6Hb508EwUbf_AXCh0e31yZEXqfkE5h_eNOK1zDp5fDRNIrXCtIG0Ie80z0kfPJXht-oph95LwowqJ0TaYsxk07ICjE99vFRp0SMvKHuPvXHY6RnCFoiJHTrGZNX-VHKBZaaYfqMsrELJ1mDrq-0pP3dsPBXT4FJUBVjAfz5icId6hKT58EyrT7M-ENgHxZCtSlIObJ1dA-rPiXgYbab3SipiGOyXUUs-hXRYtJSB68RcPSlXZj4Fyi573ZF9FIQEH3KAnaFW0_65");'>
+</div>
+</div>
+<div>
+<h2 class="text-lg font-bold leading-tight">Financeiro</h2>
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Auto Center Silva</p>
+</div>
+</div>
+<button class="flex items-center justify-center rounded-full p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border border-white dark:border-surface-dark"></span>
+</button>
+</header>
+<!-- Date Filters -->
+<div class="w-full overflow-x-auto no-scrollbar py-4 px-4">
+<div class="flex gap-3 min-w-max">
+<button class="flex h-9 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-sm transition-transform active:scale-95">
+                    Este mês
+                </button>
+<button class="flex h-9 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-4 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm transition-transform active:scale-95 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    Últimos 30 dias
+                </button>
+<button class="flex h-9 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 px-4 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm transition-transform active:scale-95 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    Ano atual
+                </button>
+</div>
+</div>
+<!-- KPI Cards -->
+<div class="px-4 space-y-4">
+<!-- Net Balance Highlighted -->
+<div class="relative overflow-hidden rounded-xl bg-primary p-6 shadow-lg shadow-primary/20">
+<div class="relative z-10 flex flex-col gap-1">
+<div class="flex items-center gap-2 text-primary-100 dark:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+<p class="text-sm font-medium">Saldo Líquido</p>
+</div>
+<p class="text-3xl font-bold tracking-tight text-white mt-1">R$ 32.750,00</p>
+<div class="flex items-center gap-1 mt-2">
+<span class="flex items-center justify-center rounded-full bg-white/20 p-0.5">
+<span class="material-symbols-outlined text-white text-[14px]">trending_up</span>
+</span>
+<p class="text-xs font-medium text-white">+8% vs mês anterior</p>
+</div>
+</div>
+<!-- Abstract Pattern Background -->
+<div class="absolute right-[-20px] top-[-20px] h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+<div class="absolute bottom-[-10px] right-[40px] h-20 w-20 rounded-full bg-blue-400/20 blur-xl"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<!-- Income -->
+<div class="flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-2">
+<span class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 text-success">
+<span class="material-symbols-outlined text-[18px]">arrow_downward</span>
+</span>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Receitas</p>
+</div>
+<p class="text-lg font-bold text-slate-900 dark:text-white mt-1">R$ 45.200</p>
+<p class="text-xs font-semibold text-success flex items-center gap-0.5">
+                        +12% <span class="material-symbols-outlined text-[12px]">trending_up</span>
+</p>
+</div>
+<!-- Expenses -->
+<div class="flex flex-col gap-2 rounded-xl bg-surface-light dark:bg-surface-dark p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-2">
+<span class="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-danger">
+<span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+</span>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Despesas</p>
+</div>
+<p class="text-lg font-bold text-slate-900 dark:text-white mt-1">R$ 12.450</p>
+<p class="text-xs font-semibold text-danger flex items-center gap-0.5">
+                        -5% <span class="material-symbols-outlined text-[12px]">trending_down</span>
+</p>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="grid grid-cols-2 gap-4 px-4 py-6">
+<button class="flex items-center justify-center gap-2 rounded-lg bg-primary/10 dark:bg-primary/20 p-3 text-sm font-bold text-primary dark:text-blue-400 hover:bg-primary/20 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                Nova Receita
+            </button>
+<button class="flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 p-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">remove_circle</span>
+                Nova Despesa
+            </button>
+</div>
+<!-- Charts Section -->
+<div class="px-4 space-y-6">
+<!-- Payment Methods Chart -->
+<div class="flex flex-col rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Receita por Pagamento</h3>
+<button class="text-primary text-xs font-semibold">Detalhes</button>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-6">
+<!-- Donut Chart Visualization -->
+<div class="relative h-40 w-40 shrink-0">
+<svg class="h-full w-full rotate-[-90deg]" viewbox="0 0 36 36">
+<!-- Pix (60%) -->
+<path class="text-primary transition-all hover:scale-105 origin-center" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="60, 100" stroke-width="4"></path>
+<!-- Card (30%) -->
+<path class="text-blue-300 dark:text-blue-800 transition-all hover:scale-105 origin-center" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="30, 100" stroke-dashoffset="-60" stroke-width="4"></path>
+<!-- Cash (10%) -->
+<path class="text-slate-200 dark:text-slate-700 transition-all hover:scale-105 origin-center" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="10, 100" stroke-dashoffset="-90" stroke-width="4"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-xs text-slate-500 dark:text-slate-400">Total</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">45.2k</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="flex flex-1 flex-col gap-3 w-full">
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-primary"></div>
+<span class="font-medium text-slate-600 dark:text-slate-300">Pix</span>
+</div>
+<span class="font-bold text-slate-900 dark:text-white">60%</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-blue-300 dark:bg-blue-800"></div>
+<span class="font-medium text-slate-600 dark:text-slate-300">Cartão</span>
+</div>
+<span class="font-bold text-slate-900 dark:text-white">30%</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<div class="h-3 w-3 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+<span class="font-medium text-slate-600 dark:text-slate-300">Dinheiro</span>
+</div>
+<span class="font-bold text-slate-900 dark:text-white">10%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Top Expenses Chart -->
+<div class="flex flex-col rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<div class="flex items-center justify-between mb-5">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Top Despesas</h3>
+<button class="text-primary text-xs font-semibold">Ver tudo</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Item 1 -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200">Peças &amp; Insumos</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">R$ 6.225</span>
+</div>
+<div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+<div class="h-full rounded-full bg-danger" style="width: 50%"></div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200">Funcionários</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">R$ 3.112</span>
+</div>
+<div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+<div class="h-full rounded-full bg-orange-400" style="width: 25%"></div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200">Aluguel</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">R$ 1.800</span>
+</div>
+<div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+<div class="h-full rounded-full bg-slate-400" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="h-4"></div>
+</div>
+<!-- Mobile Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 z-50 w-full border-t border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark px-4 pb-safe pt-2 backdrop-blur-lg">
+<div class="flex items-center justify-around pb-4">
+<a class="flex flex-col items-center gap-1 p-2 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-medium">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-primary" href="#">
+<span class="material-symbols-outlined text-[24px] font-variation-settings-'FILL'1">attach_money</span>
+<span class="text-[10px] font-bold">Financeiro</span>
+</a>
+<div class="relative -mt-8">
+<button class="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/40 hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center gap-1 p-2 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[24px]">calendar_month</span>
+<span class="text-[10px] font-medium">Agenda</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<span class="text-[10px] font-medium">Ajustes</span>
+</a>
+</div>
+</nav>
+</div>
+</body></html>
