@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOS } from '../../contexts/OSContext';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDate, calculateWorkingTime } from '../../lib/utils';
+import { formatCurrency, formatDate, toISODate, calculateWorkingTime } from '../../lib/utils';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
 
@@ -16,6 +16,7 @@ const KanbanOS = () => {
     const [clientes, setClientes] = useState([]);
     const [veiculos, setVeiculos] = useState([]);
     const [tecnicos, setTecnicos] = useState([]);
+    const [linksRastreaveis, setLinksRastreaveis] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showNovaOS, setShowNovaOS] = useState(false);
     const [showAtribuirTecnico, setShowAtribuirTecnico] = useState(false);
@@ -24,57 +25,80 @@ const KanbanOS = () => {
 
     // Visualização e filtros
     const [visualizacao, setVisualizacao] = useState('kanban'); // 'kanban' ou 'lista'
-    const [busca, setBusca] = useState('');
-    const [filtroStatus, setFiltroStatus] = useState('todos');
-    const [ordenacao, setOrdenacao] = useState('recente');
+    // Estados de Filtros Separados
+    const [filtrosLista, setFiltrosLista] = useState({
+        busca: '',
+        status: 'todos',
+        ordenacao: 'recente',
+        periodo: 'todos',
+        dataInicio: '',
+        dataFim: ''
+    });
 
-    // Filtro de Data Avançado
-    const [dataInicio, setDataInicio] = useState('');
-    const [dataFim, setDataFim] = useState('');
-    const [periodo, setPeriodo] = useState('todos'); // 'hoje', '7dias', 'mes', 'trimestre', 'ano', 'custom', 'todos'
+    const [filtrosKanban, setFiltrosKanban] = useState({
+        busca: '',
+        status: 'todos', // Não usado no dropdown do kanban, mas mantido na estrutura
+        ordenacao: 'recente',
+        periodo: 'todos',
+        dataInicio: '',
+        dataFim: ''
+    });
 
-    // Helper para calcular datas baseado no período
+    // Helper para acessar o filtro ativo
+    const filtroAtivo = visualizacao === 'lista' ? filtrosLista : filtrosKanban;
+    const setFiltroAtivo = visualizacao === 'lista' ? setFiltrosLista : setFiltrosKanban;
+
+    const updateFiltro = (campo, valor) => {
+        setFiltroAtivo(prev => ({ ...prev, [campo]: valor }));
+    };
+
+    // Helper para calcular datas baseado no período (refatorado para usar updateFiltro)
     const handlePeriodoChange = (novoPeriodo) => {
-        setPeriodo(novoPeriodo);
         const hoje = new Date();
         const inicio = new Date();
-        const fim = new Date();
+        let novaDataInicio = '';
+        let novaDataFim = '';
 
         switch (novoPeriodo) {
             case 'hoje':
-                setDataInicio(hoje.toISOString().split('T')[0]);
-                setDataFim(hoje.toISOString().split('T')[0]);
+                novaDataInicio = toISODate(hoje);
+                novaDataFim = toISODate(hoje);
                 break;
             case '7dias':
                 inicio.setDate(hoje.getDate() - 7);
-                setDataInicio(inicio.toISOString().split('T')[0]);
-                setDataFim(hoje.toISOString().split('T')[0]);
+                novaDataInicio = toISODate(inicio);
+                novaDataFim = toISODate(hoje);
                 break;
             case 'mes':
-                inicio.setDate(1); // Primeiro dia do mês atual
-                setDataInicio(inicio.toISOString().split('T')[0]);
-                // Fim do mês (último dia)
+                inicio.setDate(1);
+                novaDataInicio = toISODate(inicio);
                 const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-                setDataFim(fimMes.toISOString().split('T')[0]);
+                novaDataFim = toISODate(fimMes);
                 break;
             case 'trimestre':
                 inicio.setMonth(hoje.getMonth() - 3);
-                setDataInicio(inicio.toISOString().split('T')[0]);
-                setDataFim(hoje.toISOString().split('T')[0]);
+                novaDataInicio = toISODate(inicio);
+                novaDataFim = toISODate(hoje);
                 break;
             case 'ano':
-                inicio.setMonth(0, 1); // 01 de Janeiro
-                setDataInicio(inicio.toISOString().split('T')[0]);
-                setDataFim(hoje.toISOString().split('T')[0]);
+                inicio.setMonth(0, 1);
+                novaDataInicio = toISODate(inicio);
+                novaDataFim = toISODate(hoje);
                 break;
             case 'todos':
-                setDataInicio('');
-                setDataFim('');
+                novaDataInicio = '';
+                novaDataFim = '';
                 break;
-            case 'custom':
             default:
                 break;
         }
+
+        setFiltroAtivo(prev => ({
+            ...prev,
+            periodo: novoPeriodo,
+            dataInicio: novaDataInicio,
+            dataFim: novaDataFim
+        }));
     };
 
     const colunas = [
@@ -148,16 +172,18 @@ const KanbanOS = () => {
     const carregarDados = async () => {
         if (!empresa) return;
         try {
-            const [ordensData, clientesData, veiculosData, colaboradoresData] = await Promise.all([
+            const [ordensData, clientesData, veiculosData, colaboradoresData, linksData] = await Promise.all([
                 storage.getAll('ordens_servico', empresa.id),
                 storage.getAll('clientes', empresa.id),
                 storage.getAll('veiculos', empresa.id),
                 storage.getAll('colaboradores', empresa.id),
+                storage.getAll('links_rastreaveis', empresa.id),
             ]);
             setOrdens(ordensData.filter((o) => o.ativo));
             setClientes(clientesData);
             setVeiculos(veiculosData);
             setTecnicos(colaboradoresData.filter(c => c.ativo !== false));
+            setLinksRastreaveis(linksData);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
         } finally {
@@ -178,6 +204,11 @@ const KanbanOS = () => {
     // Verificar se existe rascunho local para a OS
     const checkDraft = (osId) => {
         return !!localStorage.getItem(`draft_os_${osId}`);
+    };
+
+    // Verificar se existe link de rastreio ativo
+    const hasLinkRastreavel = (osId) => {
+        return linksRastreaveis?.some(l => l.osId === osId && l.ativo !== false);
     };
 
     // Helper para calcular tempo de execução para exibição no card
@@ -305,33 +336,39 @@ const KanbanOS = () => {
         return tecnico?.nome || 'Sem técnico';
     };
 
-    // Filtrar e ordenar ordens para visão de lista
+    // Filtrar e ordenar ordens usando o filtroAtivo
     const ordensFiltradas = ordens.filter(o => {
+        const { busca, status, dataInicio, dataFim } = filtroAtivo;
+
         // Filtro de busca
         if (busca) {
             const termo = busca.toLowerCase();
-            const termoLimpo = termo.replace(/[^a-zA-Z0-9]/g, ''); // Remove caracteres especiais para busca de placa
+            const termoLimpo = termo.replace(/[^a-zA-Z0-9]/g, '');
             const cliente = clientes.find(c => c.id === o.clienteId);
             const veiculo = veiculos.find(v => v.id === o.veiculoId);
-
-            // Normaliza a placa do veículo também
             const placaNormalizada = veiculo?.placa ? veiculo.placa.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : '';
 
             const match =
                 o.numero?.toString().includes(termo) ||
                 cliente?.nome?.toLowerCase().includes(termo) ||
                 veiculo?.placa?.toLowerCase().includes(termo) ||
-                (termoLimpo.length > 0 && placaNormalizada.includes(termoLimpo)) || // Busca flexível de placa (ex: ard2102 acha ARD-2102)
+                (termoLimpo.length > 0 && placaNormalizada.includes(termoLimpo)) ||
                 veiculo?.modelo?.toLowerCase().includes(termo);
             if (!match) return false;
         }
-        // Filtro de status
-        if (filtroStatus !== 'todos' && o.status !== filtroStatus) return false;
+
+        // Filtro de status (apenas se não for kanban - ou se user de fato filtrar no modo lista)
+        // No kanban, 'status' não é alterado pelo UI, então é 'todos', não afeta.
+        if (status !== 'todos' && o.status !== status) return false;
 
         // Filtro de Data (Intervalo)
         if (dataInicio || dataFim) {
-            // Converter data da OS para YYYY-MM-DD para comparação
-            const dataOSObj = new Date(o.criadoEm);
+            let dataReferencia = o.criadoEm;
+            if (o.status === 'finalizada') {
+                dataReferencia = o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm;
+            }
+
+            const dataOSObj = new Date(dataReferencia);
             const ano = dataOSObj.getFullYear();
             const mes = String(dataOSObj.getMonth() + 1).padStart(2, '0');
             const dia = String(dataOSObj.getDate()).padStart(2, '0');
@@ -341,38 +378,16 @@ const KanbanOS = () => {
             if (dataFim && dataOS > dataFim) return false;
         }
 
-        /* 
-        Legacy Code Removed
-        */
-        if (false) {
-            // Comparar apenas a data (YYYY-MM-DD)
-            const dataOS = new Date(o.criadoEm).toLocaleDateString();
-            // Input date vem como YYYY-MM-DD, precisamos normalizar ou comparar strings locais
-            // Melhor: converter ambos para local date string para garantir compatibilidade
-            // Mas o input date.value é sempre YYYY-MM-DD.
-            // O.criadoEm é ISO.
-            // Vamos usar comparação simples de string YYYY-MM-DD se possível, ou converter o input.
-            // Correção: new Date(o.criadoEm).toISOString().split('T')[0] pega a data UTC.
-            // O usuário quer a data local.
-            const dataObjeto = new Date(o.criadoEm);
-            const ano = dataObjeto.getFullYear();
-            const mes = String(dataObjeto.getMonth() + 1).padStart(2, '0');
-            const dia = String(dataObjeto.getDate()).padStart(2, '0');
-            const dataFormatada = `${ano}-${mes}-${dia}`;
-
-            if (dataFormatada !== filtroData) return false;
-        }
-
         return true;
     }).sort((a, b) => {
-        switch (ordenacao) {
+        switch (filtroAtivo.ordenacao) {
             case 'antigo': return new Date(a.criadoEm) - new Date(b.criadoEm);
             case 'numero': return (a.numero || 0) - (b.numero || 0);
             case 'cliente':
                 const ca = clientes.find(c => c.id === a.clienteId)?.nome || '';
                 const cb = clientes.find(c => c.id === b.clienteId)?.nome || '';
                 return ca.localeCompare(cb);
-            default: return new Date(b.criadoEm) - new Date(a.criadoEm); // recente
+            default: return new Date(b.criadoEm) - new Date(a.criadoEm);
         }
     });
 
@@ -430,117 +445,88 @@ const KanbanOS = () => {
                     </div>
                 </div>
 
-                {/* Filtros para visão de lista */}
-                {visualizacao === 'lista' && (
-                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                        {/* Busca */}
-                        <div className="relative flex-1 max-w-xs">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary-light dark:text-text-secondary-dark text-lg">search</span>
+                {/* Filtros: Visível para Lista e Kanban */}
+                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
+                    {/* Busca */}
+                    <div className="relative flex-1 max-w-xs">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary-light dark:text-text-secondary-dark text-lg">search</span>
+                        <input
+                            type="text"
+                            value={filtroAtivo.busca}
+                            onChange={(e) => updateFiltro('busca', e.target.value)}
+                            placeholder="Buscar por número, cliente, placa..."
+                            className="input pl-10 py-2 text-sm"
+                        />
+                    </div>
+
+                    {/* Filtro de Data Avançado */}
+                    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto max-w-2xl no-scrollbar">
+                        {/* Botões de Período */}
+                        <div className="flex items-center gap-1 shrink-0">
+                            {['hoje', '7dias', 'mes', 'trimestre', 'ano'].map((p) => (
+                                <button
+                                    key={p}
+                                    onClick={() => handlePeriodoChange(p)}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${filtroAtivo.periodo === p
+                                        ? 'bg-primary text-white shadow-sm'
+                                        : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        }`}
+                                >
+                                    {p === 'hoje' && 'Hoje'}
+                                    {p === '7dias' && '7 dias'}
+                                    {p === 'mes' && 'Mês'}
+                                    {p === 'trimestre' && 'Trimestre'}
+                                    {p === 'ano' && 'Ano'}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1 shrink-0" />
+
+                        {/* Inputs de Data */}
+                        <div className="flex items-center gap-2 shrink-0">
                             <input
-                                type="text"
-                                value={busca}
-                                onChange={(e) => setBusca(e.target.value)}
-                                placeholder="Buscar por número, cliente, placa..."
-                                className="input pl-10 py-2 text-sm"
+                                type="date"
+                                value={filtroAtivo.dataInicio}
+                                onChange={(e) => {
+                                    updateFiltro('dataInicio', e.target.value);
+                                    updateFiltro('periodo', 'custom');
+                                }}
+                                className="input py-1.5 px-2 text-xs w-32"
+                                title="Data Início"
+                                placeholder="Início"
+                            />
+                            <span className="text-text-secondary-light dark:text-text-secondary-dark text-xs">até</span>
+                            <input
+                                type="date"
+                                value={filtroAtivo.dataFim}
+                                onChange={(e) => {
+                                    updateFiltro('dataFim', e.target.value);
+                                    updateFiltro('periodo', 'custom');
+                                }}
+                                className="input py-1.5 px-2 text-xs w-32"
+                                title="Data Fim"
+                                placeholder="Fim"
                             />
                         </div>
 
-                        {/* Filtro de Data Avançado */}
-                        <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto max-w-2xl no-scrollbar">
-                            {/* Botões de Período */}
-                            <div className="flex items-center gap-1 shrink-0">
-                                <button
-                                    onClick={() => handlePeriodoChange('hoje')}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${periodo === 'hoje'
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    Hoje
-                                </button>
-                                <button
-                                    onClick={() => handlePeriodoChange('7dias')}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${periodo === '7dias'
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    7 dias
-                                </button>
-                                <button
-                                    onClick={() => handlePeriodoChange('mes')}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${periodo === 'mes'
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    Mês
-                                </button>
-                                <button
-                                    onClick={() => handlePeriodoChange('trimestre')}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${periodo === 'trimestre'
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    Trimestre
-                                </button>
-                                <button
-                                    onClick={() => handlePeriodoChange('ano')}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${periodo === 'ano'
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    Ano
-                                </button>
-                            </div>
+                        {/* Botão Limpar */}
+                        {(filtroAtivo.dataInicio || filtroAtivo.dataFim) && (
+                            <button
+                                onClick={() => handlePeriodoChange('todos')}
+                                className="ml-1 p-1 rounded-full hover:bg-red-50 text-red-500 transition-colors"
+                                title="Limpar filtro de data"
+                            >
+                                <span className="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        )}
+                    </div>
 
-                            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1 shrink-0" />
-
-                            {/* Inputs de Data */}
-                            <div className="flex items-center gap-2 shrink-0">
-                                <input
-                                    type="date"
-                                    value={dataInicio}
-                                    onChange={(e) => {
-                                        setDataInicio(e.target.value);
-                                        setPeriodo('custom');
-                                    }}
-                                    className="input py-1.5 px-2 text-xs w-32"
-                                    title="Data Início"
-                                    placeholder="Início"
-                                />
-                                <span className="text-text-secondary-light dark:text-text-secondary-dark text-xs">até</span>
-                                <input
-                                    type="date"
-                                    value={dataFim}
-                                    onChange={(e) => {
-                                        setDataFim(e.target.value);
-                                        setPeriodo('custom');
-                                    }}
-                                    className="input py-1.5 px-2 text-xs w-32"
-                                    title="Data Fim"
-                                    placeholder="Fim"
-                                />
-                            </div>
-
-                            {/* Botão Limpar */}
-                            {(dataInicio || dataFim) && (
-                                <button
-                                    onClick={() => handlePeriodoChange('todos')}
-                                    className="ml-1 p-1 rounded-full hover:bg-red-50 text-red-500 transition-colors"
-                                    title="Limpar filtro de data"
-                                >
-                                    <span className="material-symbols-outlined text-sm">close</span>
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Filtro Status */}
+                    {/* Filtro Status (Visível apenas na Lista) */}
+                    {visualizacao === 'lista' && (
                         <select
-                            value={filtroStatus}
-                            onChange={(e) => setFiltroStatus(e.target.value)}
+                            value={filtroAtivo.status}
+                            onChange={(e) => updateFiltro('status', e.target.value)}
                             className="input py-2 text-sm w-40"
                         >
                             <option value="todos">Todos os status</option>
@@ -548,24 +534,24 @@ const KanbanOS = () => {
                                 <option key={col.id} value={col.id}>{col.label}</option>
                             ))}
                         </select>
+                    )}
 
-                        {/* Ordenação */}
-                        <select
-                            value={ordenacao}
-                            onChange={(e) => setOrdenacao(e.target.value)}
-                            className="input py-2 text-sm w-40"
-                        >
-                            <option value="recente">Mais recentes</option>
-                            <option value="antigo">Mais antigas</option>
-                            <option value="numero">Por número</option>
-                            <option value="cliente">Por cliente</option>
-                        </select>
+                    {/* Ordenação */}
+                    <select
+                        value={filtroAtivo.ordenacao}
+                        onChange={(e) => updateFiltro('ordenacao', e.target.value)}
+                        className="input py-2 text-sm w-40"
+                    >
+                        <option value="recente">Mais recentes</option>
+                        <option value="antigo">Mais antigas</option>
+                        <option value="numero">Por número</option>
+                        <option value="cliente">Por cliente</option>
+                    </select>
 
-                        <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-auto">
-                            {ordensFiltradas.length} resultados
-                        </span>
-                    </div>
-                )}
+                    <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-auto">
+                        {ordensFiltradas.length} resultados
+                    </span>
+                </div>
             </header>
 
             {/* Kanban Board */}
@@ -573,7 +559,8 @@ const KanbanOS = () => {
                 <div className="flex-1 overflow-x-auto p-4">
                     <div className="flex gap-3 min-w-fit h-full">
                         {colunas.map((coluna) => {
-                            const ordensColuna = getOrdensPorStatus(coluna.id);
+                            // Usar ordensFiltradas em vez de getOrdensPorStatus para aplicar os filtros
+                            const ordensColuna = ordensFiltradas.filter(o => o.status === coluna.id);
 
                             return (
                                 <div
@@ -629,6 +616,11 @@ const KanbanOS = () => {
                                                                         {checkDraft(os.id) && (
                                                                             <span className="material-symbols-outlined text-amber-500 text-sm" title="Rascunho não salvo encontrado">
                                                                                 edit_note
+                                                                            </span>
+                                                                        )}
+                                                                        {hasLinkRastreavel(os.id) && (
+                                                                            <span className="material-symbols-outlined text-blue-500 text-sm" title="Rastreio Ativo">
+                                                                                share_location
                                                                             </span>
                                                                         )}
                                                                     </span>
@@ -772,6 +764,11 @@ const KanbanOS = () => {
                                                                 edit_note
                                                             </span>
                                                         )}
+                                                        {hasLinkRastreavel(os.id) && (
+                                                            <span className="material-symbols-outlined text-blue-500 text-sm" title="Rastreio Ativo">
+                                                                share_location
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -793,7 +790,10 @@ const KanbanOS = () => {
                                                     {formatCurrency(os.valorTotal)}
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                                    {formatDate(os.criadoEm)}
+                                                    {os.status === 'finalizada'
+                                                        ? <span title="Data de Finalização">{formatDate(os.execucaoFinalizadaEm || os.atualizadoEm || os.criadoEm)}</span>
+                                                        : <span title="Data de Abertura">{formatDate(os.criadoEm)}</span>
+                                                    }
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">chevron_right</span>

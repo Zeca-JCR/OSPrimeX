@@ -14,7 +14,7 @@ const DetalhesCliente = () => {
     const [veiculos, setVeiculos] = useState([]);
     const [ordens, setOrdens] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
 
 
     const tagsConfig = {
@@ -55,14 +55,7 @@ const DetalhesCliente = () => {
         }
     };
 
-    const handleDelete = async () => {
-        try {
-            await storage.softDelete('clientes', id);
-            navigate('/clientes');
-        } catch (error) {
-            console.error('Erro ao excluir:', error);
-        }
-    };
+
 
     if (loading) {
         return (
@@ -116,12 +109,6 @@ const DetalhesCliente = () => {
                         >
                             <span className="material-symbols-outlined">edit</span>
                         </Link>
-                        <button
-                            onClick={() => setShowDeleteModal(true)}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-error"
-                        >
-                            <span className="material-symbols-outlined">delete</span>
-                        </button>
                     </div>
                 </div>
 
@@ -495,37 +482,7 @@ const DetalhesCliente = () => {
             </div>
 
             {/* Delete Modal */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                    <div className="card p-6 w-full max-w-sm animate-slideUp">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 rounded-full bg-error/10 mx-auto mb-4 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-3xl text-error">warning</span>
-                            </div>
-                            <h3 className="text-lg font-semibold text-text-light dark:text-text-dark">
-                                Excluir Cliente?
-                            </h3>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-2">
-                                Esta ação não pode ser desfeita. O cliente será desativado do sistema.
-                            </p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowDeleteModal(false)}
-                                className="btn-secondary flex-1"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleDelete}
-                                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-error text-white font-medium rounded-xl hover:bg-red-600 transition-all"
-                            >
-                                Excluir
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 };

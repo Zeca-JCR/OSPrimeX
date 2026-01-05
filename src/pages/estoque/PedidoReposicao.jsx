@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import storage from '../../lib/storage';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, toTitleCase } from '../../lib/utils';
 // import WhatsAppIcon from '../../components/common/WhatsAppIcon'; // Verificarei se existe, se não, uso ícone material
 
 const PedidoReposicao = () => {
@@ -93,7 +93,8 @@ const PedidoReposicao = () => {
     };
 
     const getNomeFornecedor = (id) => {
-        return fornecedores.find(f => f.id === id)?.nome || '-';
+        const nome = fornecedores.find(f => f.id === id)?.nome || '-';
+        return toTitleCase(nome);
     };
 
     // --- Lógica de Geração do Pedido ---
@@ -122,10 +123,10 @@ const PedidoReposicao = () => {
         const fornecedorNome = fornecedor?.nome || 'Fornecedor';
 
         const listaItens = itensParaPedido.map(p =>
-            `- *${p.qtdPedir}x* ${p.nome}`
+            `- *${p.qtdPedir}x* ${toTitleCase(p.nome)}`
         ).join('\n');
 
-        return `*Olá ${fornecedorNome}, tudo bem?*\n` +
+        return `*Olá ${toTitleCase(fornecedorNome)}, tudo bem?*\n` +
             `Gostaria de fazer um pedido de reposição:\n\n` +
             listaItens +
             `\n\nFico no aguardo, obrigado!\n*${empresa.nomeFantasia}*`;
@@ -245,7 +246,7 @@ const PedidoReposicao = () => {
                                                 />
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-text-light dark:text-text-dark">{produto.nome}</div>
+                                                <div className="text-sm font-medium text-text-light dark:text-text-dark">{toTitleCase(produto.nome)}</div>
                                                 <div className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Cod: {produto.codigo || '-'}</div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-text-secondary-light dark:text-text-secondary-dark">

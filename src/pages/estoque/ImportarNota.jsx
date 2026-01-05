@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import storage from '../../lib/storage';
 import { parseNFe } from '../../lib/nfeParser';
-import { formatCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, formatDate, toISODate } from '../../lib/utils';
 import { useTenant } from '../../contexts/TenantContext';
 
 const ImportarNota = () => {
@@ -225,7 +225,7 @@ const ImportarNota = () => {
                     descricao: `NFe ${xmlData.numero} - IMPORTADO - ${xmlData.fornecedor.nome}`,
                     valor: xmlData.valorTotal,
                     categoria: 'fornecedor',
-                    data: new Date().toISOString().split('T')[0],
+                    data: toISODate(new Date()),
                     status: 'pendente',
                     fornecedorId,
                 }, empresa.id);

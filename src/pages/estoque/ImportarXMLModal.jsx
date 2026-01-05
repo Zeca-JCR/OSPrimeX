@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import storage from '../../lib/storage';
 import { parseNFe } from '../../lib/nfeParser';
-import { formatCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, toISODate } from '../../lib/utils';
 
 const ImportarXMLModal = ({ onClose, onSave }) => {
     const { empresa } = useAuth();
@@ -195,7 +195,7 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
                     descricao: `NFe ${xmlData.numero} - IMPORTADO - ${xmlData.fornecedor.nome}`,
                     valor: xmlData.valorTotal,
                     categoria: 'fornecedor',
-                    data: new Date().toISOString().split('T')[0], // Hoje
+                    data: toISODate(new Date()), // Hoje
                     status: 'pendente',
                     fornecedorId,
                 }, empresa.id);

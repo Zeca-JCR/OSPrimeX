@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
 import storage from '../../../lib/storage';
-import { formatCurrency, formatDate } from '../../../lib/utils';
+import { formatCurrency, formatDate, toISODate } from '../../../lib/utils';
 import LancamentoModal from '../../../components/financeiro/LancamentoModal';
 
 const ContasPagarReceber = () => {
@@ -38,7 +38,7 @@ const ContasPagarReceber = () => {
             try {
                 await storage.update('lancamentos_financeiros', item.id, {
                     status: 'pago',
-                    data: new Date().toISOString().split('T')[0] // Data da baixa = hoje
+                    data: toISODate(new Date()) // Data da baixa = hoje
                 });
                 showToast('Lançamento baixado com sucesso!', 'success');
                 carregarDados();
@@ -145,8 +145,8 @@ const ContasPagarReceber = () => {
                     <button
                         onClick={() => setFiltroPeriodo('mes')}
                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filtroPeriodo === 'mes'
-                                ? 'bg-white dark:bg-gray-700 shadow text-primary'
-                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light'
+                            ? 'bg-white dark:bg-gray-700 shadow text-primary'
+                            : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light'
                             }`}
                     >
                         Este Mês
@@ -154,8 +154,8 @@ const ContasPagarReceber = () => {
                     <button
                         onClick={() => setFiltroPeriodo('todos')}
                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filtroPeriodo === 'todos'
-                                ? 'bg-white dark:bg-gray-700 shadow text-primary'
-                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light'
+                            ? 'bg-white dark:bg-gray-700 shadow text-primary'
+                            : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light'
                             }`}
                     >
                         Todos

@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext'; // Novo import
 import { useToast } from '../../contexts/ToastContext';
 import storage from '../../lib/storage';
-import { formatCurrency, normalizeString, toTitleCase } from '../../lib/utils';
+import { formatCurrency, parseDateLocal, toISODate, normalizeString, toTitleCase } from '../../lib/utils';
 import useTableColumns from '../../hooks/useTableColumns';
 import ColumnToggler from '../../components/common/ColumnToggler';
 import CreatableSelect from '../../components/common/CreatableSelect';
@@ -155,6 +155,12 @@ const ListaProdutos = () => {
         navigate('/estoque/novo');
     };
 
+    const handleDuplicate = (item, e) => {
+        e.stopPropagation();
+        if (!confirm(`Deseja criar um novo item copiando os dados de "${item.nome}"?`)) return;
+        navigate('/estoque/novo', { state: { duplicatedItem: item } });
+    };
+
     // Abrir modal de movimentação
     const abrirMovimentacao = (produto, tipo) => {
         setProdutoMovimentar(produto);
@@ -212,7 +218,7 @@ const ListaProdutos = () => {
                     descricao: `Compra: ${produtoMovimentar.nome} (${qtd} ${produtoMovimentar.unidade || 'un'})`,
                     valor: valorCusto,
                     categoria: 'fornecedor',
-                    data: new Date().toISOString().split('T')[0],
+                    data: toISODate(new Date()),
                     status: 'pago',
                 }, empresa.id);
             }
@@ -259,9 +265,7 @@ const ListaProdutos = () => {
                         <span className="material-symbols-outlined text-lg">add</span>
                         Novo Item
                     </button>
-                    <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                        <span className="material-symbols-outlined">more_vert</span>
-                    </button>
+
                 </div>
             </div>
 
@@ -429,10 +433,16 @@ const ListaProdutos = () => {
                                                     {isVisible('estoque') && (
                                                         <td className="py-3 px-4 text-right hidden md:table-cell">
                                                             {isProduto ? (
-                                                                <span className={`text-sm ${estoqueBaixo ? 'text-error font-medium' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
+                                                                <span className={`text-sm ${item.quantidade <= 0 ? 'text-red-600 font-bold' : estoqueBaixo ? 'text-orange-600 font-medium' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
                                                                     {item.quantidade} {item.unidade}
-                                                                    {estoqueBaixo && (
-                                                                        <span className="ml-1 text-xs px-1 py-0.5 rounded bg-error/10 text-error">Baixo</span>
+                                                                    {item.quantidade <= 0 ? (
+                                                                        <span className="ml-2 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                                                            Esgotado
+                                                                        </span>
+                                                                    ) : estoqueBaixo && (
+                                                                        <span className="ml-2 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                                                            Baixo
+                                                                        </span>
                                                                     )}
                                                                 </span>
                                                             ) : (
@@ -442,6 +452,14 @@ const ListaProdutos = () => {
                                                     )}
                                                     <td className="py-3 px-4">
                                                         <div className="flex items-center gap-1 justify-end">
+                                                            <button
+                                                                onClick={(e) => handleDuplicate(item, e)}
+                                                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                                                title="Duplicar Item"
+                                                            >
+                                                                <span className="material-symbols-outlined text-lg">content_copy</span>
+                                                            </button>
+
                                                             {isProduto && (
                                                                 <>
                                                                     <Link
@@ -517,16 +535,16 @@ const ListaProdutos = () => {
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 font-medium text-text-light dark:text-text-dark">
-                                            {produto.nome}
+                                            {toTitleCase(produto.nome)}
                                         </td>
                                         <td className="px-4 py-3 text-right text-text-light dark:text-text-dark">
                                             {formatCurrency(produto.receita)}
                                         </td>
                                         <td className="px-4 py-3 text-right text-text-secondary-light dark:text-text-secondary-dark">
-                                            {produto.percentualIndividual.toFixed(1)}%
+                                            {produto.percentualIndividual.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                                         </td>
                                         <td className="px-4 py-3 text-right text-text-secondary-light dark:text-text-secondary-dark">
-                                            {produto.percentualAcumulado.toFixed(1)}%
+                                            {produto.percentualAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             {produto.tipo === 'servico' ? '-' : produto.quantidade}

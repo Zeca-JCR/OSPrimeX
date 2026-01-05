@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image } from '@react-pdf/renderer';
 import { gerarPayloadPix } from '../../lib/pix';
+import { calcularResumoFinanceiro } from '../../lib/utils';
 
 // =====================================================
 // ESTILOS
@@ -455,7 +456,23 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico }) => {
                         </View>
                         {(os?.itens || []).map((item, index) => (
                             <View key={index} style={styles.tableRow}>
-                                <Text style={styles.colItem}>{String(item.nome || '')}</Text>
+                                <View style={styles.colItem}>
+                                    <Text>{String(item.nome || '')}</Text>
+                                    {(item.valDesconto > 0 || item.valAcrescimo > 0) && (
+                                        <View style={{ flexDirection: 'row', gap: 5, marginTop: 2 }}>
+                                            {item.valDesconto > 0 && (
+                                                <Text style={{ fontSize: 8, color: '#16a34a' }}>
+                                                    Desc: -{formatCurrency(item.valDesconto)}
+                                                </Text>
+                                            )}
+                                            {item.valAcrescimo > 0 && (
+                                                <Text style={{ fontSize: 8, color: '#ea580c' }}>
+                                                    Acr: +{formatCurrency(item.valAcrescimo)}
+                                                </Text>
+                                            )}
+                                        </View>
+                                    )}
+                                </View>
                                 <Text style={styles.colQtd}>{String(item.quantidade || 0)}</Text>
                                 <Text style={styles.colUnit}>{formatCurrency(item.precoUnitario)}</Text>
                                 <Text style={styles.colTotal}>{formatCurrency(item.total)}</Text>
@@ -464,10 +481,37 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico }) => {
                     </View>
 
                     {/* Total */}
-                    <View style={styles.totalRow}>
-                        <Text style={styles.totalLabel}>TOTAL:</Text>
-                        <Text style={styles.totalValue}>{formatCurrency(os?.valorTotal)}</Text>
-                    </View>
+                    {(() => {
+                        const resumo = calcularResumoFinanceiro(
+                            os?.itens,
+                            os?.descontoGlobalTipo, os?.descontoGlobalValor,
+                            os?.acrescimoGlobalTipo, os?.acrescimoGlobalValor
+                        );
+                        return (
+                            <View style={{ marginTop: 5 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 0 }}>
+                                    <Text style={{ fontSize: 10, color: '#666', marginRight: 10 }}>Subtotal:</Text>
+                                    <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{formatCurrency(resumo.somaItens)}</Text>
+                                </View>
+                                {resumo.valDescontoGlobal > 0 && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 2 }}>
+                                        <Text style={{ fontSize: 10, color: '#16a34a', marginRight: 10 }}>Desconto Global:</Text>
+                                        <Text style={{ fontSize: 10, color: '#16a34a' }}>- {formatCurrency(resumo.valDescontoGlobal)}</Text>
+                                    </View>
+                                )}
+                                {resumo.valAcrescimoGlobal > 0 && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 2 }}>
+                                        <Text style={{ fontSize: 10, color: '#ea580c', marginRight: 10 }}>Acréscimo Global:</Text>
+                                        <Text style={{ fontSize: 10, color: '#ea580c' }}>+ {formatCurrency(resumo.valAcrescimoGlobal)}</Text>
+                                    </View>
+                                )}
+                                <View style={styles.totalRow}>
+                                    <Text style={styles.totalLabel}>TOTAL:</Text>
+                                    <Text style={styles.totalValue}>{formatCurrency(resumo.totalFinal)}</Text>
+                                </View>
+                            </View>
+                        );
+                    })()}
                     {(os?.valorPago || 0) > 0 && (
                         <>
                             <View style={[styles.totalRow, { marginTop: 2, borderTopWidth: 0, paddingTop: 0 }]}>
@@ -485,6 +529,29 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico }) => {
                         </>
                     )}
                 </View>
+
+                {/* Apontamento de Horas - Configuração da Empresa */}
+                {(empresa?.imprimirApontamentos !== false) && (os?.apontamentos || []).length > 0 ? (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>APONTAMENTO DE HORAS</Text>
+                        <View style={styles.table}>
+                            <View style={styles.tableHeader}>
+                                <Text style={{ flex: 2 }}>Descrição</Text>
+                                <Text style={{ width: 80, textAlign: 'center' }}>Data</Text>
+                                <Text style={{ width: 80, textAlign: 'center' }}>Horário</Text>
+                                <Text style={{ width: 60, textAlign: 'center', fontWeight: 'bold' }}>Duração</Text>
+                            </View>
+                            {os.apontamentos.map((apt, index) => (
+                                <View key={index} style={styles.tableRow}>
+                                    <Text style={{ flex: 2 }}>{apt.descricao || '-'}</Text>
+                                    <Text style={{ width: 80, textAlign: 'center' }}>{formatDate(apt.data)}</Text>
+                                    <Text style={{ width: 80, textAlign: 'center' }}>{apt.inicio} - {apt.fim}</Text>
+                                    <Text style={{ width: 60, textAlign: 'center', fontWeight: 'bold' }}>{apt.duracao}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                ) : null}
 
                 {/* Seção PIX (apenas se não for orçamento e tiver chave) */}
                 {!ehOrcamento && chavePix ? (
@@ -639,6 +706,16 @@ export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
                 {(os?.itens || []).map((item, index) => (
                     <View key={index} style={thermalStyles.itemRow}>
                         <Text style={thermalStyles.itemNome}>{item.nome || ''}</Text>
+                        {(item.valDesconto > 0 || item.valAcrescimo > 0) && (
+                            <View style={{ marginBottom: 2 }}>
+                                {item.valDesconto > 0 && (
+                                    <Text style={{ fontSize: 9 }}>Desc: -{formatCurrency(item.valDesconto)}</Text>
+                                )}
+                                {item.valAcrescimo > 0 && (
+                                    <Text style={{ fontSize: 9 }}>Acr: +{formatCurrency(item.valAcrescimo)}</Text>
+                                )}
+                            </View>
+                        )}
                         <View style={thermalStyles.itemDetalhe}>
                             <Text>{`${item.quantidade || 0}x ${formatCurrency(item.precoUnitario)}`}</Text>
                             <Text>{formatCurrency(item.total)}</Text>
@@ -648,10 +725,37 @@ export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
 
                 {/* Total */}
                 <View style={thermalStyles.totalSection}>
-                    <View style={thermalStyles.totalRow}>
-                        <Text style={thermalStyles.totalLabel}>TOTAL:</Text>
-                        <Text style={thermalStyles.totalValue}>{formatCurrency(os?.valorTotal)}</Text>
-                    </View>
+                    {(() => {
+                        const resumo = calcularResumoFinanceiro(
+                            os?.itens,
+                            os?.descontoGlobalTipo, os?.descontoGlobalValor,
+                            os?.acrescimoGlobalTipo, os?.acrescimoGlobalValor
+                        );
+                        return (
+                            <>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                                    <Text style={{ fontSize: 9 }}>Subtotal:</Text>
+                                    <Text style={{ fontSize: 9 }}>{formatCurrency(resumo.somaItens)}</Text>
+                                </View>
+                                {resumo.valDescontoGlobal > 0 && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                                        <Text style={{ fontSize: 9 }}>Desconto:</Text>
+                                        <Text style={{ fontSize: 9 }}>-{formatCurrency(resumo.valDescontoGlobal)}</Text>
+                                    </View>
+                                )}
+                                {resumo.valAcrescimoGlobal > 0 && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                                        <Text style={{ fontSize: 9 }}>Acréscimo:</Text>
+                                        <Text style={{ fontSize: 9 }}>+{formatCurrency(resumo.valAcrescimoGlobal)}</Text>
+                                    </View>
+                                )}
+                                <View style={thermalStyles.totalRow}>
+                                    <Text style={thermalStyles.totalLabel}>TOTAL:</Text>
+                                    <Text style={thermalStyles.totalValue}>{formatCurrency(resumo.totalFinal)}</Text>
+                                </View>
+                            </>
+                        );
+                    })()}
                     {(os?.valorPago || 0) > 0 && (
                         <>
                             <View style={thermalStyles.totalRow}>

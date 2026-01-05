@@ -82,7 +82,12 @@ const Dashboard = () => {
                 const osFinalizadasHoje = ordensAtivas.filter(o => o.status === 'finalizada' && new Date(o.atualizadoEm || o.criadoEm) >= hoje);
 
                 // Métricas de OS (Meta)
-                const osFinalizadasMes = ordensAtivas.filter(o => o.status === 'finalizada' && new Date(o.criadoEm) >= inicioMes);
+                // Fix: Usar data de finalização real (execucaoFinalizadaEm) se disponível, senão fallback para atualização
+                const osFinalizadasMes = ordensAtivas.filter(o => {
+                    if (o.status !== 'finalizada') return false;
+                    const dataFim = o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm;
+                    return new Date(dataFim) >= inicioMes;
+                });
 
                 // Métricas Financeiras
                 const receitaMes = receitasEfetivadas

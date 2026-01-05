@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDateTime } from '../../lib/utils';
+import { formatCurrency, formatDateTime, toTitleCase } from '../../lib/utils';
 
 const HistoricoEstoque = () => {
     const { empresa } = useAuth();
@@ -41,7 +41,7 @@ const HistoricoEstoque = () => {
 
     const getProdutoNome = (produtoId) => {
         const produto = produtos.find((p) => p.id === produtoId);
-        return produto?.nome || 'Produto removido';
+        return toTitleCase(produto?.nome || 'Produto removido');
     };
 
     const handleNovaMovimentacao = (tipo) => {
@@ -275,7 +275,7 @@ const MovimentacaoModal = ({ tipo, produtos, empresaId, onClose, onSave }) => {
                             <option value="">Selecione um produto</option>
                             {produtos.map((produto) => (
                                 <option key={produto.id} value={produto.id}>
-                                    {produto.nome} (Estoque: {produto.quantidade})
+                                    {toTitleCase(produto.nome)} (Estoque: {produto.quantidade})
                                 </option>
                             ))}
                         </select>

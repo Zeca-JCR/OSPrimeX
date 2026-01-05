@@ -131,21 +131,59 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
                         </div>
                     </div>
 
-                    <div className="pt-4 flex justify-end gap-2">
+                    <div className="pt-4 flex items-center justify-between">
                         <button
                             type="button"
-                            onClick={onClose}
-                            className="btn-secondary"
+                            onClick={async () => {
+                                if (!confirm('Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita.')) return;
+
+                                setSalvando(true);
+                                try {
+                                    // Validação: Verificar vínculo com OS
+                                    const todasOS = await storage.getAll('ordens_servico', empresaId);
+                                    const vinculado = todasOS.some(os => os.veiculoId === veiculo.id);
+
+                                    if (vinculado) {
+                                        alert('Não é possível excluir este veículo pois ele está vinculado a uma ou mais Ordens de Serviço.');
+                                        return;
+                                    }
+
+                                    await storage.delete('veiculos', veiculo.id);
+                                    if (onSave) onSave(null); // Passar null para indicar exclusão/recarregamento
+                                    onClose();
+                                } catch (error) {
+                                    console.error('Erro ao excluir veículo:', error);
+                                    alert('Erro ao excluir veículo.');
+                                } finally {
+                                    setSalvando(false);
+                                }
+                            }}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            disabled={salvando}
+                            title="Excluir Veículo permanently"
                         >
-                            Cancelar
+                            <div className="flex items-center gap-1">
+                                <span className="material-symbols-outlined text-lg">delete</span>
+                                <span>Excluir</span>
+                            </div>
                         </button>
-                        <button
-                            type="submit"
-                            disabled={salvando || !placaValida}
-                            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {salvando ? 'Salvando...' : 'Salvar Alterações'}
-                        </button>
+
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="btn-secondary"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={salvando || !placaValida}
+                                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {salvando ? 'Salvando...' : 'Salvar Alterações'}
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

@@ -36,7 +36,11 @@ const MainLayoutContent = () => {
     const [showProfileModal, setShowProfileModal] = useState(false);
 
     // Submenus expandidos
+    // Submenus expandidos
     const [expandedMenus, setExpandedMenus] = useState({});
+
+    // User Menu Dropdown
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     const toggleSubmenu = (path) => {
         setExpandedMenus(prev => ({ ...prev, [path]: !prev[path] }));
@@ -260,6 +264,19 @@ const MainLayoutContent = () => {
                             </>
                         )}
                     </div>
+
+
+                    {/* Botão Recolher (Desktop) - Movido para o topo */}
+                    <button
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        className={`hidden lg:flex p-1.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${sidebarCollapsed ? 'mx-auto' : ''}`}
+                        title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
+                    >
+                        <span className="material-symbols-outlined text-[20px]">
+                            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
+                        </span>
+                    </button>
+
                     {!sidebarCollapsed && (
                         <button
                             onClick={() => setSidebarOpen(false)}
@@ -271,13 +288,15 @@ const MainLayoutContent = () => {
                 </div>
 
                 {/* Empresa - compacto */}
-                {!sidebarCollapsed && (
-                    <div className="px-3 py-2 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                        <p className="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark truncate">
-                            {empresa?.nomeFantasia || 'Carregando...'}
-                        </p>
-                    </div>
-                )}
+                {
+                    !sidebarCollapsed && (
+                        <div className="px-3 py-2 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
+                            <p className="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark truncate">
+                                {empresa?.nomeFantasia || 'Carregando...'}
+                            </p>
+                        </div>
+                    )
+                }
 
                 {/* Navigation - estilo Stitch */}
                 <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
@@ -421,69 +440,36 @@ const MainLayoutContent = () => {
                     })}
                 </nav>
 
-                {/* Footer - compacto */}
-                <div className={`border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] ${sidebarCollapsed ? 'p-2' : 'p-2'}`}>
-                    {/* Collapse toggle - apenas desktop */}
-                    <button
-                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className={`
-                            hidden lg:flex items-center gap-2 w-full px-3 py-2 rounded-lg
-                            text-text-secondary-light dark:text-text-secondary-dark
-                            hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors
-                            ${sidebarCollapsed ? 'justify-center' : ''}
-                        `}
-                        title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
-                    >
-                        <span className="material-symbols-outlined text-[20px]">
-                            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
-                        </span>
-                        {!sidebarCollapsed && <span className="text-sm">Recolher</span>}
-                    </button>
-
-
-
-                    <button
-                        onClick={logout}
-                        className={`
-                            w-full flex items-center gap-2.5 px-3 py-2 rounded-lg
-                            text-error hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors
-                            ${sidebarCollapsed ? 'justify-center' : ''}
-                        `}
-                        title={sidebarCollapsed ? 'Sair' : undefined}
-                    >
-                        <span className="material-symbols-outlined text-[20px]">logout</span>
-                        {!sidebarCollapsed && <span className="text-sm">Sair</span>}
-                    </button>
-                </div>
-            </aside>
+                {/* Footer removido - Sair e Recolher movidos */}
+            </aside >
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+            < div className="flex-1 flex flex-col min-h-screen overflow-hidden" >
                 {/* Header - mais compacto */}
-                <header className="h-14 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] flex items-center justify-between px-4 shrink-0">
+                < header className="h-14 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] flex items-center justify-between px-4 shrink-0" >
                     {/* Menu toggle (mobile) */}
-                    <button
+                    < button
                         onClick={() => setSidebarOpen(true)}
                         className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                         <span className="material-symbols-outlined">menu</span>
-                    </button>
+                    </button >
 
                     {/* Spacer */}
-                    <div className="flex-1" />
+                    < div className="flex-1" />
 
                     {/* Busca Global */}
-                    <BuscaGlobal />
+                    < BuscaGlobal />
 
                     {/* Header actions */}
-                    <div className="flex items-center gap-1">
+                    < div className="flex items-center gap-1" >
                         {/* Restart Tour */}
-                        <div className="mr-2">
+                        < div className="mr-2" >
                             <RestartTourButton />
-                        </div>
+                        </div >
 
                         {/* Theme toggle */}
-                        <button
+                        < button
                             onClick={toggleTheme}
                             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
                             title={isDark ? 'Modo claro' : 'Modo escuro'}
@@ -491,10 +477,10 @@ const MainLayoutContent = () => {
                             <span className="material-symbols-outlined text-xl">
                                 {isDark ? 'light_mode' : 'dark_mode'}
                             </span>
-                        </button>
+                        </button >
 
                         {/* Notifications */}
-                        <div className="relative">
+                        < div className="relative" >
                             <button
                                 onClick={() => setShowNotificacoes(!showNotificacoes)}
                                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark relative"
@@ -508,106 +494,140 @@ const MainLayoutContent = () => {
                             </button>
 
                             {/* Dropdown de notificações */}
-                            {showNotificacoes && (
-                                <div className="absolute right-0 top-12 w-80 card shadow-xl z-50 max-h-96 overflow-hidden flex flex-col">
-                                    <div className="p-3 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] flex items-center justify-between">
-                                        <h3 className="font-semibold text-text-light dark:text-text-dark">Notificações</h3>
-                                        {notificacoes.length > 0 && (
-                                            <button
-                                                onClick={clearAll}
-                                                className="text-xs text-primary hover:underline"
-                                            >
-                                                Limpar tudo
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="overflow-y-auto flex-1">
-                                        {notificacoes.length === 0 ? (
-                                            <div className="p-6 text-center text-text-secondary-light dark:text-text-secondary-dark">
-                                                <span className="material-symbols-outlined text-3xl mb-2">notifications_off</span>
-                                                <p className="text-sm">Nenhuma notificação</p>
-                                            </div>
-                                        ) : (
-                                            notificacoes.map(notif => (
-                                                <div
-                                                    key={notif.id}
-                                                    onClick={() => {
-                                                        markAsRead(notif.id);
-                                                        setShowNotificacoes(false);
-
-                                                        if (notif.tipo === 'agenda') {
-                                                            navigate('/agenda', {
-                                                                state: {
-                                                                    openAgendamentoId: notif.metadata?.agendamentoId
-                                                                }
-                                                            });
-                                                        } else if (notif.link) {
-                                                            navigate(notif.link);
-                                                        } else if (notif.osId) {
-                                                            navigate(`/os/${notif.osId}`);
-                                                        }
-                                                    }}
-                                                    className={`p-3 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${!notif.lida ? 'bg-primary/5' : ''
-                                                        }`}
+                            {
+                                showNotificacoes && (
+                                    <div className="absolute right-0 top-12 w-80 card shadow-xl z-50 max-h-96 overflow-hidden flex flex-col">
+                                        <div className="p-3 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] flex items-center justify-between">
+                                            <h3 className="font-semibold text-text-light dark:text-text-dark">Notificações</h3>
+                                            {notificacoes.length > 0 && (
+                                                <button
+                                                    onClick={clearAll}
+                                                    className="text-xs text-primary hover:underline"
                                                 >
-                                                    <div className="flex gap-3">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notif.tipo === 'aprovacao' ? 'bg-green-100 text-green-600' :
-                                                            notif.tipo === 'agenda' ? 'bg-blue-100 text-blue-600' :
-                                                                'bg-primary/10 text-primary'
-                                                            }`}>
-                                                            <span className="material-symbols-outlined">
-                                                                {notif.tipo === 'aprovacao' ? 'check_circle' :
-                                                                    notif.tipo === 'agenda' ? 'calendar_month' : 'info'}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="font-medium text-sm text-text-light dark:text-text-dark">{notif.titulo}</p>
-                                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark truncate">{notif.mensagem}</p>
-                                                            {notif.tipo === 'agenda' && (
-                                                                <span className="text-[10px] text-primary font-medium mt-0.5 block">Clique para ver na agenda</span>
-                                                            )}
-                                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                                                {new Date(notif.criadoEm).toLocaleString('pt-BR')}
-                                                            </p>
-                                                        </div>
-                                                        {!notif.lida && (
-                                                            <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
-                                                        )}
-                                                    </div>
+                                                    Limpar tudo
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="overflow-y-auto flex-1">
+                                            {notificacoes.length === 0 ? (
+                                                <div className="p-6 text-center text-text-secondary-light dark:text-text-secondary-dark">
+                                                    <span className="material-symbols-outlined text-3xl mb-2">notifications_off</span>
+                                                    <p className="text-sm">Nenhuma notificação</p>
                                                 </div>
-                                            ))
-                                        )}
+                                            ) : (
+                                                notificacoes.map(notif => (
+                                                    <div
+                                                        key={notif.id}
+                                                        onClick={() => {
+                                                            markAsRead(notif.id);
+                                                            setShowNotificacoes(false);
+
+                                                            if (notif.tipo === 'agenda') {
+                                                                navigate('/agenda', {
+                                                                    state: {
+                                                                        openAgendamentoId: notif.metadata?.agendamentoId
+                                                                    }
+                                                                });
+                                                            } else if (notif.link) {
+                                                                navigate(notif.link);
+                                                            } else if (notif.osId) {
+                                                                navigate(`/os/${notif.osId}`);
+                                                            }
+                                                        }}
+                                                        className={`p-3 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${!notif.lida ? 'bg-primary/5' : ''
+                                                            }`}
+                                                    >
+                                                        <div className="flex gap-3">
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notif.tipo === 'aprovacao' ? 'bg-green-100 text-green-600' :
+                                                                notif.tipo === 'agenda' ? 'bg-blue-100 text-blue-600' :
+                                                                    'bg-primary/10 text-primary'
+                                                                }`}>
+                                                                <span className="material-symbols-outlined">
+                                                                    {notif.tipo === 'aprovacao' ? 'check_circle' :
+                                                                        notif.tipo === 'agenda' ? 'calendar_month' : 'info'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-medium text-sm text-text-light dark:text-text-dark">{notif.titulo}</p>
+                                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark truncate">{notif.mensagem}</p>
+                                                                {notif.tipo === 'agenda' && (
+                                                                    <span className="text-[10px] text-primary font-medium mt-0.5 block">Clique para ver na agenda</span>
+                                                                )}
+                                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                                    {new Date(notif.criadoEm).toLocaleString('pt-BR')}
+                                                                </p>
+                                                            </div>
+                                                            {!notif.lida && (
+                                                                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )
+                            }
+                        </div >
 
                         {/* User - compacto - agora clicável */}
-                        <button
-                            onClick={() => setShowProfileModal(true)}
-                            className="flex items-center gap-2 pl-3 ml-2 border-l border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-1 transition-colors"
-                            title="Editar Perfil / Alterar Senha"
-                        >
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
-                                {usuario?.nome?.charAt(0) || 'U'}
-                            </div>
-                            <div className="hidden sm:block text-left">
-                                <p className="text-sm font-medium text-text-light dark:text-text-dark leading-tight">
-                                    {usuario?.nome?.split(' ')[0]}
-                                </p>
-                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark capitalize leading-tight">
-                                    {usuario?.perfil}
-                                </p>
-                            </div>
-                        </button>
-                    </div>
-                </header>
+                        < div className="relative" >
+                            <button
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                                className="flex items-center gap-2 pl-3 ml-2 border-l border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-1 transition-colors"
+                                title="Menu do Usuário"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">
+                                    {usuario?.nome?.charAt(0) || 'U'}
+                                </div>
+                                <div className="hidden sm:block text-left">
+                                    <p className="text-sm font-medium text-text-light dark:text-text-dark leading-tight flex items-center gap-1">
+                                        {usuario?.nome?.split(' ')[0]}
+                                        <span className="material-symbols-outlined text-sm">arrow_drop_down</span>
+                                    </p>
+                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark capitalize leading-tight">
+                                        {usuario?.perfil}
+                                    </p>
+                                </div>
+                            </button>
+
+                            {/* Dropdown User Menu */}
+                            {
+                                showUserMenu && (
+                                    <div className="absolute right-0 top-12 w-56 card shadow-xl z-50 animate-scaleIn">
+                                        <div className="p-3 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
+                                            <p className="font-semibold text-text-light dark:text-text-dark">{usuario?.nome}</p>
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{usuario?.email}</p>
+                                        </div>
+                                        <div className="p-1">
+                                            <button
+                                                onClick={() => { setShowProfileModal(true); setShowUserMenu(false); }}
+                                                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-light dark:text-text-dark hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">manage_accounts</span>
+                                                Meus Dados
+                                            </button>
+                                            <div className="border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] my-1"></div>
+                                            <button
+                                                onClick={() => { logout(); setShowUserMenu(false); }}
+                                                className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-error hover:bg-red-50 dark:hover:bg-red-900/10"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">logout</span>
+                                                Sair
+                                            </button>
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div >
+                    </div >
+                </header >
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-auto">
+                < main className="flex-1 overflow-auto" >
                     <Outlet />
-                </main>
-            </div>
+                </main >
+            </div >
             {showNovaOS && (
                 <NovaOSModal
                     onClose={() => setShowNovaOS(false)}
@@ -621,15 +641,17 @@ const MainLayoutContent = () => {
             )}
 
             {/* Modal de Perfil */}
-            {showProfileModal && (
-                <UserProfileModal
-                    onClose={() => setShowProfileModal(false)}
-                />
-            )}
+            {
+                showProfileModal && (
+                    <UserProfileModal
+                        onClose={() => setShowProfileModal(false)}
+                    />
+                )
+            }
 
             {/* Gerenciador de Janelas (OS) - Recebe estado da sidebar para posicionamento */}
             <OSWindowManager sidebarCollapsed={sidebarCollapsed} />
-        </div>
+        </div >
     );
 };
 

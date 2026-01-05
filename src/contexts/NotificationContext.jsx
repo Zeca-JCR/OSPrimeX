@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import storage from '../lib/storage';
-import { formatDate } from '../lib/utils';
+import { formatCurrency, formatDate, toISODate } from '../lib/utils';
 
 const NotificationContext = createContext(null);
 
@@ -156,8 +156,8 @@ export const NotificationProvider = ({ children }) => {
                 // Melhor: para "Dias de antecedência", geralmente é data >= hoje e data <= hoje + dias
 
                 // Formatar datas para comparação YYYY-MM-DD
-                const hojeStr = hoje.toISOString().split('T')[0];
-                const limiteStr = limite.toISOString().split('T')[0];
+                const hojeStr = toISODate(hoje);
+                const limiteStr = toISODate(limite);
 
                 const pendentes = agendamentos.filter(ag => {
                     if (ag.status !== 'agendado') return false;

@@ -3,15 +3,43 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOS } from '../../contexts/OSContext';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDateTime, toISODate, calculateWorkingTime, normalizeString, toTitleCase } from '../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, formatPlaca, toISODate, calculateWorkingTime, normalizeString, toTitleCase } from '../../lib/utils';
 import { DownloadOSButton, DownloadThermalButton } from '../../components/pdf/OSDocument';
+import { PrintOSButton, PrintThermalButton } from '../../components/pdf/PrintButtons';
 import { TimerExecucao } from '../../components/os/TimerExecucao';
 import AssinaturaCanvas from '../../components/os/AssinaturaCanvas';
 import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
 import { EditVeiculoModal } from '../../components/os/EditVeiculoModal';
+import { TimeTrackingSection } from '../../components/os/TimeTrackingSection';
 
 import { gerarPayloadPix } from '../../lib/pix';
 import { useAutoSave } from '../../hooks/useAutoSave';
+
+// Função auxiliar para calcular totais (Global)
+const calcularResumoFinanceiro = (itens, dTipo, dValor, aTipo, aValor) => {
+    const somaItens = itens.reduce((acc, item) => acc + (item.isento ? 0 : (item.total || 0)), 0);
+
+    let valDescontoGlobal = 0;
+    if (dValor) {
+        if (dTipo === 'valor') valDescontoGlobal = parseFloat(dValor) || 0;
+        else valDescontoGlobal = somaItens * ((parseFloat(dValor) || 0) / 100);
+    }
+
+    let valAcrescimoGlobal = 0;
+    if (aValor) {
+        if (aTipo === 'valor') valAcrescimoGlobal = parseFloat(aValor) || 0;
+        else valAcrescimoGlobal = somaItens * ((parseFloat(aValor) || 0) / 100);
+    }
+
+    const totalFinal = Math.max(0, somaItens - valDescontoGlobal + valAcrescimoGlobal);
+
+    return {
+        somaItens,
+        valDescontoGlobal,
+        valAcrescimoGlobal,
+        totalFinal
+    };
+};
 
 const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
     const { empresa } = useAuth();
@@ -19,6 +47,29 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
     const params = useParams();
     const id = osId || params.id; // Prioriza prop (Window Mode) sobre URL (Route Mode)
     const { updateWindow } = useOS();
+
+
+    // Estado para garantir configurações atualizadas (hot-reload interno)
+    const [configuracoesLocais, setConfiguracoesLocais] = useState(null);
+    const configuracoes = configuracoesLocais || empresa || {};
+
+    // Carregar configurações frescas ao montar
+    useEffect(() => {
+        const fetchConfig = async () => {
+            if (empresa?.id) {
+                try {
+                    const empAtualizada = await storage.getById('empresas', empresa.id);
+                    if (empAtualizada) {
+                        // As configurações estão na raiz do objeto
+                        setConfiguracoesLocais(empAtualizada);
+                    }
+                } catch (err) {
+                    console.error('Erro ao recarregar configurações:', err);
+                }
+            }
+        };
+        fetchConfig();
+    }, [empresa?.id]);
 
     const [os, setOs] = useState(null);
     const [cliente, setCliente] = useState(null);
@@ -57,7 +108,22 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
     }, [isDirty]);
 
     // Modais
+    const [addItemValues, setAddItemValues] = useState(null);
     const [showAddItem, setShowAddItem] = useState(false);
+
+    const handleUpdateApontamentos = (updates) => {
+        setOs(prev => ({ ...prev, ...updates }));
+        setForm(prev => ({ ...prev, ...updates }));
+        setIsDirty(true);
+    };
+
+    const handleAddToBill = (quantidadeDecimal) => {
+        setAddItemValues({
+            tipo: 'servico',
+            quantidade: quantidadeDecimal
+        });
+        setShowAddItem(true);
+    };
     const [showImportarKit, setShowImportarKit] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
     const [showAtribuirTecnico, setShowAtribuirTecnico] = useState(false);
@@ -82,6 +148,7 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
     const [toastAprovacao, setToastAprovacao] = useState(false);
 
     const [linkRastreavel, setLinkRastreavel] = useState(null);
+    const [linkCopied, setLinkCopied] = useState(false);
 
     // Atualizar título e estado da janela no Dock
     useEffect(() => {
@@ -170,7 +237,7 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
 
                     // Ajuste para pegar a data local correta
                     const offset = hoje.getTimezoneOffset() * 60000;
-                    const validadePadrao = new Date(hoje.getTime() - offset).toISOString().split('T')[0];
+                    const validadePadrao = toISODate(new Date(hoje.getTime() - offset));
 
                     setForm(prev => ({ ...prev, validadeOrcamento: validadePadrao }));
                 }
@@ -452,16 +519,23 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
             ...item,
             id: `item_${Date.now()}`,
             isento: ['garantia', 'cortesia', 'interna'].includes(os.tipo) ? true : false,
-            total: item.quantidade * item.precoUnitario,
+            // item.total já vem calculado do modal (líquido do item)
+            // Se o item não tiver campos novos (legado), calcula o básico
+            total: item.total !== undefined ? item.total : (item.quantidade * item.precoUnitario),
         };
         const novosItens = [...itensAtuais, novoItem];
-        const novoTotal = novosItens.reduce((sum, i) => sum + (i.isento ? 0 : i.total), 0);
+
+        const { totalFinal } = calcularResumoFinanceiro(
+            novosItens,
+            os.descontoGlobalTipo, os.descontoGlobalValor,
+            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+        );
 
         // Atualizar estado local (Draft)
-        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
-        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
+        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
+        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
         setIsDirty(true);
-        setShowAddItem(false);
+        // setShowAddItem(false); // Mantendo modal aberto para inserção contínua
     };
 
     // Adicionar múltiplos itens (para importação de Kits)
@@ -473,14 +547,20 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
             ...item,
             id: `item_${timestamp}_${index}`,
             isento: ['garantia', 'cortesia', 'interna'].includes(os.tipo) ? true : false,
+            // Recalcular total se necessário, ou usar o do kit se compatível
             total: item.quantidade * item.precoUnitario,
         }));
 
         const novosItens = [...itensAtuais, ...novosItensKit];
-        const novoTotal = novosItens.reduce((sum, i) => sum + (i.isento ? 0 : i.total), 0);
 
-        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
-        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
+        const { totalFinal } = calcularResumoFinanceiro(
+            novosItens,
+            os.descontoGlobalTipo, os.descontoGlobalValor,
+            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+        );
+
+        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
+        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
         setIsDirty(true);
         setShowImportarKit(false);
     };
@@ -488,11 +568,16 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
     // Remover item da OS (sem mexer no estoque, pois ainda não foi finalizada)
     const removerItem = async (itemId) => {
         const novosItens = (os.itens || []).filter((i) => i.id !== itemId);
-        const novoTotal = novosItens.reduce((sum, i) => sum + (i.isento ? 0 : i.total), 0);
+
+        const { totalFinal } = calcularResumoFinanceiro(
+            novosItens,
+            os.descontoGlobalTipo, os.descontoGlobalValor,
+            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+        );
 
         // Atualizar estado local (Draft)
-        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
-        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
+        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
+        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
         setIsDirty(true);
     };
 
@@ -500,11 +585,16 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
     const salvarEdicaoItem = async (itemEditado) => {
         const itensAtuais = os.itens || [];
         const novosItens = itensAtuais.map(i => i.id === itemEditado.id ? itemEditado : i);
-        const novoTotal = novosItens.reduce((sum, i) => sum + i.total, 0);
+
+        const { totalFinal } = calcularResumoFinanceiro(
+            novosItens,
+            os.descontoGlobalTipo, os.descontoGlobalValor,
+            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+        );
 
         // Atualizar estado local (Draft)
-        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
-        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
+        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
+        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
         setIsDirty(true);
         setItemEditando(null);
     };
@@ -763,6 +853,14 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
 
                 await storage.create('links_rastreaveis', novoLink, empresa.id);
                 linkCurto = `${window.location.origin}/r/${codigo}`;
+
+                // Atualizar estado visual imediatamente
+                setLinkRastreavel(novoLink);
+            }
+
+            // Se já existia, garantir que o estado esteja sincronizado (caso tenha carregado depois)
+            if (linkEncontrado) {
+                setLinkRastreavel(linkEncontrado);
             }
 
             let texto = '';
@@ -967,6 +1065,44 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                                     <span className="material-symbols-outlined text-sm">{statusAtual.icon}</span>
                                     {statusAtual.label}
                                 </div>
+                                {linkRastreavel && (
+                                    <div className="flex items-center gap-1 animate-scaleIn ml-1">
+                                        {/* Botão Abrir */}
+                                        <button
+                                            onClick={() => window.open(`/r/${linkRastreavel.id}`, '_blank')}
+                                            className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-200 transition-colors"
+                                            title="Abrir Rastreio (Visão do Cliente)"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">share_location</span>
+                                        </button>
+
+                                        {/* Botão Copiar */}
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${window.location.origin}/r/${linkRastreavel.id}`);
+                                                setLinkCopied(true);
+                                                setTimeout(() => setLinkCopied(false), 2000);
+                                            }}
+                                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${linkCopied
+                                                ? 'bg-green-100 text-green-600'
+                                                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                                }`}
+                                            title="Copiar Link"
+                                        >
+                                            <span className="material-symbols-outlined text-xs">
+                                                {linkCopied ? 'check' : 'content_copy'}
+                                            </span>
+                                        </button>
+
+                                        {/* Contador de Visualizações */}
+                                        {linkRastreavel.cliques > 0 && (
+                                            <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] text-gray-500 font-medium" title={`${linkRastreavel.cliques} visualizações pelo cliente`}>
+                                                <span className="material-symbols-outlined text-[10px]">visibility</span>
+                                                {linkRastreavel.cliques}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </h1>
                         <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -980,7 +1116,8 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                     {/* Ações Direita (PDF, Mais Ações, Janela) */}
                     <div className="flex items-center gap-2">
                         {/* Botão PDF A4 */}
-                        <DownloadOSButton
+                        {/* Botão Imprimir A4 */}
+                        <PrintOSButton
                             os={os}
                             cliente={cliente}
                             veiculo={veiculo}
@@ -989,8 +1126,8 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1 text-sm"
                         />
 
-                        {/* Botão Térmico 80mm */}
-                        <DownloadThermalButton
+                        {/* Botão Imprimir Térmico 80mm */}
+                        <PrintThermalButton
                             os={os}
                             cliente={cliente}
                             veiculo={veiculo}
@@ -1031,6 +1168,30 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                                         Coletar Assinatura
                                     </button>
 
+                                    <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
+
+                                    {/* Download Options (Moved from header) */}
+                                    <div className="px-3 py-2">
+                                        <p className="text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase mb-1">Downloads</p>
+                                        <div className="flex flex-col gap-1">
+                                            <DownloadOSButton
+                                                os={os}
+                                                cliente={cliente}
+                                                veiculo={veiculo}
+                                                empresa={empresa}
+                                                tecnico={tecnicoAtribuido}
+                                                className="w-full text-left flex items-center gap-2 text-sm text-text-light dark:text-text-dark hover:text-primary"
+                                            />
+                                            <DownloadThermalButton
+                                                os={os}
+                                                cliente={cliente}
+                                                veiculo={veiculo}
+                                                empresa={empresa}
+                                                className="w-full text-left flex items-center gap-2 text-sm text-text-light dark:text-text-dark hover:text-primary"
+                                            />
+                                        </div>
+                                    </div>
+
                                     {os.status === 'finalizada' && (
                                         <>
                                             <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
@@ -1041,6 +1202,9 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                                                 <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">data_object</span>
                                                 Exportar JSON
                                             </button>
+
+
+
                                             <button
                                                 onClick={handleGerarPix}
                                                 className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark"
@@ -1099,7 +1263,7 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
 
 
                     </div>
-                </div>
+                </div >
             </header >
 
 
@@ -1456,6 +1620,13 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                         )}
                     </div>
 
+                    {/* Apontamento de Horas */}
+                    <TimeTrackingSection
+                        os={os}
+                        onUpdate={handleUpdateApontamentos}
+                        onAddToBill={handleAddToBill}
+                    />
+
                     {/* Itens da OS */}
                     <div className="card p-4">
                         <div className="flex items-center justify-between mb-3">
@@ -1503,9 +1674,15 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                                             <p className="font-medium text-text-light dark:text-text-dark truncate">
                                                 {item.nome}
                                             </p>
-                                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                                {item.quantidade}x {formatCurrency(item.precoUnitario)}
-                                            </p>
+                                            <div className="text-sm text-text-secondary-light dark:text-text-secondary-dark flex flex-col">
+                                                <span>{item.quantidade} {(!item.unidade || item.unidade === 'SV') ? 'UN' : item.unidade} x {formatCurrency(item.precoUnitario)}</span>
+                                                {(item.valDesconto > 0 || item.valAcrescimo > 0) && (
+                                                    <span className="text-xs mt-0.5 flex gap-2">
+                                                        {item.valDesconto > 0 && <span className="text-green-600 dark:text-green-400">-{formatCurrency(item.valDesconto)}</span>}
+                                                        {item.valAcrescimo > 0 && <span className="text-orange-600 dark:text-orange-400">+{formatCurrency(item.valAcrescimo)}</span>}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex flex-col items-end">
                                             <p className={`font-bold ${item.isento ? 'text-gray-400 line-through decoration-2' : 'text-text-light dark:text-text-dark'}`}>
@@ -1522,9 +1699,15 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                                                 <button
                                                     onClick={() => {
                                                         const novosItens = os.itens.map(i => i.id === item.id ? { ...i, isento: !i.isento } : i);
-                                                        const novoTotal = novosItens.reduce((sum, i) => sum + (i.isento ? 0 : i.total), 0);
-                                                        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
-                                                        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: novoTotal }));
+
+                                                        const { totalFinal } = calcularResumoFinanceiro(
+                                                            novosItens,
+                                                            os.descontoGlobalTipo, os.descontoGlobalValor,
+                                                            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                                        );
+
+                                                        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
+                                                        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
                                                         setIsDirty(true);
                                                     }}
                                                     className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 ${item.isento ? 'text-purple-600' : 'text-gray-400'}`}
@@ -1554,11 +1737,134 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                                 ))}
 
                                 {/* Total */}
-                                <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                                    <p className="font-semibold text-text-light dark:text-text-dark">Total</p>
-                                    <p className="text-xl font-bold text-primary">
-                                        {formatCurrency(os.valorTotal || 0)}
-                                    </p>
+                                {/* Total e Descontos/Acréscimos Globais */}
+                                <div className="space-y-2 pt-3 border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
+                                    {/* Inputs de Desconto/Acréscimo Global (Apenas se configurado) */}
+                                    {os.status !== 'finalizada' && os.status !== 'cancelada' && ((configuracoes?.descontoNoTotal !== false && configuracoes?.descontoNoTotal !== 'false') || (configuracoes?.acrescimoNoTotal === true || configuracoes?.acrescimoNoTotal === 'true')) && (
+                                        <div className="grid grid-cols-2 gap-3 mb-2">
+                                            {(configuracoes?.descontoNoTotal !== false && configuracoes?.descontoNoTotal !== 'false') && (
+                                                <div>
+                                                    <label className="text-[10px] uppercase font-bold text-text-secondary-light dark:text-text-secondary-dark tracking-wider mb-1 block">Desconto</label>
+                                                    <div className="flex rounded-lg shadow-sm">
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={os.descontoGlobalValor || ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    os.descontoGlobalTipo, val,
+                                                                    os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                                                );
+                                                                setOs(prev => ({ ...prev, descontoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, descontoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            placeholder="0,00"
+                                                            className="input text-xs h-8 py-1 px-2 min-w-0"
+                                                        />
+                                                        <select
+                                                            value={os.descontoGlobalTipo || 'valor'}
+                                                            onChange={(e) => {
+                                                                const tipo = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    tipo, os.descontoGlobalValor,
+                                                                    os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                                                );
+                                                                setOs(prev => ({ ...prev, descontoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, descontoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-xs px-1 rounded-r-lg focus:ring-0"
+                                                        >
+                                                            <option value="valor">R$</option>
+                                                            <option value="porcentagem">%</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {(configuracoes?.acrescimoNoTotal === true || configuracoes?.acrescimoNoTotal === 'true') && (
+                                                <div>
+                                                    <label className="text-[10px] uppercase font-bold text-text-secondary-light dark:text-text-secondary-dark tracking-wider mb-1 block">Acréscimo</label>
+                                                    <div className="flex rounded-lg shadow-sm">
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={os.acrescimoGlobalValor || ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    os.descontoGlobalTipo, os.descontoGlobalValor,
+                                                                    os.acrescimoGlobalTipo, val
+                                                                );
+                                                                setOs(prev => ({ ...prev, acrescimoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, acrescimoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            placeholder="0,00"
+                                                            className="input text-xs h-8 py-1 px-2 min-w-0"
+                                                        />
+                                                        <select
+                                                            value={os.acrescimoGlobalTipo || 'valor'}
+                                                            onChange={(e) => {
+                                                                const tipo = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    os.descontoGlobalTipo, os.descontoGlobalValor,
+                                                                    tipo, os.acrescimoGlobalValor
+                                                                );
+                                                                setOs(prev => ({ ...prev, acrescimoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, acrescimoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-xs px-1 rounded-r-lg focus:ring-0"
+                                                        >
+                                                            <option value="valor">R$</option>
+                                                            <option value="porcentagem">%</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Resumo Financeiro */}
+                                    {(() => {
+                                        const resumo = calcularResumoFinanceiro(
+                                            os.itens || [],
+                                            os.descontoGlobalTipo, os.descontoGlobalValor,
+                                            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                        );
+                                        return (
+                                            <>
+                                                <div className="flex justify-between text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                                    <span>Subtotal</span>
+                                                    <span>{formatCurrency(resumo.somaItens)}</span>
+                                                </div>
+                                                {resumo.valDescontoGlobal > 0 && (
+                                                    <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
+                                                        <span>Desconto Global</span>
+                                                        <span>- {formatCurrency(resumo.valDescontoGlobal)}</span>
+                                                    </div>
+                                                )}
+                                                {resumo.valAcrescimoGlobal > 0 && (
+                                                    <div className="flex justify-between text-xs text-orange-600 dark:text-orange-400">
+                                                        <span>Acréscimo Global</span>
+                                                        <span>+ {formatCurrency(resumo.valAcrescimoGlobal)}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-between pt-2">
+                                                    <p className="font-semibold text-text-light dark:text-text-dark">Total</p>
+                                                    <p className="text-xl font-bold text-primary">
+                                                        {formatCurrency(resumo.totalFinal)}
+                                                    </p>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )}
@@ -1593,6 +1899,10 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
 
                                 {/* Lista de pagamentos */}
                                 {(() => {
+
+
+                                    if (!os) return null;
+
                                     const { pagamentos, totalPago, restante } = calcularPagamentos();
                                     return (
                                         <>
@@ -1781,8 +2091,13 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                 showAddItem && (
                     <AddItemModal
                         produtos={produtos}
-                        onClose={() => setShowAddItem(false)}
+                        onClose={() => {
+                            setShowAddItem(false);
+                            setAddItemValues(null);
+                        }}
                         onAdd={adicionarItem}
+                        configuracoes={configuracoes}
+                        initialValues={addItemValues}
                     />
                 )
             }
@@ -1805,6 +2120,7 @@ const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
                         item={itemEditando}
                         onClose={() => setItemEditando(null)}
                         onSave={salvarEdicaoItem}
+                        configuracoes={configuracoes}
                     />
                 )
             }
@@ -2250,13 +2566,27 @@ const PagamentoModal = ({ valorRestante, onClose, onSubmit }) => {
 };
 
 // Modal para adicionar item
-const AddItemModal = ({ produtos, onClose, onAdd }) => {
-    const [tipo, setTipo] = useState('produto');
+const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }) => {
+    const [tipo, setTipo] = useState(initialValues?.tipo || 'produto');
     const [produtoId, setProdutoId] = useState('');
-    const [quantidade, setQuantidade] = useState(1);
+    const [quantidade, setQuantidade] = useState(initialValues?.quantidade || 1);
+    const [unidade, setUnidade] = useState('');
     const [precoUnitario, setPrecoUnitario] = useState('');
     const [showTemplates, setShowTemplates] = useState(true);
     const [busca, setBusca] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchInputRef = useRef(null);
+
+    // Novos estados para precificação avançada
+    const [descontoTipo, setDescontoTipo] = useState('valor'); // 'valor' ou 'porcentagem'
+    const [descontoValor, setDescontoValor] = useState('');
+
+    const [acrescimoTipo, setAcrescimoTipo] = useState('valor'); // 'valor' ou 'porcentagem'
+    const [acrescimoValor, setAcrescimoValor] = useState('');
+
+    // Safe toggles with defaults
+    const showDescontos = configuracoes?.descontoNosItens !== false && configuracoes?.descontoNosItens !== 'false'; // Default TRUE
+    const showAcrescimos = configuracoes?.acrescimoNosItens === true || configuracoes?.acrescimoNosItens === 'true'; // Default FALSE
 
     const produtosFiltrados = produtos.filter((p) => {
         if (p.tipo !== tipo) return false;
@@ -2271,12 +2601,39 @@ const AddItemModal = ({ produtos, onClose, onAdd }) => {
         );
     });
     const servicosRapidos = produtos.filter((p) => p.tipo === 'servico' && p.servicoRapido);
+    const [showTimeModal, setShowTimeModal] = useState(false);
+
+    // Cálculos em tempo real
+    const qtd = parseFloat(quantidade) || 0;
+    const preco = parseFloat(precoUnitario) || 0;
+    const totalBruto = qtd * preco;
+
+    let valDesconto = 0;
+    if (descontoValor) {
+        if (descontoTipo === 'valor') valDesconto = parseFloat(descontoValor) || 0;
+        else valDesconto = totalBruto * ((parseFloat(descontoValor) || 0) / 100);
+    }
+
+    let valAcrescimo = 0;
+    if (acrescimoValor) {
+        if (acrescimoTipo === 'valor') valAcrescimo = parseFloat(acrescimoValor) || 0;
+        else valAcrescimo = totalBruto * ((parseFloat(acrescimoValor) || 0) / 100);
+    }
+
+    const totalLiquido = Math.max(0, totalBruto - valDesconto + valAcrescimo);
 
     const handleProdutoChange = (id) => {
         setProdutoId(id);
         const prod = produtos.find((p) => p.id === id);
         if (prod) {
             setPrecoUnitario(prod.precoVenda);
+            setPrecoUnitario(prod.precoVenda);
+            // Legado: Se for SV, força UN. Se não tiver, UN.
+            const unit = (!prod.unidade || prod.unidade === 'SV') ? 'UN' : prod.unidade;
+            setUnidade(unit);
+            // Resetar descontos/acréscimos ao trocar produto
+            setDescontoValor('');
+            setAcrescimoValor('');
         }
     };
 
@@ -2289,9 +2646,33 @@ const AddItemModal = ({ produtos, onClose, onAdd }) => {
             produtoId,
             nome: prod.nome,
             tipo: prod.tipo,
-            quantidade: parseInt(quantidade),
-            precoUnitario: parseFloat(precoUnitario),
+            nome: prod.nome,
+            tipo: prod.tipo,
+            unidade: unidade || 'UN',
+            quantidade: qtd,
+            precoUnitario: preco,
+            // Novos campos
+            valorBruto: totalBruto,
+            descontoTipo,
+            descontoValor: parseFloat(descontoValor) || 0,
+            valDesconto, // Valor calculado em R$
+            acrescimoTipo,
+            acrescimoValor: parseFloat(acrescimoValor) || 0,
+            valAcrescimo, // Valor calculado em R$
+            total: totalLiquido // Total líquido final
         });
+
+        // Limpar campos e manter foco para próxima inserção
+        setBusca('');
+        setProdutoId('');
+        setBusca('');
+        setProdutoId('');
+        setPrecoUnitario('');
+        setUnidade('');
+        setQuantidade(1);
+        setDescontoValor('');
+        setAcrescimoValor('');
+        searchInputRef.current?.focus();
     };
 
     // Auto-selecionar se encontrar código de barras exato
@@ -2314,7 +2695,10 @@ const AddItemModal = ({ produtos, onClose, onAdd }) => {
         onAdd({
             produtoId: servico.id,
             nome: servico.nome,
+            nome: servico.nome,
             tipo: 'servico',
+            // Legado: Se for SV, força UN
+            unidade: (!servico.unidade || servico.unidade === 'SV') ? 'UN' : servico.unidade,
             quantidade: 1,
             precoUnitario: servico.precoVenda,
         });
@@ -2354,10 +2738,10 @@ const AddItemModal = ({ produtos, onClose, onAdd }) => {
                                     key={servico.id}
                                     type="button"
                                     onClick={() => adicionarServicoRapido(servico)}
-                                    className="px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors flex flex-col items-start"
+                                    className="px-3 py-1.5 rounded-full bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 text-green-700 dark:text-green-400 text-xs font-medium hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors flex items-center gap-1.5"
                                 >
+                                    <span className="material-symbols-outlined text-[16px]">build</span>
                                     <span>{servico.nome}</span>
-                                    <span className="text-[10px] opacity-75">{formatCurrency(servico.precoVenda)}</span>
                                 </button>
                             ))}
                         </div>
@@ -2381,113 +2765,169 @@ const AddItemModal = ({ produtos, onClose, onAdd }) => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                value="produto"
-                                checked={tipo === 'produto'}
-                                onChange={(e) => { setTipo(e.target.value); setProdutoId(''); }}
-                                className="w-4 h-4 text-primary"
-                            />
-                            <span className="text-text-light dark:text-text-dark">Produto</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                value="servico"
-                                checked={tipo === 'servico'}
-                                onChange={(e) => { setTipo(e.target.value); setProdutoId(''); }}
-                                className="w-4 h-4 text-primary"
-                            />
-                            <span className="text-text-light dark:text-text-dark">Serviço</span>
-                        </label>
+                    {/* Segmented Control: Produto vs Serviço */}
+                    <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setTipo('produto');
+                                setProdutoId('');
+                                setBusca('');
+                                setUnidade('UN');
+                                setPrecoUnitario('');
+                                setQuantidade(1);
+                                setDescontoValor('');
+                                setAcrescimoValor('');
+                            }}
+                            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2 ${tipo === 'produto'
+                                ? 'bg-white dark:bg-gray-700 text-primary shadow-sm'
+                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark'
+                                }`}
+                        >
+                            <span className="material-symbols-outlined text-lg">inventory_2</span>
+                            Produto
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setTipo('servico');
+                                setProdutoId('');
+                                setBusca('');
+                                setUnidade('UN');
+                                setPrecoUnitario('');
+                                setQuantidade(1);
+                                setDescontoValor('');
+                                setAcrescimoValor('');
+                            }}
+                            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2 ${tipo === 'servico'
+                                ? 'bg-white dark:bg-gray-700 text-primary shadow-sm'
+                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark'
+                                }`}
+                        >
+                            <span className="material-symbols-outlined text-lg">handyman</span>
+                            Serviço
+                        </button>
                     </div>
 
-                    {/* Busca por Nome ou Código de Barras */}
-                    <div>
+                    {/* Busca por Nome ou Código de Barras (Combobox) */}
+                    <div className="relative">
                         <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                            Buscar Item (Nome, Código, Marca ou Aplicação)
+                            Buscar Item
                         </label>
                         <div className="relative">
                             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                                 <span className="material-symbols-outlined">search</span>
                             </span>
                             <input
+                                ref={searchInputRef}
                                 type="text"
                                 value={busca}
-                                onChange={(e) => setBusca(e.target.value)}
+                                onChange={(e) => { setBusca(e.target.value); setShowDropdown(true); }}
+                                onFocus={() => setShowDropdown(true)}
+                                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                                 className="input pl-10"
                                 placeholder="Nome, código, marca ou aplicação..."
                                 autoFocus
                             />
                         </div>
+
+                        {/* Dropdown de Resultados (Combobox) */}
+                        {showDropdown && (
+                            <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                                {produtosFiltrados.length === 0 ? (
+                                    <div className="p-4 text-center text-text-secondary-light dark:text-text-secondary-dark text-sm">
+                                        Nenhum item encontrado.
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                                        {produtosFiltrados.map((p) => (
+                                            <button
+                                                key={p.id}
+                                                type="button"
+                                                onClick={() => { handleProdutoChange(p.id); setShowDropdown(false); setBusca(p.nome); }}
+                                                className={`w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between ${produtoId === p.id ? 'bg-primary/5 dark:bg-primary/20 border-l-4 border-l-primary' : ''
+                                                    }`}
+                                            >
+                                                <div>
+                                                    <p className="font-medium text-text-light dark:text-text-dark text-sm">
+                                                        {toTitleCase(p.nome)}
+                                                    </p>
+                                                    {(p.marca || p.aplicacao) && (
+                                                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
+                                                            {[toTitleCase(p.marca), toTitleCase(p.aplicacao)].filter(Boolean).join(' • ')}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-bold text-primary">
+                                                        {formatCurrency(p.precoVenda)}
+                                                    </p>
+                                                    {p.tipo === 'produto' && (
+                                                        <p className={`text-[10px] font-medium mt-0.5 ${(p.quantidade || 0) > 0
+                                                            ? 'text-green-600 dark:text-green-400'
+                                                            : 'text-red-500'
+                                                            }`}>
+                                                            Estoque: {p.quantidade || 0}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    {/* Lista de Resultados */}
-                    <div>
-                        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                            Selecione o Item
-                        </label>
-                        <div className="border border-gray-300 dark:border-gray-700 rounded-lg max-h-60 overflow-y-auto bg-white dark:bg-gray-800">
-                            {produtosFiltrados.length === 0 ? (
-                                <div className="p-4 text-center text-text-secondary-light dark:text-text-secondary-dark">
-                                    Nenhum item encontrado.
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                                    {produtosFiltrados.map((p) => (
-                                        <button
-                                            key={p.id}
-                                            type="button"
-                                            onClick={() => handleProdutoChange(p.id)}
-                                            className={`w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between ${produtoId === p.id ? 'bg-primary/5 dark:bg-primary/20 border-l-4 border-l-primary' : ''
-                                                }`}
-                                        >
-                                            <div>
-                                                <p className="font-medium text-text-light dark:text-text-dark text-sm">
-                                                    {toTitleCase(p.nome)}
-                                                </p>
-                                                {(p.marca || p.aplicacao) && (
-                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5">
-                                                        {[toTitleCase(p.marca), toTitleCase(p.aplicacao)].filter(Boolean).join(' • ')}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-bold text-primary">
-                                                    {formatCurrency(p.precoVenda)}
-                                                </p>
-                                                {p.codigoBarras && (
-                                                    <p className="text-[10px] text-gray-400 font-mono">
-                                                        {p.codigoBarras}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+
+
+                    <div className="grid grid-cols-12 gap-4">
+                        {/* Quantidade */}
+                        <div className="col-span-3">
+                            <label className="block text-xs font-medium text-text-light dark:text-text-dark mb-1">
+                                Qtd
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={quantidade}
+                                    onChange={(e) => setQuantidade(e.target.value)}
+                                    className="input pr-8" // Padding right for icon
+                                    min="0.1"
+                                    step="any"
+                                    required
+                                />
+                                {tipo === 'servico' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowTimeModal(true)}
+                                        className="absolute right-1 top-1 p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                                        title="Converter Horas em Decimal"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">schedule</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Quantidade
+                        {/* Unidade */}
+                        <div className="col-span-2">
+                            <label className="block text-xs font-medium text-text-light dark:text-text-dark mb-1">
+                                Unidade
                             </label>
                             <input
-                                type="number"
-                                value={quantidade}
-                                onChange={(e) => setQuantidade(e.target.value)}
-                                className="input"
-                                min="1"
-                                required
+                                type="text"
+                                value={unidade}
+                                readOnly
+                                className="input bg-gray-50 dark:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark cursor-not-allowed text-center px-1"
+                                placeholder="UN"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Preço Unitário
+
+                        {/* Preço Unitário */}
+                        <div className="col-span-3">
+                            <label className="block text-xs font-medium text-text-light dark:text-text-dark mb-1">
+                                Preço Unit.
                             </label>
                             <input
                                 type="number"
@@ -2499,7 +2939,90 @@ const AddItemModal = ({ produtos, onClose, onAdd }) => {
                                 required
                             />
                         </div>
+
+                        {/* Total Bruto (Read Only) */}
+                        <div className="col-span-4">
+                            <label className="block text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
+                                Total Bruto
+                            </label>
+                            <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-text-secondary-light dark:text-text-secondary-dark font-medium cursor-not-allowed">
+                                {formatCurrency(totalBruto)}
+                            </div>
+                        </div>
+
+                        {/* Modificadores Financeiros */}
+                        {(showDescontos || showAcrescimos) && (
+                            <div className="col-span-12 grid grid-cols-2 gap-4 pt-2">
+                                {showDescontos && (
+                                    <div>
+                                        <label className="block text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
+                                            Desconto
+                                        </label>
+                                        <div className="flex rounded-lg shadow-sm">
+                                            <input
+                                                type="number"
+                                                value={descontoValor}
+                                                onChange={(e) => setDescontoValor(e.target.value)}
+                                                className="input rounded-r-none w-full min-w-0 text-sm"
+                                                placeholder="0,00"
+                                                min="0"
+                                                step="0.01"
+                                            />
+                                            <select
+                                                value={descontoTipo}
+                                                onChange={(e) => setDescontoTipo(e.target.value)}
+                                                className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer w-12"
+                                            >
+                                                <option value="valor">R$</option>
+                                                <option value="porcentagem">%</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                                {showAcrescimos && (
+                                    <div>
+                                        <label className="block text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
+                                            Acréscimo
+                                        </label>
+                                        <div className="flex rounded-lg shadow-sm">
+                                            <input
+                                                type="number"
+                                                value={acrescimoValor}
+                                                onChange={(e) => setAcrescimoValor(e.target.value)}
+                                                className="input rounded-r-none w-full min-w-0 text-sm"
+                                                placeholder="0,00"
+                                                min="0"
+                                                step="0.01"
+                                            />
+                                            <select
+                                                value={acrescimoTipo}
+                                                onChange={(e) => setAcrescimoTipo(e.target.value)}
+                                                className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer w-12"
+                                            >
+                                                <option value="valor">R$</option>
+                                                <option value="porcentagem">%</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
+
+                    {/* Footer: Total Liquido */}
+                    <div className="pt-4 mt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                        <div className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                            <p>Subtotal: {formatCurrency(totalBruto)}</p>
+                            {valDesconto > 0 && <p className="text-green-600">Desconto: -{formatCurrency(valDesconto)}</p>}
+                            {valAcrescimo > 0 && <p className="text-orange-600">Acréscimo: +{formatCurrency(valAcrescimo)}</p>}
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider font-bold">Total Líquido</p>
+                            <p className="text-2xl font-bold text-primary">{formatCurrency(totalLiquido)}</p>
+                        </div>
+                    </div>
+
+
 
                     <div className="flex gap-3 pt-4">
                         <button type="button" onClick={onClose} className="btn-secondary flex-1">
@@ -2511,6 +3034,13 @@ const AddItemModal = ({ produtos, onClose, onAdd }) => {
                         </button>
                     </div>
                 </form>
+                {showTimeModal && (
+                    <TimeConversionModal
+                        onClose={() => setShowTimeModal(false)}
+                        onApply={(val) => setQuantidade(val)}
+                        initialValue={quantidade}
+                    />
+                )}
             </div>
         </div>
     );
@@ -2590,26 +3120,152 @@ const ChecklistModal = ({ checklist, onClose, onSave }) => {
 };
 
 
-// Modal para editar item
-const EditItemModal = ({ item, onClose, onSave }) => {
+// Modal de Conversão de Horário (Novo)
+const TimeConversionModal = ({ onClose, onApply, initialValue }) => {
+    // Função auxiliar para inicializar horas (evita race condition)
+    const getInitialHoras = () => {
+        if (!initialValue) return '00:00';
+        const valStr = String(initialValue).replace(',', '.');
+        if (isNaN(valStr)) return '00:00';
+
+        const dec = parseFloat(valStr);
+        const h = Math.floor(dec);
+        const m = Math.round((dec - h) * 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    };
+
+    const [horas, setHoras] = useState(getInitialHoras);
+    const [decimal, setDecimal] = useState('');
+
+    useEffect(() => {
+        if (horas) {
+            const [h, m] = horas.split(':').map(Number);
+            const val = h + (m / 60);
+            setDecimal(val.toFixed(3)); // 3 casas decimais
+        }
+    }, [horas]);
+
+    const handleApply = () => {
+        onApply(decimal);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
+            <div className="card p-6 w-full max-w-sm animate-scaleIn">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-text-light dark:text-text-dark">Conversão de Horário</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase mb-1">
+                                Tempo (HH:MM)
+                            </label>
+                            <input
+                                type="time"
+                                value={horas}
+                                onChange={(e) => setHoras(e.target.value)}
+                                className="input text-center font-mono text-lg"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase mb-1">
+                                Qtde Decimal
+                            </label>
+                            <input
+                                type="text"
+                                value={decimal}
+                                readOnly
+                                className="input bg-gray-50 dark:bg-gray-800 text-right font-mono text-lg"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                        <button onClick={handleApply} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                            <span className="material-symbols-outlined">check</span>
+                            Aplicar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Modal para editar item (Editado para incluir conversão)
+const EditItemModal = ({ item, onClose, onSave, configuracoes }) => {
     const [nome, setNome] = useState(item.nome);
     const [quantidade, setQuantidade] = useState(item.quantidade);
+    const [unidade, setUnidade] = useState(item.unidade || 'UN'); // Nova state
     const [precoUnitario, setPrecoUnitario] = useState(item.precoUnitario);
+    const [showTimeModal, setShowTimeModal] = useState(false);
+
+    // Novos estados
+    const [descontoTipo, setDescontoTipo] = useState(item.descontoTipo || 'valor');
+    const [descontoValor, setDescontoValor] = useState(item.descontoValor || '');
+    const [acrescimoTipo, setAcrescimoTipo] = useState(item.acrescimoTipo || 'valor');
+    const [acrescimoValor, setAcrescimoValor] = useState(item.acrescimoValor || '');
+
+    // Safe toggles with defaults
+    const showDescontos = configuracoes?.descontoNosItens !== false && configuracoes?.descontoNosItens !== 'false'; // Default TRUE
+    const showAcrescimos = configuracoes?.acrescimoNosItens === true || configuracoes?.acrescimoNosItens === 'true'; // Default FALSE
+
+    // Cálculos em tempo real
+    const qtd = parseFloat(quantidade) || 0;
+    const preco = parseFloat(precoUnitario) || 0;
+    const totalBruto = qtd * preco;
+
+    let valDesconto = 0;
+    if (descontoValor) {
+        if (descontoTipo === 'valor') valDesconto = parseFloat(descontoValor) || 0;
+        else valDesconto = totalBruto * ((parseFloat(descontoValor) || 0) / 100);
+    }
+
+    let valAcrescimo = 0;
+    if (acrescimoValor) {
+        if (acrescimoTipo === 'valor') valAcrescimo = parseFloat(acrescimoValor) || 0;
+        else valAcrescimo = totalBruto * ((parseFloat(acrescimoValor) || 0) / 100);
+    }
+
+    const totalLiquido = Math.max(0, totalBruto - valDesconto + valAcrescimo);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         onSave({
             ...item,
             nome,
-            quantidade: parseFloat(quantidade),
-            precoUnitario: parseFloat(precoUnitario),
-            total: parseFloat(quantidade) * parseFloat(precoUnitario)
+            quantidade: qtd,
+            unidade: unidade || 'UN',
+            precoUnitario: preco,
+            // Detalhes de preço
+            valorBruto: totalBruto,
+            descontoTipo,
+            descontoValor: parseFloat(descontoValor) || 0,
+            valDesconto,
+            acrescimoTipo,
+            acrescimoValor: parseFloat(acrescimoValor) || 0,
+            valAcrescimo,
+            total: totalLiquido
         });
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="card p-6 w-full max-w-md animate-slideUp">
+            <div className="card p-6 w-full max-w-md animate-slideUp relative">
+                {showTimeModal && (
+                    <TimeConversionModal
+                        onClose={() => setShowTimeModal(false)}
+                        onApply={(val) => setQuantidade(val)}
+                        initialValue={quantidade}
+                    />
+                )}
+
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-text-light dark:text-text-dark">
                         Editar Item
@@ -2633,19 +3289,44 @@ const EditItemModal = ({ item, onClose, onSave }) => {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-[1.5fr_1fr_1.5fr] gap-4">
                         <div>
                             <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
                                 Quantidade
                             </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="number"
+                                    value={quantidade}
+                                    onChange={(e) => setQuantidade(e.target.value)}
+                                    className="input"
+                                    min="0.001"
+                                    step="any"
+                                    required
+                                />
+                                {item.tipo === 'servico' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowTimeModal(true)}
+                                        className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-100 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
+                                        title="Converter Horas em Decimal"
+                                    >
+                                        <span className="material-symbols-outlined">schedule</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                Unidade
+                            </label>
                             <input
-                                type="number"
-                                value={quantidade}
-                                onChange={(e) => setQuantidade(e.target.value)}
-                                className="input"
-                                min="1"
-                                step="any"
-                                required
+                                type="text"
+                                value={unidade}
+                                onChange={(e) => setUnidade(e.target.value.toUpperCase())}
+                                className="input uppercase"
+                                maxLength={3}
+                                placeholder="UN"
                             />
                         </div>
                         <div>
@@ -2664,11 +3345,87 @@ const EditItemModal = ({ item, onClose, onSave }) => {
                         </div>
                     </div>
 
-                    <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex justify-between items-center">
-                        <span className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Total</span>
-                        <span className="text-lg font-bold text-primary">
-                            {((parseFloat(quantidade) || 0) * (parseFloat(precoUnitario) || 0)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </span>
+                    {/* Discount and Surcharge Section */}
+                    {(showDescontos || showAcrescimos) && (
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100 dark:border-gray-800">
+                            {showDescontos && (
+                                <div>
+                                    <label className="block text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
+                                        Desconto
+                                    </label>
+                                    <div className="flex rounded-lg shadow-sm">
+                                        <input
+                                            type="number"
+                                            value={descontoValor}
+                                            onChange={(e) => setDescontoValor(e.target.value)}
+                                            className="input rounded-r-none w-full min-w-0"
+                                            placeholder="0,00"
+                                            min="0"
+                                            step="0.01"
+                                        />
+                                        <select
+                                            value={descontoTipo}
+                                            onChange={(e) => setDescontoTipo(e.target.value)}
+                                            className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer"
+                                        >
+                                            <option value="valor">R$</option>
+                                            <option value="porcentagem">%</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                            {showAcrescimos && (
+                                <div>
+                                    <label className="block text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
+                                        Acréscimo
+                                    </label>
+                                    <div className="flex rounded-lg shadow-sm">
+                                        <input
+                                            type="number"
+                                            value={acrescimoValor}
+                                            onChange={(e) => setAcrescimoValor(e.target.value)}
+                                            className="input rounded-r-none w-full min-w-0"
+                                            placeholder="0,00"
+                                            min="0"
+                                            step="0.01"
+                                        />
+                                        <select
+                                            value={acrescimoTipo}
+                                            onChange={(e) => setAcrescimoTipo(e.target.value)}
+                                            className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer"
+                                        >
+                                            <option value="valor">R$</option>
+                                            <option value="porcentagem">%</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl space-y-1">
+                        <div className="flex justify-between items-center text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(totalBruto)}</span>
+                        </div>
+                        {valDesconto > 0 && (
+                            <div className="flex justify-between items-center text-xs text-green-600 dark:text-green-400">
+                                <span>Desconto</span>
+                                <span>- {formatCurrency(valDesconto)}</span>
+                            </div>
+                        )}
+                        {valAcrescimo > 0 && (
+                            <div className="flex justify-between items-center text-xs text-orange-600 dark:text-orange-400">
+                                <span>Acréscimo</span>
+                                <span>+ {formatCurrency(valAcrescimo)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <span className="text-sm font-medium text-text-light dark:text-text-dark">Total Líquido</span>
+                            <span className="text-lg font-bold text-primary">
+                                {formatCurrency(totalLiquido)}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-4">

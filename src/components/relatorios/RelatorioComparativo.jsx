@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { formatCurrency } from '../../lib/utils';
 
-const RelatorioComparativo = ({ ordens, servicos = [], ano, mes }) => {
+const RelatorioComparativo = ({ ordens, servicos = [], ano, mes, dataInicio, dataFim }) => {
 
     // Função auxiliar para calcular métricas de um mês específico
-    const calcularMetricas = (targetAno, targetMes) => {
-        // Filtrar ordens finalizadas do mês alvo
+    const calcularMetricas = (targetAno, targetMes, limitStartDate = null, limitEndDate = null) => {
+        // Filtrar ordens finalizadas do mês alvo (ou período específico)
         const osDoMes = ordens.filter(o => {
             if (o.status !== 'finalizada') return false;
             // Tenta usar a data de finalização, se não existir use atualizadoEm, se não criadoEm
@@ -13,7 +13,28 @@ const RelatorioComparativo = ({ ordens, servicos = [], ano, mes }) => {
             if (!dataRef) return false;
 
             const data = new Date(dataRef);
-            return data.getFullYear() === targetAno && data.getMonth() === targetMes;
+
+            // Se tiver limites precisos (dataInicio/dataFim), usa eles prioritariamente para o mês atual
+            if (limitStartDate && limitEndDate) {
+                // Parse Local para garantir 00:00 e 23:59
+                // Nota: parseDateLocal já lida com string YYYY-MM-DD
+                const start = new Date(limitStartDate + 'T00:00:00');
+                const end = new Date(limitEndDate + 'T23:59:59.999');
+
+                // Fallback simples se parse falhar ou se strings já vierem completas
+                // Mas aqui assumimos que dataInicio/Fim vêm do input type="date" (YYYY-MM-DD)
+
+                if (data < start || data > end) return false;
+            } else {
+                // Check month/year match (Logica antiga para mês anterior ou sem filtro preciso)
+                if (data.getFullYear() !== targetAno || data.getMonth() !== targetMes) {
+                    // console.log('Rejected:', data.toISOString(), targetAno, targetMes);
+                    return false;
+                }
+                // console.log('Accepted:', data.toISOString());
+            }
+
+            return true;
         });
 
         const faturamento = osDoMes.reduce((acc, o) => acc + (Number(o.valorTotal) || 0), 0);
@@ -24,8 +45,8 @@ const RelatorioComparativo = ({ ordens, servicos = [], ano, mes }) => {
     };
 
     const metrics = useMemo(() => {
-        // Mês Atual (o selecionado nos filtros)
-        const current = calcularMetricas(ano, mes);
+        // Mês Atual (o selecionado nos filtros) -> Usa dataInicio e dataFim se disponíveis para ser exato
+        const current = calcularMetricas(ano, mes, dataInicio, dataFim);
 
         // Mês Anterior
         // Tratar virada de ano (Janeiro -> Dezembro do ano anterior)
@@ -51,7 +72,7 @@ const RelatorioComparativo = ({ ordens, servicos = [], ano, mes }) => {
             },
             mesAnteriorNome: prevDate.toLocaleString('pt-BR', { month: 'long' })
         };
-    }, [ordens, ano, mes]);
+    }, [ordens, ano, mes, dataFim]);
 
     // Componente de Card Individual
     const ComparisonCard = ({ title, value, prevValue, growth, isCurrency = false, icon }) => {

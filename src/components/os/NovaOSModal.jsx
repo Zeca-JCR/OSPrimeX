@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import storage from '../../lib/storage';
-import { formatPlaca } from '../../lib/utils';
+import { formatPlaca, validarPlaca, toISODate } from '../../lib/utils';
 
 export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, initialClienteId = '', initialVeiculoId = '' }) => {
     const { empresa } = useAuth();
@@ -119,7 +119,7 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
             if (!pode && form.tipo === 'os') { // Bloqueia OS, mas talvez permita Orçamento? Vamos bloquear tudo por enquanto ou só OS.
                 // Como Orçamento vira OS, melhor bloquear tudo.
                 const limite = getLimiteOS();
-                throw new Error(`Limite do plano atingido (${limite} OS). Faça upgrade.`);
+                throw new Error(`Limite do plano atingido(${limite} OS).Faça upgrade.`);
             }
 
             if (!form.clienteId) throw new Error('Selecione um cliente');
@@ -143,7 +143,7 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
                 if (template && template.itens) {
                     novosItens = template.itens.map(item => ({
                         ...item,
-                        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)} `,
                         total: (Number(item.quantidade) || 1) * (Number(item.precoUnitario) || 0)
                     }));
                     novoValorTotal = novosItens.reduce((acc, item) => acc + item.total, 0);
@@ -169,7 +169,7 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
                         // Ajuste para pegar a data local correta (YYYY-MM-DD) sem converter para UTC
                         const offset = hoje.getTimezoneOffset() * 60000;
                         const dataLocal = new Date(hoje.getTime() - offset);
-                        return dataLocal.toISOString().split('T')[0];
+                        return toISODate(dataLocal);
                     })() : '',
                     kmAtual: form.km || '', // Salva o KM de abertura na OS
                     checklist: [],
@@ -221,10 +221,10 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <label
-                                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${['os', 'garantia', 'cortesia', 'retorno', 'interna'].includes(form.tipo)
-                                        ? 'border-primary bg-primary/10 text-primary'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                                        }`}
+                                    className={`flex items - center justify - center gap - 2 p - 3 rounded - xl border - 2 cursor - pointer transition - all ${['os', 'garantia', 'cortesia', 'retorno', 'interna'].includes(form.tipo)
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                                        } `}
                                     onClick={() => setForm(prev => ({ ...prev, tipo: 'os' }))}
                                 >
                                     <input
@@ -238,10 +238,10 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
                                     <span className="font-medium">Ordem de Serviço</span>
                                 </label>
                                 <label
-                                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.tipo === 'orcamento'
-                                        ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                                        }`}
+                                    className={`flex items - center justify - center gap - 2 p - 3 rounded - xl border - 2 cursor - pointer transition - all ${form.tipo === 'orcamento'
+                                            ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
+                                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                                        } `}
                                     onClick={() => setForm(prev => ({ ...prev, tipo: 'orcamento' }))}
                                 >
                                     <input
@@ -407,7 +407,7 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
                                                     const val = formatPlaca(e.target.value);
                                                     setNewVeiculo(prev => ({ ...prev, placa: val }));
                                                 }}
-                                                className={`input w-full ${newVeiculo.placa && !/^[A-Z]{3}-?\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$/.test(newVeiculo.placa) ? 'border-red-500 bg-red-50' : ''}`}
+                                                className={`input w - full ${newVeiculo.placa && !/^[A-Z]{3}-?\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$/.test(newVeiculo.placa) ? 'border-red-500 bg-red-50' : ''} `}
                                                 maxLength={8}
                                                 autoFocus
                                             />

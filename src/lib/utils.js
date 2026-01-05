@@ -463,3 +463,31 @@ export const toTitleCase = (str) => {
         return word.charAt(0).toUpperCase() + word.slice(1);
     }).join(' ');
 };
+
+/**
+ * Calcula o resumo financeiro da OS (Subtotal, Descontos, Acréscimos)
+ */
+export const calcularResumoFinanceiro = (itens, dTipo, dValor, aTipo, aValor) => {
+    const somaItens = (itens || []).reduce((acc, item) => acc + (item.isento ? 0 : (item.total || 0)), 0);
+
+    let valDescontoGlobal = 0;
+    if (dValor) {
+        if (dTipo === 'valor') valDescontoGlobal = parseFloat(dValor) || 0;
+        else valDescontoGlobal = somaItens * ((parseFloat(dValor) || 0) / 100);
+    }
+
+    let valAcrescimoGlobal = 0;
+    if (aValor) {
+        if (aTipo === 'valor') valAcrescimoGlobal = parseFloat(aValor) || 0;
+        else valAcrescimoGlobal = somaItens * ((parseFloat(aValor) || 0) / 100);
+    }
+
+    const totalFinal = Math.max(0, somaItens - valDescontoGlobal + valAcrescimoGlobal);
+
+    return {
+        somaItens,
+        valDescontoGlobal,
+        valAcrescimoGlobal,
+        totalFinal
+    };
+};

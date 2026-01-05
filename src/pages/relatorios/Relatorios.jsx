@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDate, parseDateLocal } from '../../lib/utils';
+import { formatCurrency, formatDate, parseDateLocal, toISODate } from '../../lib/utils';
 // import { PDFDownloadLink } from '@react-pdf/renderer'; // Substituído por wrapper dinâmico
 import PDFLinkWrapper from '../../components/pdf/PDFLinkWrapper';
 // import { RelatorioDocument } from '../../components/pdf/RelatorioDocument'; // Importado dinamicamente no wrapper
@@ -31,8 +31,8 @@ const Relatorios = () => {
     const configurarPeriodoPadrao = () => {
         const hoje = new Date();
         const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        setDataFim(hoje.toISOString().split('T')[0]);
-        setDataInicio(inicioMes.toISOString().split('T')[0]);
+        setDataFim(toISODate(hoje));
+        setDataInicio(toISODate(inicioMes));
     };
 
     const carregarDados = async () => {
@@ -113,16 +113,15 @@ const Relatorios = () => {
                 return;
         }
 
-        setDataInicio(inicio.toISOString().split('T')[0]);
-        setDataFim(hoje.toISOString().split('T')[0]);
+        setDataInicio(toISODate(inicio));
+        setDataFim(toISODate(hoje));
     };
 
     // === RELATÓRIOS ===
 
-    // Faturamento
     const getRelatorioFaturamento = () => {
-        // Para faturamento, consideramos a data de atualização (finalização) se disponível
-        let ordensFiltradas = filtrarPorPeriodo(ordens, (o) => o.atualizadoEm || o.criadoEm);
+        // Para faturamento, consideramos a data de finalização real se disponível
+        let ordensFiltradas = filtrarPorPeriodo(ordens, (o) => o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm);
         ordensFiltradas = filtrarPorTecnico(ordensFiltradas);
         const finalizadas = ordensFiltradas.filter((o) => o.status === 'finalizada');
 
@@ -132,7 +131,8 @@ const Relatorios = () => {
         // Agrupar por dia
         const porDia = {};
         finalizadas.forEach((o) => {
-            const dia = formatDate(o.criadoEm);
+            const dataRef = o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm;
+            const dia = formatDate(dataRef);
             if (!porDia[dia]) porDia[dia] = 0;
             porDia[dia] += o.valorTotal || 0;
         });
@@ -147,7 +147,12 @@ const Relatorios = () => {
 
     // OS por Status
     const getRelatorioOSStatus = () => {
-        let ordensFiltradas = filtrarPorPeriodo(ordens);
+        let ordensFiltradas = filtrarPorPeriodo(ordens, (o) => {
+            if (o.status === 'finalizada') {
+                return o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm;
+            }
+            return o.criadoEm;
+        });
         ordensFiltradas = filtrarPorTecnico(ordensFiltradas);
 
         const porStatus = {
@@ -179,7 +184,7 @@ const Relatorios = () => {
     // Clientes
     const getRelatorioClientes = () => {
         // Clientes atendidos no período (considerando data da OS finalizada/atualizada)
-        let ordensFiltradas = filtrarPorPeriodo(ordens, (o) => o.atualizadoEm || o.criadoEm);
+        let ordensFiltradas = filtrarPorPeriodo(ordens, (o) => o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm);
         ordensFiltradas = filtrarPorTecnico(ordensFiltradas);
 
         // Top clientes por valor
@@ -249,7 +254,7 @@ const Relatorios = () => {
     // Serviços mais vendidos
     const getRelatorioServicos = () => {
         // Serviços vendidos no período
-        let ordensFiltradas = filtrarPorPeriodo(ordens, (o) => o.atualizadoEm || o.criadoEm);
+        let ordensFiltradas = filtrarPorPeriodo(ordens, (o) => o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm);
         ordensFiltradas = filtrarPorTecnico(ordensFiltradas);
         const finalizadas = ordensFiltradas.filter((o) => o.status === 'finalizada');
 
@@ -415,7 +420,7 @@ const Relatorios = () => {
                             dados={dadosRelatorio}
                             empresa={empresa}
                             periodo={periodo}
-                            fileName={`Relatorio_${tipoRelatorio}_${new Date().toISOString().split('T')[0]}.pdf`}
+                            fileName={`Relatorio_${tipoRelatorio}_${toISODate(new Date())}.pdf`}
                             className="btn-primary py-2 px-3 text-sm flex items-center gap-1"
                         >
                             {({ loading }) => (
@@ -435,8 +440,10 @@ const Relatorios = () => {
                 <RelatorioComparativo
                     ordens={ordens}
                     servicos={produtos}
-                    ano={new Date(periodo === 'mes' || periodo === 'custom' ? dataInicio : new Date()).getFullYear()}
-                    mes={new Date(periodo === 'mes' || periodo === 'custom' ? dataInicio : new Date()).getMonth()}
+                    ano={parseDateLocal(periodo === 'mes' || periodo === 'custom' ? dataInicio : new Date()).getFullYear()}
+                    mes={parseDateLocal(periodo === 'mes' || periodo === 'custom' ? dataInicio : new Date()).getMonth()}
+                    dataInicio={dataInicio}
+                    dataFim={dataFim}
                 />
 
                 {tipoRelatorio === 'faturamento' && <RelatorioFaturamento dados={dadosRelatorio} />}

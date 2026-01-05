@@ -33,6 +33,7 @@ const ConfiguracoesEmpresa = () => {
         metaMensalOS: 30, // Meta mensal de OS finalizadas
         diasValidadeOrcamento: 10, // Dias de validade padrão para orçamento
         diasInatividade: 90, // CRM: Dias para considerar inativo
+        imprimirApontamentos: true, // Configuração de impressão
         // Configurações de impressão
         logoUrl: '',
         corPrimaria: '#137fec',
@@ -56,6 +57,11 @@ const ConfiguracoesEmpresa = () => {
         trabalhaSabado: false,
         horarioSabadoInicio: '08:00',
         horarioSabadoFim: '12:00',
+        // Configurações de Preço
+        descontoNosItens: true,
+        acrescimoNosItens: false,
+        descontoNoTotal: true,
+        acrescimoNoTotal: false,
     });
 
     useEffect(() => {
@@ -86,6 +92,7 @@ const ConfiguracoesEmpresa = () => {
                 metaMensalOS: empresa.metaMensalOS || 30,
                 diasValidadeOrcamento: empresa.diasValidadeOrcamento || 10,
                 diasInatividade: empresa.diasInatividade || 90,
+                imprimirApontamentos: empresa.imprimirApontamentos ?? true,
                 logoUrl: empresa.logoUrl || '',
                 corPrimaria: empresa.corPrimaria || '#137fec',
                 chavePix: empresa.chavePix || '',
@@ -96,6 +103,11 @@ const ConfiguracoesEmpresa = () => {
                 markupPadrao: empresa.markupPadrao || 50,
                 agendaDiasAntecedencia: empresa.agendaDiasAntecedencia || 1,
                 agendaMensagemConfirmacao: empresa.agendaMensagemConfirmacao || 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} às {hora}? 🚗',
+                // Pricing
+                descontoNosItens: empresa.descontoNosItens ?? true,
+                acrescimoNosItens: empresa.acrescimoNosItens ?? false,
+                descontoNoTotal: empresa.descontoNoTotal ?? true,
+                acrescimoNoTotal: empresa.acrescimoNoTotal ?? false,
                 horarioTrabalhoInicio: empresa.horarioTrabalhoInicio || '08:00',
                 horarioTrabalhoFim: empresa.horarioTrabalhoFim || '18:00',
                 horarioAlmocoInicio: empresa.horarioAlmocoInicio || '12:00',
@@ -469,6 +481,66 @@ const ConfiguracoesEmpresa = () => {
                     </div>
                 </div>
 
+                {/* Configurações de Orçamento/Preço */}
+                <div className="md:col-span-2 card p-6">
+                    <h3 className="text-lg font-bold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">price_change</span>
+                        Configurações de Orçamento
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <h4 className="font-medium text-text-light dark:text-text-dark">Itens e Serviços</h4>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.descontoNosItens}
+                                    onChange={(e) => setForm({ ...form, descontoNosItens: e.target.checked })}
+                                    className="toggle toggle-primary"
+                                />
+                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                    Permitir <strong>Descontos</strong> nos itens
+                                </span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.acrescimoNosItens}
+                                    onChange={(e) => setForm({ ...form, acrescimoNosItens: e.target.checked })}
+                                    className="toggle toggle-primary"
+                                />
+                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                    Permitir <strong>Acréscimos</strong> nos itens
+                                </span>
+                            </label>
+                        </div>
+                        <div className="space-y-4">
+                            <h4 className="font-medium text-text-light dark:text-text-dark">Total da OS</h4>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.descontoNoTotal}
+                                    onChange={(e) => setForm({ ...form, descontoNoTotal: e.target.checked })}
+                                    className="toggle toggle-primary"
+                                />
+                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                    Permitir <strong>Desconto Global</strong> no total
+                                </span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.acrescimoNoTotal}
+                                    onChange={(e) => setForm({ ...form, acrescimoNoTotal: e.target.checked })}
+                                    className="toggle toggle-primary"
+                                />
+                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                    Permitir <strong>Acréscimo Global</strong> no total
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Configurações de OS */}
                 <div className="card p-4 lg:p-6">
                     <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
@@ -539,6 +611,20 @@ const ConfiguracoesEmpresa = () => {
                             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
                                 Como as OS serão exibidas ao entrar na tela
                             </p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 md:col-span-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                            <input
+                                type="checkbox"
+                                id="imprimirApontamentos"
+                                name="imprimirApontamentos"
+                                checked={form.imprimirApontamentos}
+                                onChange={handleChange}
+                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="imprimirApontamentos" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
+                                Imprimir Apontamento de Horas na OS
+                            </label>
+                            <span className="material-symbols-outlined text-gray-400 text-sm" title="Se marcado, uma tabela com os apontamentos de horas será impressa no PDF da OS.">help</span>
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">

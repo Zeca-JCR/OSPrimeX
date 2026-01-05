@@ -95,7 +95,7 @@ const LandingPage = () => {
             <section className="pt-32 pb-20 px-4">
                 <div className="max-w-4xl mx-auto text-center">
                     <h1 className="text-4xl md:text-6xl font-bold text-text-light dark:text-text-dark mb-6">
-                        Gestão de Oficina <br />
+                        Gestão de Oficinas <br />
                         <span className="text-primary">Simples e Eficiente</span>
                     </h1>
                     <p className="text-lg md:text-xl text-text-secondary-light dark:text-text-secondary-dark mb-8 max-w-2xl mx-auto">
@@ -200,8 +200,8 @@ const LandingPage = () => {
                                 <Link
                                     to="/login"
                                     className={`block text-center py-3 rounded-xl font-medium transition-colors ${plan.popular
-                                            ? 'bg-primary text-white hover:bg-primary-hover'
-                                            : 'bg-gray-100 dark:bg-gray-800 text-text-light dark:text-text-dark hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        ? 'bg-primary text-white hover:bg-primary-hover'
+                                        : 'bg-gray-100 dark:bg-gray-800 text-text-light dark:text-text-dark hover:bg-gray-200 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     Começar Agora
