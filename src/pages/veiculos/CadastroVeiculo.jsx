@@ -1,21 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatDate, formatCurrency, formatPlaca } from '../../lib/utils';
 import GraficoKM from '../../components/veiculos/GraficoKM';
 
-const CadastroVeiculo = () => {
+const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
     const { empresa } = useAuth();
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
-    const { id } = useParams();
+    const params = useParams();
     const [searchParams] = useSearchParams();
+    const id = veiculoId || params.id; // Prioriza prop (TabMode) sobre URL
     const clienteIdFromUrl = searchParams.get('cliente');
     const isEdicao = !!id;
 
     const [loading, setLoading] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
     const [clientes, setClientes] = useState([]);
     const [ordensVeiculo, setOrdensVeiculo] = useState([]);
 
@@ -43,6 +47,51 @@ const CadastroVeiculo = () => {
             carregarVeiculo();
         }
     }, [id]);
+
+    // Comunicar dirty state para aba
+    useEffect(() => {
+        if (isTabMode) onDirtyChange?.(isDirty);
+    }, [isDirty, isTabMode, onDirtyChange]);
+
+    // Comunicar título para aba (placa + modelo)
+    useEffect(() => {
+        if (isTabMode) {
+            const titulo = form?.placa ? `${form.placa}` : 'Novo Veículo';
+            onTitleChange?.(titulo);
+        }
+    }, [form?.placa, isTabMode, onTitleChange]);
+
+    // Função de salvar para saveHandler
+    const salvarVeiculo = useCallback(async () => {
+        if (!form.clienteId) throw new Error('Selecione um cliente');
+        if (!form.marca.trim()) throw new Error('Marca é obrigatória');
+        if (!form.modelo.trim()) throw new Error('Modelo é obrigatório');
+        if (!form.placa.trim()) throw new Error('Placa é obrigatória');
+
+        const payload = {
+            ...form,
+            placa: form.placa,
+            ano: form.ano ? parseInt(form.ano) : null,
+            km: form.km ? parseInt(form.km) : null,
+            proximaRevisaoKm: form.proximaRevisaoKm ? parseInt(form.proximaRevisaoKm) : null,
+        };
+
+        if (isEdicao) {
+            await storage.update('veiculos', id, payload);
+        } else {
+            await storage.create('veiculos', payload, empresa.id);
+        }
+        setIsDirty(false);
+    }, [form, id, isEdicao, empresa?.id]);
+
+    // Registrar saveHandler
+    useEffect(() => {
+        if (isTabMode && veiculoId) {
+            const tabId = `veiculo-${veiculoId}`;
+            registerSaveHandler(tabId, salvarVeiculo);
+            return () => unregisterSaveHandler(tabId);
+        }
+    }, [isTabMode, veiculoId, salvarVeiculo, registerSaveHandler, unregisterSaveHandler]);
 
     const carregarClientes = async () => {
         try {
@@ -94,6 +143,7 @@ const CadastroVeiculo = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        setIsDirty(true);
         if (name === 'placa') {
             setForm((prev) => ({ ...prev, [name]: formatPlaca(value) }));
         } else {
@@ -192,8 +242,11 @@ const CadastroVeiculo = () => {
                 await storage.create('veiculos', payload, empresa.id);
             }
 
+            setIsDirty(false);
             // Navegar de volta
-            if (clienteIdFromUrl) {
+            if (isTabMode) {
+                onClose?.();
+            } else if (clienteIdFromUrl) {
                 navigate(`/clientes/${clienteIdFromUrl}`);
             } else {
                 navigate('/veiculos');
@@ -205,7 +258,37 @@ const CadastroVeiculo = () => {
         }
     };
 
+    const handleDelete = async () => {
+        if (!confirm('Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita.')) return;
 
+        setSalvando(true);
+        try {
+            // Validação: Verificar vínculo com OS
+            const todasOS = await storage.getAll('ordens_servico', empresa?.id);
+            const vinculado = todasOS.some(os => os.veiculoId === id);
+
+            if (vinculado) {
+                alert('Não é possível excluir este veículo pois ele está vinculado a Ordens de Serviço (histórico).');
+                return;
+            }
+
+            await storage.delete('veiculos', id);
+
+            // Navegar de volta
+            if (isTabMode) {
+                onClose?.();
+            } else if (clienteIdFromUrl) {
+                navigate(`/clientes/${clienteIdFromUrl}`);
+            } else {
+                navigate('/veiculos');
+            }
+        } catch (error) {
+            console.error('Erro ao excluir veículo:', error);
+            setError('Erro ao excluir veículo: ' + error.message);
+        } finally {
+            setSalvando(false);
+        }
+    };
 
     const combustiveis = [
         { value: 'flex', label: 'Flex' },
@@ -232,7 +315,7 @@ const CadastroVeiculo = () => {
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="flex items-center gap-3 px-4 py-3">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => isTabMode ? onClose?.() : navigate(-1)}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
@@ -576,18 +659,29 @@ const CadastroVeiculo = () => {
 
                 {/* Sticky Footer Actions */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-20">
-                    <div className="max-w-2xl mx-auto flex gap-3">
+                    <div className="max-w-2xl mx-auto flex gap-3 items-center">
+                        {isEdicao && (
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mr-auto"
+                                title="Excluir Veículo"
+                                disabled={salvando}
+                            >
+                                <span className="material-symbols-outlined">delete</span>
+                            </button>
+                        )}
                         <button
                             type="button"
-                            onClick={() => navigate(-1)}
-                            className="btn-secondary flex-1"
+                            onClick={() => isTabMode ? onClose?.() : navigate(-1)}
+                            className={`btn-secondary ${isEdicao ? '' : 'flex-1'}`}
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={salvando}
-                            className="btn-primary flex-1 shadow-lg shadow-primary/20"
+                            className={`btn-primary shadow-lg shadow-primary/20 ${isEdicao ? '' : 'flex-1'}`}
                         >
                             {salvando ? (
                                 <>

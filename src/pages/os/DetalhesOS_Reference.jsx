@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOS } from '../../contexts/OSContext';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDate, formatDateTime, formatPlaca, toISODate, calculateWorkingTime, normalizeString, toTitleCase, parseCurrency, formatCurrencyInput } from '../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, formatPlaca, toISODate, calculateWorkingTime, normalizeString, toTitleCase } from '../../lib/utils';
 import { DownloadOSButton, DownloadThermalButton } from '../../components/pdf/OSDocument';
 import { PrintOSButton, PrintThermalButton } from '../../components/pdf/PrintButtons';
 import { TimerExecucao } from '../../components/os/TimerExecucao';
@@ -11,7 +11,6 @@ import AssinaturaCanvas from '../../components/os/AssinaturaCanvas';
 import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
 import { EditVeiculoModal } from '../../components/os/EditVeiculoModal';
 import { TimeTrackingSection } from '../../components/os/TimeTrackingSection';
-import CurrencyInput from '../../components/common/CurrencyInput';
 
 import { gerarPayloadPix } from '../../lib/pix';
 import { useAutoSave } from '../../hooks/useAutoSave';
@@ -42,11 +41,12 @@ const calcularResumoFinanceiro = (itens, dTipo, dValor, aTipo, aValor) => {
     };
 };
 
-const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirtyChange, onTitleChange }) => {
+const DetalhesOS = ({ osId, isWindowMode, onClose, onMinimize }) => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
     const params = useParams();
-    const id = osId || params.id; // Prioriza prop (Tab/Window Mode) sobre URL (Route Mode)
+    const id = osId || params.id; // Prioriza prop (Window Mode) sobre URL (Route Mode)
+    const { updateWindow } = useOS();
 
 
     // Estado para garantir configurações atualizadas (hot-reload interno)
@@ -84,19 +84,15 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const [isDirty, setIsDirty] = useState(false);
     const isDirtyRef = useRef(isDirty);
 
-    // Auto-Save desabilitado - alterações ficam em memória até salvar manualmente
-    // const { draftFound, loadDraft, clearDraft, isSaving: isAutoSaving, lastSaved } = useAutoSave(
-    //     id ? `draft_os_${id}` : null,
-    //     form,
-    //     2000,
-    //     isDirty && ['orcamento', 'aberta', 'execucao', 'aguardando_peca'].includes(os?.status)
-    // );
-    const draftFound = false;
-    const loadDraft = () => null;
-    const clearDraft = () => { };
+    // Auto-Save Hook
+    const { draftFound, loadDraft, clearDraft, isSaving: isAutoSaving, lastSaved } = useAutoSave(
+        id ? `draft_os_${id}` : null,
+        form, // Salva o form inteiro
+        2000,
+        isDirty && ['orcamento', 'aberta', 'execucao', 'aguardando_peca'].includes(os?.status) // Salva se estiver sujo e em status editável
+    );
 
-    // Modal de confirmação ao sair com alterações não salvas
-    const [showConfirmarSaida, setShowConfirmarSaida] = useState(false);
+    const [restoredDraft, setRestoredDraft] = useState(false);
 
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -131,7 +127,6 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const [showImportarKit, setShowImportarKit] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
     const [showAtribuirTecnico, setShowAtribuirTecnico] = useState(false);
-    const [atribuirParaIniciarExecucao, setAtribuirParaIniciarExecucao] = useState(false); // Flag: veio do "Iniciar Execução"
     const [showFotoModal, setShowFotoModal] = useState(null); // foto selecionada para visualizar
     const [showPagamento, setShowPagamento] = useState(false);
 
@@ -143,7 +138,6 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     // Modais de transição de status
     const [showFinalizarModal, setShowFinalizarModal] = useState(false);
     const [showCancelarModal, setShowCancelarModal] = useState(false);
-    const [showReabrirModal, setShowReabrirModal] = useState(false);
     const [kmAtualizado, setKmAtualizado] = useState('');
     const [motivoCancelamento, setMotivoCancelamento] = useState('');
     const [showFinalizadoSuccess, setShowFinalizadoSuccess] = useState(false);
@@ -156,39 +150,16 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const [linkRastreavel, setLinkRastreavel] = useState(null);
     const [linkCopied, setLinkCopied] = useState(false);
 
-    // Atualizar título e estado da aba/janela
+    // Atualizar título e estado da janela no Dock
     useEffect(() => {
-        if (os?.numero) {
-            const title = `OS #${os.numero}`;
-            // Modo Aba: usar callbacks
-            if (isTabMode) {
-                onTitleChange?.(title);
-            }
+        if (isWindowMode && os?.numero && updateWindow) {
+            updateWindow(id, {
+                title: `OS #${os.numero}`,
+                number: os.numero,
+                isDirty: isDirty // Sync dirty state
+            });
         }
-    }, [os?.numero, isTabMode, onTitleChange]);
-
-    // Sincronizar isDirty com a aba
-    useEffect(() => {
-        if (isTabMode) {
-            onDirtyChange?.(isDirty);
-        }
-    }, [isDirty, isTabMode, onDirtyChange]);
-
-    // Listener para quando usuário clica no X da aba para fechar
-    useEffect(() => {
-        if (!isTabMode) return;
-
-        const handleTabCloseRequest = (event) => {
-            const tabId = event.detail?.tabId;
-            // Verifica se é esta aba (baseado no osId)
-            if (tabId === `os-${id}` && isDirty) {
-                setShowConfirmarSaida(true);
-            }
-        };
-
-        window.addEventListener('tab-close-request', handleTabCloseRequest);
-        return () => window.removeEventListener('tab-close-request', handleTabCloseRequest);
-    }, [isTabMode, id, isDirty]);
+    }, [isWindowMode, os?.numero, id, updateWindow, isDirty]);
 
     useEffect(() => {
         carregarDados(true);
@@ -319,14 +290,17 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const handleFormChange = (field, value) => {
         setForm(prev => {
             const novo = { ...prev, [field]: value };
+            // Verifica se mudou algo em relação ao original (os)
+            // Comparação simples para strings/numbers. Para objetos mais complexos precisaria de deep equal
+            // Mas aqui os campos editáveis são simples (defeito, observacoes)
+            const mudou = JSON.stringify(novo) !== JSON.stringify(os);
+            // Na verdade, comparison field by field is safer because 'os' might have other internal changes
+            // Mas como 'os' é a referencia loaded do DB, e 'novo' é local...
+            // Simplificando: sempre que digita, assume dirty para habilitar o salvar. 
+            // O reset acontece no 'Cancelar' ou 'Salvar'
             setIsDirty(true);
             return novo;
         });
-    };
-
-    const aprovarOrcamento = async () => {
-        // Aprovar orçamento muda o status para 'aberta' (Aprovada/Não Iniciada)
-        await mudarStatus('aberta');
     };
 
     const cancelarEdicao = async () => {
@@ -340,7 +314,6 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
         // Validações
         if (novoStatus === 'execucao' && !os.tecnicoId) {
             alert('Atribua um técnico antes de iniciar a execução.');
-            setAtribuirParaIniciarExecucao(true); // Flag para iniciar execução após atribuir
             setShowAtribuirTecnico(true);
             return;
         }
@@ -359,24 +332,12 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
             return;
         }
 
-        // Modal para reabertura de OS finalizada (estorno necessário)
+        // Alerta para reabertura de OS finalizada (estorno necessário)
         if (os.status === 'finalizada' && (novoStatus === 'aberta' || novoStatus === 'execucao')) {
-            setShowReabrirModal(true);
-            return;
-        }
-
-        // Verificação de previsão de entrega vencida ao aprovar orçamento
-        if (os.status === 'orcamento' && novoStatus === 'aberta' && os.previsaoEntrega) {
-            const previsao = new Date(os.previsaoEntrega);
-            const agora = new Date();
-            if (previsao < agora) {
-                const confirmar = confirm(
-                    `⚠️ ATENÇÃO: A previsão de entrega informada no orçamento (${previsao.toLocaleDateString('pt-BR')} às ${previsao.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}) já passou!\n\nDeseja continuar mesmo assim?\n\nVocê poderá atualizar a previsão após aprovar.`
-                );
-                if (!confirmar) {
-                    return;
-                }
+            if (!confirm('ATENÇÃO: Ao reabrir uma OS finalizada, as peças baixadas serão estornadas ao estoque. Continuar?')) {
+                return;
             }
+            await estornarEstoque();
         }
 
         // Timer de execução: registrar início quando entra em execução
@@ -521,23 +482,6 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
         }
     };
 
-    // Confirmar reabertura de OS finalizada (chamado pelo modal)
-    const confirmarReabertura = async () => {
-        setSalvando(true);
-        try {
-            // Estornar estoque (devolver peças)
-            await estornarEstoque();
-
-            // Salvar novo status
-            await salvarOS({ status: 'aberta' });
-            setShowReabrirModal(false);
-        } catch (error) {
-            console.error('Erro ao reabrir:', error);
-        } finally {
-            setSalvando(false);
-        }
-    };
-
     // Estornar estoque (devolver peças)
     const estornarEstoque = async () => {
         const itens = os.itens || [];
@@ -663,24 +607,6 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
             return;
         }
 
-        // Se veio do "Iniciar Execução", mudar status automaticamente
-        if (atribuirParaIniciarExecucao && tecnicoId) {
-            setAtribuirParaIniciarExecucao(false);
-            setShowAtribuirTecnico(false);
-
-            // Preparar dados para execução
-            const dadosExecucao = {
-                tecnicoId,
-                status: 'execucao',
-                execucaoIniciadaEm: os.execucaoIniciadaEm || new Date().toISOString(),
-                execucaoRetomadasEm: [...(os.execucaoRetomadasEm || []), new Date().toISOString()]
-            };
-
-            await salvarOS(dadosExecucao);
-            return;
-        }
-
-        // Atribuição normal (sem iniciar execução)
         setOs(prev => ({ ...prev, tecnicoId }));
         setForm(prev => ({ ...prev, tecnicoId }));
         setIsDirty(true);
@@ -1118,244 +1044,133 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
             )}
 
             {/* Header Sticky */}
-            <header className="flex-none z-30 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] shadow-sm">
+            <header className="flex-none z-30 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] shadow-sm relative">
                 <div className="flex items-center justify-between px-4 py-3">
-                    {/* Esquerda: Voltar + Título */}
-                    <div className="flex items-center gap-3">
-                        {!isWindowMode && (
-                            <button
-                                onClick={() => {
-                                    if (isDirty) {
-                                        setShowConfirmarSaida(true);
-                                    } else if (isTabMode) {
-                                        onClose?.();
-                                    } else {
-                                        navigate('/os');
-                                    }
-                                }}
-                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
-                                title="Voltar"
-                            >
-                                <span className="material-symbols-outlined">arrow_back</span>
-                            </button>
-                        )}
-                        <div>
-                            <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    {/* Lado Esquerdo (Botão Voltar) */}
+                    {!isWindowMode && (
+                        <button
+                            onClick={() => navigate('/os')}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark mr-2"
+                        >
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                    )}
+
+                    {/* Título Centralizado Absoluto */}
+                    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-2">
                                 {os.numero ? `OS #${os.numero}` : 'OS Sem Número'}
                                 <div className={`px-2 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 border border-transparent ${statusAtual.color}`}>
                                     <span className="material-symbols-outlined text-sm">{statusAtual.icon}</span>
                                     {statusAtual.label}
                                 </div>
-                            </h1>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {cliente?.nome || 'Cliente não identificado'} • {veiculo?.placa || 'Sem placa'}
-                            </p>
-                        </div>
+                                {linkRastreavel && (
+                                    <div className="flex items-center gap-1 animate-scaleIn ml-1">
+                                        {/* Botão Abrir */}
+                                        <button
+                                            onClick={() => window.open(`/r/${linkRastreavel.id}`, '_blank')}
+                                            className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-200 transition-colors"
+                                            title="Abrir Rastreio (Visão do Cliente)"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">share_location</span>
+                                        </button>
+
+                                        {/* Botão Copiar */}
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${window.location.origin}/r/${linkRastreavel.id}`);
+                                                setLinkCopied(true);
+                                                setTimeout(() => setLinkCopied(false), 2000);
+                                            }}
+                                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${linkCopied
+                                                ? 'bg-green-100 text-green-600'
+                                                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                                }`}
+                                            title="Copiar Link"
+                                        >
+                                            <span className="material-symbols-outlined text-xs">
+                                                {linkCopied ? 'check' : 'content_copy'}
+                                            </span>
+                                        </button>
+
+                                        {/* Contador de Visualizações */}
+                                        {linkRastreavel.cliques > 0 && (
+                                            <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] text-gray-500 font-medium" title={`${linkRastreavel.cliques} visualizações pelo cliente`}>
+                                                <span className="material-symbols-outlined text-[10px]">visibility</span>
+                                                {linkRastreavel.cliques}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </h1>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            {cliente?.nome || 'Cliente não identificado'}
+                        </p>
                     </div>
 
-                    {/* Direita: Ações Principais (Desktop) */}
+                    {/* Espaçador para Flex (empurra ações para direita) */}
+                    <div className="flex-1"></div>
+
+                    {/* Ações Direita (PDF, Mais Ações, Janela) */}
                     <div className="flex items-center gap-2">
-                        {/* Ações "Desenterradas" para Desktop */}
-                        <div className="hidden lg:flex items-center gap-1 mr-2 border-r border-gray-200 dark:border-gray-700 pr-2">
-                            <button
-                                onClick={duplicarOS}
-                                className="btn-ghost text-xs flex items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary hover:bg-primary/5 px-2 py-1.5 rounded-md transition-colors"
-                                title="Duplicar OS"
-                            >
-                                <span className="material-symbols-outlined text-lg">content_copy</span>
-                                Duplicar
-                            </button>
-
-                            <button
-                                onClick={() => handleEnviarWhatsApp('acompanhamento')}
-                                className="btn-ghost text-xs flex items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary hover:bg-primary/5 px-2 py-1.5 rounded-md transition-colors"
-                                title="Enviar Link de Rastreio"
-                            >
-                                <span className="material-symbols-outlined text-lg">share</span>
-                                Compartilhar
-                            </button>
-
-                            <button
-                                onClick={() => setShowAssinatura(true)}
-                                className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
-                            >
-                                <span className="material-symbols-outlined text-lg">draw</span>
-                                Assinar
-                            </button>
-                        </div>
-
-                        {/* Status Actions (Workflow) - Restored */}
-                        <div className="flex items-center gap-2">
-                            {/* Tracking Info (Visible for all active OS) */}
-                            {os.status !== 'cancelada' && (
-                                <div className="hidden lg:flex items-center gap-2 mr-2 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-medium text-gray-500">
-                                    <span className="flex items-center gap-1" title="Visualizações pelo cliente">
-                                        <span className="material-symbols-outlined text-sm">visibility</span>
-                                        {os.visualizacoes || 0}
-                                    </span>
-                                    <div className="w-px h-3 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                                    <button
-                                        onClick={async () => {
-                                            try {
-                                                let linkToCopy = '';
-                                                if (linkRastreavel) {
-                                                    linkToCopy = `${window.location.origin}/r/${linkRastreavel.id}`;
-                                                } else {
-                                                    // Tenta gerar na hora se não existir
-                                                    const linksExistentes = await storage.getAll('links_rastreaveis', empresa.id);
-                                                    const linkEncontrado = linksExistentes.find(l => l.osId === os.id && l.ativo !== false);
-
-                                                    if (linkEncontrado) {
-                                                        linkToCopy = `${window.location.origin}/r/${linkEncontrado.id}`;
-                                                        setLinkRastreavel(linkEncontrado);
-                                                    } else {
-                                                        const codigo = Math.random().toString(36).substring(2, 8).toUpperCase();
-                                                        const novoLink = {
-                                                            id: codigo,
-                                                            codigo: codigo,
-                                                            osId: os.id,
-                                                            urlDestino: `/status/${os.numero}?e=${empresa.id}`,
-                                                            ativo: true,
-                                                            cliques: 0,
-                                                            criadoEm: new Date().toISOString()
-                                                        };
-                                                        await storage.create('links_rastreaveis', novoLink, empresa.id);
-                                                        linkToCopy = `${window.location.origin}/r/${codigo}`;
-                                                        setLinkRastreavel(novoLink);
-                                                    }
-                                                }
-                                                navigator.clipboard.writeText(linkToCopy);
-                                                alert('Link de rastreio copiado!');
-                                            } catch (err) {
-                                                console.error('Erro ao copiar link:', err);
-                                                alert('Erro ao gerar link.');
-                                            }
-                                        }}
-                                        className="hover:text-primary flex items-center gap-1"
-                                        title="Copiar link de rastreio"
-                                    >
-                                        <span className="material-symbols-outlined text-sm">content_copy</span>
-                                    </button>
-                                </div>
-                            )}
-
-                            {os.status === 'orcamento' && (
-                                <>
-                                    <button
-                                        onClick={() => handleEnviarWhatsApp('orcamento')}
-                                        className="btn-ghost text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 border-green-200 dark:border-green-800"
-                                        title="Enviar orçamento para aprovação via WhatsApp"
-                                    >
-                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                                        </svg>
-                                        <span className="hidden sm:inline">Enviar p/Aprovação</span>
-                                    </button>
-                                    <button
-                                        onClick={aprovarOrcamento}
-                                        className="btn-ghost text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 border-blue-200 dark:border-blue-800"
-                                        title="Cliente presente no balcão aprovando verbalmente"
-                                    >
-                                        <span className="material-symbols-outlined">how_to_reg</span>
-                                        <span className="hidden sm:inline">Aprovar Manualmente</span>
-                                    </button>
-                                </>
-                            )}
-
-                            {os.status === 'aberta' && (
-                                <button
-                                    onClick={() => mudarStatus('execucao')}
-                                    className="btn-primary animate-pulse"
-                                >
-                                    <span className="material-symbols-outlined">play_arrow</span>
-                                    Iniciar Execução
-                                </button>
-                            )}
-
-                            {os.status === 'execucao' && (
-                                <>
-                                    <button
-                                        onClick={() => mudarStatus('aguardando_peca')}
-                                        className="btn-secondary text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:border-orange-800"
-                                    >
-                                        <span className="material-symbols-outlined">pause</span>
-                                        <span className="hidden sm:inline">Aguardar Peça</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setShowFinalizarModal(true)}
-                                        className="btn-primary bg-green-600 hover:bg-green-700 border-green-600"
-                                    >
-                                        <span className="material-symbols-outlined">check</span>
-                                        Finalizar
-                                    </button>
-                                </>
-                            )}
-
-                            {os.status === 'aguardando_peca' && (
-                                <button
-                                    onClick={() => mudarStatus('execucao')}
-                                    className="btn-primary"
-                                >
-                                    <span className="material-symbols-outlined">play_arrow</span>
-                                    Retomar Execução
-                                </button>
-                            )}
-
-                            {os.status === 'finalizada' && (
-                                <button
-                                    onClick={() => mudarStatus('aberta')}
-                                    className="btn-secondary text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:border-orange-800"
-                                >
-                                    <span className="material-symbols-outlined">lock_open</span>
-                                    <span className="hidden sm:inline">Reabrir</span>
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Separador visual entre ações de workflow e impressão */}
-                        <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
-
-                        {/* Botões de Impressão */}
+                        {/* Botão PDF A4 */}
+                        {/* Botão Imprimir A4 */}
                         <PrintOSButton
                             os={os}
                             cliente={cliente}
                             veiculo={veiculo}
                             empresa={empresa}
                             tecnico={tecnicoAtribuido}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1 text-sm"
                         />
+
+                        {/* Botão Imprimir Térmico 80mm */}
                         <PrintThermalButton
                             os={os}
                             cliente={cliente}
                             veiculo={veiculo}
                             empresa={empresa}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1 text-sm"
                         />
 
-                        {/* Dropdown Menu (Mobile + Extras) */}
+                        {/* Menu Mais Ações (Dropdown) */}
                         <div className="relative group">
-                            <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark">
-                                <span className="material-symbols-outlined">more_vert</span>
+                            <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1 text-sm">
+                                <span className="material-symbols-outlined text-lg">more_vert</span>
                             </button>
 
+                            {/* Bridge container with padding-top to maintain hover state over the gap */}
                             <div className="absolute right-0 top-full pt-2 w-56 hidden group-hover:block z-50 animate-scaleIn origin-top-right">
                                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                                    {/* Mobile Only Actions */}
-                                    {/* Note: In pure CSS, we can hide these on LG, but here we render them always in dropdown for fallback or just show on mobile */}
-                                    <div className="lg:hidden">
-                                        <button onClick={duplicarOS} className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark">
-                                            <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">content_copy</span> Duplicar
-                                        </button>
-                                        <button onClick={() => handleEnviarWhatsApp('acompanhamento')} className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark">
-                                            <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">share</span> Rastreio
-                                        </button>
-                                        <button onClick={() => setShowAssinatura(true)} className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark">
-                                            <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">draw</span> Assinar
-                                        </button>
-                                        <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
-                                    </div>
+                                    <button
+                                        onClick={duplicarOS}
+                                        className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark"
+                                    >
+                                        <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">content_copy</span>
+                                        Duplicar OS
+                                    </button>
 
-                                    {/* Downloads */}
+                                    <button
+                                        onClick={() => handleEnviarWhatsApp('acompanhamento')}
+                                        className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark"
+                                    >
+                                        <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">share</span>
+                                        Compartilhar Link de Rastreio
+                                    </button>
+
+                                    <button
+                                        onClick={() => setShowAssinatura(true)}
+                                        className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark"
+                                    >
+                                        <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">draw</span>
+                                        Coletar Assinatura
+                                    </button>
+
+                                    <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
+
+                                    {/* Download Options (Moved from header) */}
                                     <div className="px-3 py-2">
                                         <p className="text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase mb-1">Downloads</p>
                                         <div className="flex flex-col gap-1">
@@ -1377,50 +1192,81 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                         </div>
                                     </div>
 
-                                    {/* Export / Pix */}
                                     {os.status === 'finalizada' && (
                                         <>
                                             <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
-                                            <button onClick={handleExport} className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark">
-                                                <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">data_object</span> Exportar JSON
+                                            <button
+                                                onClick={handleExport}
+                                                className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark"
+                                            >
+                                                <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">data_object</span>
+                                                Exportar JSON
                                             </button>
-                                            <button onClick={handleGerarPix} className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark">
-                                                <span className="material-symbols-outlined text-lg text-blue-500">pix</span> Receber PIX
+
+
+
+                                            <button
+                                                onClick={handleGerarPix}
+                                                className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-sm text-text-light dark:text-text-dark"
+                                            >
+                                                <span className="material-symbols-outlined text-lg text-blue-500">pix</span>
+                                                Receber via PIX
                                             </button>
                                         </>
                                     )}
 
-                                    {/* Danger Zone - Cancelar (para todos os status exceto cancelada) */}
-                                    {os.status !== 'cancelada' && <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />}
+                                    <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
 
-                                    {os.status !== 'cancelada' && (
-                                        <button onClick={() => mudarStatus('cancelada')} className="w-full p-3 text-left hover:bg-red-50 dark:hover:bg-red-900/10 text-red-600 flex items-center gap-3 text-sm">
+                                    {/* Ações Destrutivas / Secundárias de Status */}
+                                    {os.status === 'orcamento' && (
+                                        <button
+                                            onClick={() => mudarStatus('cancelada')}
+                                            className="w-full p-3 text-left hover:bg-red-50 dark:hover:bg-red-900/10 text-red-600 flex items-center gap-3 text-sm"
+                                        >
                                             <span className="material-symbols-outlined text-lg">cancel</span>
-                                            Cancelar OS
-                                            {os.status === 'finalizada' && (
-                                                <span className="ml-auto text-[10px] bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded font-bold">ESTORNO</span>
-                                            )}
+                                            Cancelar Orçamento
                                         </button>
                                     )}
+
+                                    {os.status === 'finalizada' && (
+                                        <button
+                                            onClick={() => mudarStatus('aberta')}
+                                            className="w-full p-3 text-left hover:bg-orange-50 dark:hover:bg-orange-900/10 text-orange-600 flex items-center gap-3 text-sm"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">lock_open</span>
+                                            Reabrir OS
+                                        </button>
+                                    )}
+
                                 </div>
                             </div>
                         </div>
 
-                        {/* Window Controls */}
                         {isWindowMode && (
-                            <div className="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-2 ml-1">
-                                <button onClick={onMinimize} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-text-secondary-light dark:text-text-secondary-dark"><span className="material-symbols-outlined">remove</span></button>
+                            <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => isDirty ? setShowConfirmarSaida(true) : onClose()}
+                                    onClick={onMinimize}
+                                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-text-secondary-light dark:text-text-secondary-dark"
+                                    title="Minimizar Janela"
+                                >
+                                    <span className="material-symbols-outlined">remove</span>
+                                </button>
+                                <button
+                                    onClick={onClose}
                                     className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-text-secondary-light dark:text-text-secondary-dark hover:text-red-500"
+                                    title="Fechar Janela"
                                 >
                                     <span className="material-symbols-outlined">close</span>
                                 </button>
                             </div>
                         )}
+
+
                     </div>
-                </div>
+                </div >
             </header >
+
+
             {/* Alerta de Rascunho Encontrado (Top Bar) */}
             {
                 draftFound && !restoredDraft && !isDirty && (
@@ -1457,191 +1303,227 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                 )
             }
 
-            {/* Main Content Area - Scrollable */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-900/50 p-4">
-                <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative pb-4">
 
-                    {/* === COLUNA ESQUERDA (Contexto) === */}
-                    <div className="lg:col-span-4 space-y-6">
 
-                        {/* Cartão Cliente & Veículo Unified */}
-                        <div className="card p-5">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">person</span>
-                                    Cliente e Veículo
-                                </h3>
-                                {os.status !== 'finalizada' && os.status !== 'cancelada' && (
-                                    <button onClick={() => setShowEditVeiculo(true)} className="text-xs text-primary hover:underline">Editar</button>
-                                )}
+                {/* Workflow Bar - Barra de Ações de Fluxo */}
+                {
+                    os.status !== 'cancelada' && os.status !== 'finalizada' && (
+                        <div className="border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] bg-gray-50 dark:bg-gray-800/30 px-4 py-3 relative">
+
+
+                            {/* Indicador de Auto-Save */}
+                            {isAutoSaving && (
+                                <div className="absolute top-[-30px] right-4 flex items-center gap-1.5 text-xs font-medium text-gray-400 bg-white/90 dark:bg-gray-900/90 px-2 py-1 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                                    Salvando rascunho...
+                                </div>
+                            )}
+                            {lastSaved && !isAutoSaving && isDirty && (
+                                <div className="absolute top-[-30px] right-4 flex items-center gap-1.5 text-xs text-gray-400 bg-white/90 dark:bg-gray-900/90 px-2 py-1 rounded-full shadow-sm border border-gray-100 dark:border-gray-800 transition-opacity duration-1000">
+                                    <span className="material-symbols-outlined text-[10px]">cloud_done</span>
+                                    Salvo {lastSaved.toLocaleTimeString()}
+                                </div>
+                            )}
+
+                            {errorMsg && (
+                                <div className="absolute top-[-50px] right-4 bg-red-600 text-white px-4 py-3 rounded-xl shadow-lg z-50 animate-bounce flex items-center gap-2">
+                                    <span className="material-symbols-outlined">error</span>
+                                    {errorMsg}
+                                </div>
+                            )}
+                            <div className="flex flex-wrap gap-3 items-center justify-between">
+                                <div className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-2">
+                                    <span className="material-symbols-outlined">alt_route</span>
+                                    Próxima Etapa:
+                                </div>
+
+                                <div className="flex gap-3 flex-1 justify-end">
+                                    {/* Workflow: ORÇAMENTO */}
+                                    {os.status === 'orcamento' && (
+                                        <>
+                                            {(cliente?.whatsapp || cliente?.telefone) && (
+                                                <button
+                                                    onClick={() => {
+                                                        console.log('Validando aprovação (Zap). Total:', os.valorTotal);
+                                                        if (!os.valorTotal || Number(os.valorTotal) <= 0) {
+                                                            console.log('Bloqueado: Valor zero ou inválido');
+                                                            setErrorMsg('Adicione itens ou serviços para enviar a aprovação.');
+                                                            return;
+                                                        }
+                                                        handleEnviarWhatsApp('acompanhamento');
+                                                    }}
+                                                    className="btn-secondary text-green-600 hover:bg-green-50 border-green-200"
+                                                >
+                                                    <span className="material-symbols-outlined">send</span>
+                                                    Enviar p/ Aprovação (Zap)
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => {
+                                                    console.log('Validando aprovação manual. Total:', os.valorTotal);
+                                                    if (!os.valorTotal || Number(os.valorTotal) <= 0) {
+                                                        console.log('Bloqueado: Valor zero ou inválido');
+                                                        setErrorMsg('Adicione itens ou serviços para aprovar.');
+                                                        return;
+                                                    }
+                                                    mudarStatus('aberta');
+                                                }}
+                                                className="btn-primary bg-blue-600 hover:bg-blue-700"
+                                            >
+                                                <span className="material-symbols-outlined">thumb_up</span>
+                                                Aprovar Manualmente
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {/* Workflow: ABERTA */}
+                                    {os.status === 'aberta' && (
+                                        <button
+                                            onClick={() => mudarStatus('execucao')}
+                                            className="btn-primary"
+                                        >
+                                            <span className="material-symbols-outlined">play_arrow</span>
+                                            Iniciar Execução
+                                        </button>
+                                    )}
+
+                                    {/* Workflow: EXECUÇÃO */}
+                                    {os.status === 'execucao' && (
+                                        <>
+                                            <button
+                                                onClick={() => mudarStatus('aguardando_peca')}
+                                                className="btn-secondary text-orange-600 hover:bg-orange-50 border-orange-200"
+                                            >
+                                                <span className="material-symbols-outlined">inventory_2</span>
+                                                Aguardando Peça
+                                            </button>
+                                            <button
+                                                onClick={() => mudarStatus('finalizada')}
+                                                className="btn-primary bg-green-600 hover:bg-green-700"
+                                            >
+                                                <span className="material-symbols-outlined">check_circle</span>
+                                                Finalizar Serviço
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {/* Workflow: AGUARDANDO PEÇA */}
+                                    {os.status === 'aguardando_peca' && (
+                                        <button
+                                            onClick={() => mudarStatus('execucao')}
+                                            className="btn-primary"
+                                        >
+                                            <span className="material-symbols-outlined">play_arrow</span>
+                                            Retomar Execução
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+                        </div>
+                    )
+                }
 
-                            <div className="flex gap-4 items-center mb-4">
-                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
+
+                {/* Content */}
+                <div className="p-4 space-y-4 max-w-3xl mx-auto">
+
+                    {/* Datas e Prazos (Novo) */}
+                    <div className="card p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Previsão de Entrega (Universal) */}
+                        <div>
+                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-1">
+                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-blue-500">event</span>
+                                Previsão de Entrega {os.status === 'orcamento' && <span className="text-xs font-normal text-gray-400">(Opcional)</span>}
+                            </label>
+                            <input
+                                type="datetime-local"
+                                value={form?.previsaoEntrega || ''}
+                                onChange={(e) => handleFormChange('previsaoEntrega', e.target.value)}
+                                className="input w-full"
+                            />
+                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                {os.status === 'orcamento'
+                                    ? 'Estimativa caso o serviço seja aprovado.'
+                                    : 'Data combinada com o cliente.'}
+                            </p>
+                        </div>
+
+                        {/* Validade do Orçamento (Apenas Orçamento) */}
+                        {(os.status === 'orcamento' || os.status === 'aguardando_aprovacao') && (
+                            <div className="animate-slideDown">
+                                <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-1">
+                                    <span className="material-symbols-outlined text-sm align-middle mr-1 text-orange-500">history_toggle_off</span>
+                                    Validade do Orçamento
+                                </label>
+                                <input
+                                    type="date"
+                                    value={form?.validadeOrcamento || ''}
+                                    onChange={(e) => handleFormChange('validadeOrcamento', e.target.value)}
+                                    className="input w-full"
+                                />
+                                {(() => {
+                                    if (!form?.validadeOrcamento) return null;
+                                    const hoje = new Date();
+                                    hoje.setHours(0, 0, 0, 0);
+                                    const validade = new Date(form.validadeOrcamento + 'T00:00:00'); // Fix timezone issue on date parsing
+                                    const diffDias = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24));
+
+                                    return (
+                                        <p className={`text-xs mt-1 ${diffDias < 0 ? 'text-red-500 font-bold' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
+                                            {diffDias < 0 ? 'Vencido!' : diffDias === 0 ? 'Vence hoje!' : `Vence em ${diffDias} dias`}
+                                        </p>
+                                    );
+                                })()}
+                            </div>
+                        )}
+                    </div>
+                    {/* Cliente e Veículo */}
+                    < div className="card p-4" >
+                        <div className="flex items-start gap-4">
+                            {veiculo?.foto ? (
+                                <img
+                                    src={veiculo.foto}
+                                    alt={`${veiculo?.marca} ${veiculo?.modelo}`}
+                                    className="w-14 h-14 rounded-xl object-cover shrink-0"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
                                     {cliente?.nome?.charAt(0) || 'C'}
                                 </div>
-                                <div className="min-w-0">
-                                    <p className="font-semibold text-gray-900 dark:text-white truncate">{cliente?.nome}</p>
-                                    <div className="flex flex-wrap gap-2 text-xs text-gray-500 mt-1">
-                                        {cliente?.telefone && <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[10px]">call</span>{cliente.telefone}</span>}
-                                        {cliente?.whatsapp && <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[10px]">chat</span>{cliente.whatsapp}</span>}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
-                                <div className="flex gap-3">
-                                    {veiculo?.foto ? (
-                                        <img src={veiculo.foto} alt="Veículo" className="w-16 h-16 rounded-md object-cover" />
-                                    ) : (
-                                        <div className="w-16 h-16 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">
-                                            <span className="material-symbols-outlined">directions_car</span>
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-gray-900 dark:text-white">{veiculo?.modelo || 'Modelo não inf.'}</p>
-                                        <p className="text-xs text-gray-500 mb-1">{veiculo?.marca} • {veiculo?.cor}</p>
-                                        <div className="flex items-center gap-2 mt-2">
-                                            <span className="px-2 py-0.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono font-bold tracking-wider">
-                                                {veiculo?.placa || 'SEM PLACA'}
-                                            </span>
-                                            <span className="text-xs text-gray-500">{os.kmAtual ? `${os.kmAtual} km` : 'KM N/A'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Cartão Status & Técnico - Com borda lateral colorida por status */}
-                        <div className={`card p-5 border-l-4 transition-all ${os.status === 'execucao' ? 'border-l-primary bg-primary/5 dark:bg-primary/10' :
-                            os.status === 'aguardando_peca' ? 'border-l-orange-500 bg-orange-50/50 dark:bg-orange-900/10' :
-                                os.status === 'finalizada' ? 'border-l-green-500' :
-                                    os.status === 'cancelada' ? 'border-l-red-500 opacity-60' :
-                                        os.status === 'orcamento' ? 'border-l-yellow-500' :
-                                            'border-l-gray-300 dark:border-l-gray-600'
-                            }`}>
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary">engineering</span>
-                                Execução
-                                {os.status === 'execucao' && (
-                                    <span className="ml-auto text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary text-white animate-pulse">AO VIVO</span>
-                                )}
-                            </h3>
-
-                            {/* Técnico */}
-                            <div className="mb-4">
-                                <label className="text-xs font-medium text-gray-500 uppercase mb-1 block">Técnico Responsável</label>
-                                <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer border border-transparent hover:border-gray-200 transition-all" onClick={() => os.status !== 'finalizada' && setShowAtribuirTecnico(true)}>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs">
-                                            {tecnicoAtribuido ? tecnicoAtribuido.nome.charAt(0) : '?'}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className={`text-sm ${tecnicoAtribuido ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-400 italic'}`}>
-                                                {tecnicoAtribuido?.nome || 'Atribuir Técnico'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {os.status !== 'finalizada' && <span className="material-symbols-outlined text-gray-400">edit</span>}
-                                </div>
-                            </div>
-
-                            {/* Timer */}
-                            <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
-                                <TimerExecucao os={os} />
-                            </div>
-
-                            {/* Datas */}
-                            <div className="grid grid-cols-2 gap-3 mt-4">
-                                <div>
-                                    <label className="text-xs text-gray-500 block mb-1">Entrada</label>
-                                    <p className="text-sm font-medium">{formatDateTime(os.criadoEm)}</p>
-                                </div>
-                                {os.status === 'orcamento' ? (
-                                    <>
-                                        <div>
-                                            <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">
-                                                Validade do Orçamento
-                                            </label>
-                                            <input
-                                                type="date"
-                                                value={form?.validadeOrcamento ? form.validadeOrcamento.split('T')[0] : ''}
-                                                onChange={(e) => handleFormChange('validadeOrcamento', e.target.value)}
-                                                min={new Date().toISOString().split('T')[0]}
-                                                className="input text-xs py-1 px-2 h-8 w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-500 block mb-1">Previsão Entrega (Opcional)</label>
-                                            <input
-                                                type="datetime-local"
-                                                value={form?.previsaoEntrega || ''}
-                                                onChange={(e) => handleFormChange('previsaoEntrega', e.target.value)}
-                                                className="input text-xs py-1 px-2 h-8 w-full"
-                                            />
-                                        </div>
-                                    </>
-                                ) : (
+                            )}
+                            <div className="flex-1">
+                                <div className="flex justify-between items-start">
                                     <div>
-                                        <label className="text-xs text-gray-500 block mb-1">Previsão de Entrega (Opcional)</label>
-                                        <input
-                                            type="datetime-local"
-                                            value={form?.previsaoEntrega || ''}
-                                            onChange={(e) => handleFormChange('previsaoEntrega', e.target.value)}
-                                            className="input text-xs py-1 px-2 h-8 w-full"
-                                            disabled={os.status === 'finalizada' || os.status === 'cancelada'}
-                                        />
+                                        <p className="font-semibold text-text-light dark:text-text-dark">
+                                            {cliente?.nome || 'Cliente não encontrado'}
+                                        </p>
+                                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                            {veiculo?.marca} {veiculo?.modelo} • {veiculo?.placa}
+                                            {os.kmAtual && (
+                                                <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-text-secondary-light dark:text-text-secondary-dark border border-gray-200 dark:border-gray-700">
+                                                    KM {os.kmAtual}
+                                                </span>
+                                            )}
+                                        </p>
                                     </div>
-                                )}
+                                    {os.status !== 'finalizada' && os.status !== 'cancelada' && (
+                                        <button
+                                            onClick={() => setShowEditVeiculo(true)}
+                                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
+                                            title="Editar Veículo"
+                                        >
+                                            <span className="material-symbols-outlined">edit</span>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
+                    </div >
 
-                        {/* Diagnóstico */}
-                        <div className="card p-5 space-y-4">
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex gap-2 items-center mb-2">
-                                    <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-red-500 text-sm">report_problem</span>
-                                    </div>
-                                    Defeito Relatado
-                                </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 bg-red-50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
-                                    {os.defeitoRelatado || 'Não informado.'}
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex gap-2 items-center mb-2">
-                                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-blue-500 text-sm">biotech</span>
-                                    </div>
-                                    Diagnóstico Técnico
-                                </h3>
-                                <textarea
-                                    className="input text-sm w-full min-h-[100px] focus:ring-blue-200 dark:focus:ring-blue-800"
-                                    placeholder="Descreva o que foi constatado..."
-                                    value={form?.defeitoConstatado || ''}
-                                    onChange={(e) => handleFormChange('defeitoConstatado', e.target.value)}
-                                    disabled={os.status === 'finalizada'}
-                                />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex gap-2 items-center mb-2">
-                                    <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                                        <span className="material-symbols-outlined text-gray-500 text-sm">notes</span>
-                                    </div>
-                                    Observações
-                                </h3>
-                                <textarea
-                                    className="input text-sm w-full min-h-[80px]"
-                                    placeholder="Obs. internas..."
-                                    value={form?.observacoes || ''}
-                                    onChange={(e) => handleFormChange('observacoes', e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Modal Editar Veículo (Mantido aqui para contexto) */}
-                        {showEditVeiculo && veiculo && (
+                    {/* Modal Editar Veículo */}
+                    {
+                        showEditVeiculo && veiculo && (
                             <EditVeiculoModal
                                 veiculo={veiculo}
                                 empresaId={empresa.id}
@@ -1651,636 +1533,558 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                     setShowEditVeiculo(false);
                                 }}
                             />
-                        )}
+                        )
+                    }
 
+                    {/* Técnico */}
+                    < div className="card p-4" >
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Técnico Responsável</p>
+                                <p className="font-medium text-text-light dark:text-text-dark">
+                                    {tecnicoAtribuido?.nome || 'Não atribuído'}
+                                </p>
+                            </div>
+                            {os.status !== 'finalizada' && os.status !== 'cancelada' && (
+                                <button
+                                    onClick={() => setShowAtribuirTecnico(true)}
+                                    className="btn-secondary py-2 px-3 text-sm"
+                                >
+                                    <span className="material-symbols-outlined text-lg">person_add</span>
+                                    {tecnicoAtribuido ? 'Alterar' : 'Atribuir'}
+                                </button>
+                            )}
+                        </div>
+                    </div >
+
+                    {/* Timer de Execução */}
+                    {
+                        (os.status === 'execucao' || os.status === 'aguardando_peca' || os.tempoExecucaoMs) && (
+                            <TimerExecucao os={os} />
+                        )
+                    }
+
+                    {/* Defeito Relatado */}
+                    <div className="card p-4">
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-1">Defeito Relatado</p>
+                        <p className="text-text-light dark:text-text-dark">
+                            {os.defeitoRelatado || 'Não informado'}
+                        </p>
                     </div>
 
-                    {/* === COLUNA DIREITA (Conteúdo) === */}
-                    <div className="lg:col-span-8 space-y-6">
+                    {/* Defeito Constatado */}
+                    <div className="card p-4">
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-2">Defeito Constatado</p>
+                        {os.status === 'aberta' || os.status === 'execucao' ? (
+                            <textarea
+                                value={form?.defeitoConstatado || ''}
+                                onChange={(e) => handleFormChange('defeitoConstatado', e.target.value)}
+                                className="input min-h-[80px] resize-y"
+                                placeholder="Descreva o defeito constatado após análise..."
+                            />
+                        ) : (
+                            <p className="text-text-light dark:text-text-dark">
+                                {os.defeitoConstatado || 'Não informado'}
+                            </p>
+                        )}
+                    </div>
 
-                        {/* Banners Contextuais por Status */}
-                        {os.status === 'aguardando_peca' && (
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 animate-fadeIn">
-                                <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined text-orange-600 dark:text-orange-400">inventory_2</span>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-orange-800 dark:text-orange-300">Aguardando Peça</p>
-                                    <p className="text-sm text-orange-600 dark:text-orange-400">Esta OS está pausada. Retome a execução quando a peça chegar.</p>
-                                </div>
+                    {/* Checklist */}
+                    <div className="card p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="font-semibold text-text-light dark:text-text-dark">Checklist</p>
+                            {os.status !== 'finalizada' && os.status !== 'cancelada' && (
+                                <button
+                                    onClick={() => setShowChecklist(true)}
+                                    className="text-sm text-primary hover:underline"
+                                >
+                                    Editar
+                                </button>
+                            )}
+                        </div>
+                        {(!os.checklist || os.checklist.length === 0) ? (
+                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                Nenhum item verificado
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                {os.checklist.map((item, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <span className={`material-symbols-outlined text-lg ${item.ok ? 'text-green-500' : 'text-red-500'}`}>
+                                            {item.ok ? 'check_circle' : 'cancel'}
+                                        </span>
+                                        <span className="text-text-light dark:text-text-dark">{item.item}</span>
+                                    </div>
+                                ))}
                             </div>
                         )}
+                    </div>
 
-                        {os.status === 'orcamento' && (
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 animate-fadeIn">
-                                <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400">receipt_long</span>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-yellow-800 dark:text-yellow-300">Orçamento Pendente</p>
-                                    <p className="text-sm text-yellow-600 dark:text-yellow-400">Aguardando aprovação do cliente para iniciar os serviços.</p>
-                                </div>
-                            </div>
-                        )}
+                    {/* Apontamento de Horas */}
+                    <TimeTrackingSection
+                        os={os}
+                        onUpdate={handleUpdateApontamentos}
+                        onAddToBill={handleAddToBill}
+                    />
 
-                        {os.status === 'cancelada' && (
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 animate-fadeIn">
-                                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
-                                    <span className="material-symbols-outlined text-red-600 dark:text-red-400">cancel</span>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-red-800 dark:text-red-300">OS Cancelada</p>
-                                    <p className="text-sm text-red-600 dark:text-red-400">Esta ordem de serviço foi cancelada e não pode ser editada.</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Checklist */}
-                        <div className="card p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <p className="font-semibold text-text-light dark:text-text-dark">Checklist</p>
-                                {os.status !== 'finalizada' && os.status !== 'cancelada' && (
+                    {/* Itens da OS */}
+                    <div className="card p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="font-semibold text-text-light dark:text-text-dark">
+                                Itens ({os.itens?.length || 0})
+                            </p>
+                            {os.status !== 'finalizada' && os.status !== 'cancelada' && (
+                                <div className="flex items-center gap-3">
                                     <button
-                                        onClick={() => setShowChecklist(true)}
-                                        className="text-sm text-primary hover:underline"
+                                        onClick={salvarModelo}
+                                        className="text-sm text-secondary hover:text-primary hover:underline flex items-center gap-1"
+                                        title="Salvar itens como modelo para futuras OS"
                                     >
-                                        Editar
+                                        <span className="material-symbols-outlined text-lg">save_as</span>
+                                        Salvar Kit
                                     </button>
-                                )}
-                            </div>
-                            {(!os.checklist || os.checklist.length === 0) ? (
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    Nenhum item verificado
-                                </p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {os.checklist.map((item, index) => (
-                                        <div key={index} className="flex items-center gap-2">
-                                            <span className={`material-symbols-outlined text-lg ${item.ok ? 'text-green-500' : 'text-red-500'}`}>
-                                                {item.ok ? 'check_circle' : 'cancel'}
-                                            </span>
-                                            <span className="text-text-light dark:text-text-dark">{item.item}</span>
-                                        </div>
-                                    ))}
+                                    <button
+                                        onClick={() => setShowImportarKit(true)}
+                                        className="text-sm text-secondary hover:text-primary hover:underline flex items-center gap-1"
+                                        title="Importar itens de um modelo/kit salvo"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">download</span>
+                                        Importar Kit
+                                    </button>
+                                    <button
+                                        onClick={() => setShowAddItem(true)}
+                                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">add</span>
+                                        Adicionar
+                                    </button>
                                 </div>
                             )}
                         </div>
 
-                        {/* Apontamento de Horas */}
-                        <TimeTrackingSection
-                            os={os}
-                            onUpdate={handleUpdateApontamentos}
-                            onAddToBill={handleAddToBill}
-                        />
-
-                        {/* Itens da OS (Tabela) */}
-                        <div className="card overflow-hidden">
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-4">
-                                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">shopping_cart</span>
-                                    Itens e Serviços
-                                    <span className="text-xs font-normal text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
-                                        {os.itens?.length || 0}
-                                    </span>
-                                </h3>
-
-                                {os.status !== 'finalizada' && os.status !== 'cancelada' && (
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={salvarModelo} className="btn-ghost text-xs flex items-center gap-1" title="Salvar Kit">
-                                            <span className="material-symbols-outlined text-sm">save_as</span> <span className="hidden sm:inline">Salvar Kit</span>
-                                        </button>
-                                        <button onClick={() => setShowImportarKit(true)} className="btn-ghost text-xs flex items-center gap-1" title="Importar Kit">
-                                            <span className="material-symbols-outlined text-sm">download</span> <span className="hidden sm:inline">Importar</span>
-                                        </button>
-                                        <button onClick={() => setShowAddItem(true)} className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">add</span> Adicionar
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 font-medium border-b border-gray-100 dark:border-gray-700">
-                                        <tr>
-                                            <th className="px-4 py-3">Descrição</th>
-                                            <th className="px-4 py-3 text-center w-24">Qtd.</th>
-                                            <th className="px-4 py-3 text-right w-32">Unitário</th>
-                                            <th className="px-4 py-3 text-right w-32">Total</th>
-                                            {os.status !== 'finalizada' && os.status !== 'cancelada' && <th className="px-4 py-3 w-16"></th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                        {(!os.itens || os.itens.length === 0) ? (
-                                            <tr>
-                                                <td colSpan="5" className="px-4 py-8 text-center text-gray-500 italic">
-                                                    Nenhum item ou serviço adicionado.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            os.itens.map((item) => (
-                                                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
-                                                    <td className="px-4 py-3">
-                                                        <div className="font-medium text-gray-900 dark:text-white">{item.nome}</div>
-                                                        {(item.valDesconto > 0 || item.valAcrescimo > 0) && (
-                                                            <div className="text-xs flex gap-2 mt-0.5">
-                                                                {item.valDesconto > 0 && <span className="text-green-600">-{formatCurrency(item.valDesconto)} (Desc.)</span>}
-                                                                {item.valAcrescimo > 0 && <span className="text-orange-600">+{formatCurrency(item.valAcrescimo)} (Acrés.)</span>}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">
-                                                        {item.quantidade} {(!item.unidade || item.unidade === 'SV') ? '' : item.unidade}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">
-                                                        {formatCurrency(item.precoUnitario)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
-                                                        <span className={item.isento ? 'line-through text-gray-400' : ''}>{formatCurrency(item.total)}</span>
-                                                        {item.isento && <span className="ml-2 text-[10px] uppercase font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Isento</span>}
-                                                    </td>
-                                                    {os.status !== 'finalizada' && os.status !== 'cancelada' && (
-                                                        <td className="px-4 py-3 text-right">
-                                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const novosItens = os.itens.map(i => i.id === item.id ? { ...i, isento: !i.isento } : i);
-                                                                        const { totalFinal } = calcularResumoFinanceiro(novosItens, os.descontoGlobalTipo, os.descontoGlobalValor, os.acrescimoGlobalTipo, os.acrescimoGlobalValor);
-                                                                        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
-                                                                        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
-                                                                        setIsDirty(true);
-                                                                    }}
-                                                                    className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 ${item.isento ? 'text-purple-600' : 'text-gray-400'}`}
-                                                                    title={item.isento ? "Cobrar" : "Isentar"}
-                                                                >
-                                                                    <span className="material-symbols-outlined text-lg">{item.isento ? 'money_off' : 'attach_money'}</span>
-                                                                </button>
-                                                                <button onClick={() => setItemEditando(item)} className="p-1.5 rounded text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Editar">
-                                                                    <span className="material-symbols-outlined text-lg">edit</span>
-                                                                </button>
-                                                                <button onClick={() => removerItem(item.id)} className="p-1.5 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Remover">
-                                                                    <span className="material-symbols-outlined text-lg">close</span>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    )}
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-
-                                    {/* Footer da Tabela (Resumo) */}
-                                    {(os.itens && os.itens.length > 0) && (
-                                        <tfoot className="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
-                                            {/* Desconto/Acréscimo Global Editável */}
-                                            {os.status !== 'finalizada' && os.status !== 'cancelada' && ((configuracoes?.descontoNoTotal !== false && configuracoes?.descontoNoTotal !== 'false') || (configuracoes?.acrescimoNoTotal === true || configuracoes?.acrescimoNoTotal === 'true')) && (
-                                                <tr>
-                                                    <td colSpan="5" className="px-4 py-3">
-                                                        <div className="flex justify-end gap-4 items-center">
-                                                            {(configuracoes?.descontoNoTotal !== false && configuracoes?.descontoNoTotal !== 'false') && (
-                                                                <div className="flex items-center gap-2">
-                                                                    <label className="text-xs font-semibold uppercase text-gray-500">Desconto Global</label>
-                                                                    <div className="flex bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-8 w-32">
-                                                                        <input
-                                                                            type="number"
-                                                                            step="0.01"
-                                                                            className="flex-1 w-full px-2 text-sm bg-transparent outline-none text-right"
-                                                                            placeholder="0.00"
-                                                                            value={os.descontoGlobalValor || ''}
-                                                                            onChange={(e) => {
-                                                                                const val = e.target.value;
-                                                                                const { totalFinal } = calcularResumoFinanceiro(os.itens || [], os.descontoGlobalTipo, val, os.acrescimoGlobalTipo, os.acrescimoGlobalValor);
-                                                                                setOs(prev => ({ ...prev, descontoGlobalValor: val, valorTotal: totalFinal }));
-                                                                                setForm(prev => ({ ...prev, descontoGlobalValor: val, valorTotal: totalFinal }));
-                                                                                setIsDirty(true);
-                                                                            }}
-                                                                        />
-                                                                        <select
-                                                                            value={os.descontoGlobalTipo || 'valor'}
-                                                                            onChange={(e) => {
-                                                                                const tipo = e.target.value;
-                                                                                const { totalFinal } = calcularResumoFinanceiro(
-                                                                                    os.itens || [],
-                                                                                    tipo, os.descontoGlobalValor,
-                                                                                    os.acrescimoGlobalTipo, os.acrescimoGlobalValor
-                                                                                );
-                                                                                setOs(prev => ({ ...prev, descontoGlobalTipo: tipo, valorTotal: totalFinal }));
-                                                                                setForm(prev => ({ ...prev, descontoGlobalTipo: tipo, valorTotal: totalFinal }));
-                                                                                setIsDirty(true);
-                                                                            }}
-                                                                            className="bg-gray-100 dark:bg-gray-700 border-l border-gray-200 dark:border-gray-700 text-xs px-1 rounded-r-md focus:ring-0"
-                                                                        >
-                                                                            <option value="valor">R$</option>
-                                                                            <option value="porcentagem">%</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            {(configuracoes?.acrescimoNoTotal === true || configuracoes?.acrescimoNoTotal === 'true') && (
-                                                                <div className="flex items-center gap-2">
-                                                                    <label className="text-xs font-semibold uppercase text-gray-500">Acréscimo Global</label>
-                                                                    <div className="flex bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-8 w-32">
-                                                                        <input
-                                                                            type="number"
-                                                                            step="0.01"
-                                                                            className="flex-1 w-full px-2 text-sm bg-transparent outline-none text-right"
-                                                                            placeholder="0.00"
-                                                                            value={os.acrescimoGlobalValor || ''}
-                                                                            onChange={(e) => {
-                                                                                const val = e.target.value;
-                                                                                const { totalFinal } = calcularResumoFinanceiro(os.itens || [], os.descontoGlobalTipo, os.descontoGlobalValor, os.acrescimoGlobalTipo, val);
-                                                                                setOs(prev => ({ ...prev, acrescimoGlobalValor: val, valorTotal: totalFinal }));
-                                                                                setForm(prev => ({ ...prev, acrescimoGlobalValor: val, valorTotal: totalFinal }));
-                                                                                setIsDirty(true);
-                                                                            }}
-                                                                        />
-                                                                        <select
-                                                                            value={os.acrescimoGlobalTipo || 'valor'}
-                                                                            onChange={(e) => {
-                                                                                const tipo = e.target.value;
-                                                                                const { totalFinal } = calcularResumoFinanceiro(
-                                                                                    os.itens || [],
-                                                                                    os.descontoGlobalTipo, os.descontoGlobalValor,
-                                                                                    tipo, os.acrescimoGlobalValor
-                                                                                );
-                                                                                setOs(prev => ({ ...prev, acrescimoGlobalTipo: tipo, valorTotal: totalFinal }));
-                                                                                setForm(prev => ({ ...prev, acrescimoGlobalTipo: tipo, valorTotal: totalFinal }));
-                                                                                setIsDirty(true);
-                                                                            }}
-                                                                            className="bg-gray-100 dark:bg-gray-700 border-l border-gray-200 dark:border-gray-700 text-xs px-1 rounded-r-md focus:ring-0"
-                                                                        >
-                                                                            <option value="valor">R$</option>
-                                                                            <option value="porcentagem">%</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                            {/* Resumo Financeiro */}
-                                            {(() => {
-                                                const resumo = calcularResumoFinanceiro(
-                                                    os.itens || [],
-                                                    os.descontoGlobalTipo, os.descontoGlobalValor,
-                                                    os.acrescimoGlobalTipo, os.acrescimoGlobalValor
-                                                );
-                                                return (
-                                                    <>
-                                                        <tr>
-                                                            <td colSpan="3" className="px-4 py-2 text-right text-xs text-text-secondary-light dark:text-text-secondary-dark">Subtotal</td>
-                                                            <td colSpan="2" className="px-4 py-2 text-right text-xs text-text-secondary-light dark:text-text-secondary-dark">{formatCurrency(resumo.somaItens)}</td>
-                                                        </tr>
-                                                        {resumo.valDescontoGlobal > 0 && (
-                                                            <tr>
-                                                                <td colSpan="3" className="px-4 py-2 text-right text-xs text-green-600 dark:text-green-400">Desconto Global</td>
-                                                                <td colSpan="2" className="px-4 py-2 text-right text-xs text-green-600 dark:text-green-400">- {formatCurrency(resumo.valDescontoGlobal)}</td>
-                                                            </tr>
-                                                        )}
-                                                        {resumo.valAcrescimoGlobal > 0 && (
-                                                            <tr>
-                                                                <td colSpan="3" className="px-4 py-2 text-right text-xs text-orange-600 dark:text-orange-400">Acréscimo Global</td>
-                                                                <td colSpan="2" className="px-4 py-2 text-right text-xs text-orange-600 dark:text-orange-400">+ {formatCurrency(resumo.valAcrescimoGlobal)}</td>
-                                                            </tr>
-                                                        )}
-                                                        <tr className="border-t border-gray-200 dark:border-gray-700">
-                                                            <td colSpan="3" className="px-4 py-3 text-right font-semibold text-text-light dark:text-text-dark">Total</td>
-                                                            <td colSpan="2" className="px-4 py-3 text-right text-xl font-bold text-primary">
-                                                                {formatCurrency(resumo.totalFinal)}
-                                                            </td>
-                                                        </tr>
-                                                    </>
-                                                );
-                                            })()}
-                                        </tfoot>
-                                    )}
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Seção de Pagamentos */}
-                        {
-                            (os.status === 'execucao' || os.status === 'finalizada' || (os.status === 'cancelada' && ((os.valorPago || 0) > 0 || (os.valorTotal || 0) > 0))) && (os.valorTotal || 0) > 0 && (
-                                <div className={`card p-4 transition-all ${calcularPagamentos().restante <= 0
-                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 ring-1 ring-green-200 dark:ring-green-800'
-                                    : ''
-                                    }`}>
-                                    <div className="flex items-center justify-between mb-3">
-                                        <p className="font-semibold text-text-light dark:text-text-dark flex items-center gap-2">
-                                            <span className={`material-symbols-outlined text-lg ${calcularPagamentos().restante <= 0 ? 'text-green-600' : ''}`}>payments</span>
-                                            Pagamentos
-                                            {calcularPagamentos().restante <= 0 && (
-                                                <span className="material-symbols-outlined text-green-600 text-sm">verified</span>
-                                            )}
-                                        </p>
-                                        {(() => {
-                                            const { restante } = calcularPagamentos();
-                                            return restante > 0 ? (
-                                                <button
-                                                    onClick={() => setShowPagamento(true)}
-                                                    className="text-sm text-primary hover:underline flex items-center gap-1"
-                                                >
-                                                    <span className="material-symbols-outlined text-lg">add_circle</span>
-                                                    Registrar
-                                                </button>
-                                            ) : (
-                                                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
-                                                    QUITADO
+                        {(!os.itens || os.itens.length === 0) ? (
+                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                Nenhum item adicionado
+                            </p>
+                        ) : (
+                            <div className="space-y-3">
+                                {os.itens.map((item) => (
+                                    <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-text-light dark:text-text-dark truncate">
+                                                {item.nome}
+                                            </p>
+                                            <div className="text-sm text-text-secondary-light dark:text-text-secondary-dark flex flex-col">
+                                                <span>{item.quantidade} {(!item.unidade || item.unidade === 'SV') ? 'UN' : item.unidade} x {formatCurrency(item.precoUnitario)}</span>
+                                                {(item.valDesconto > 0 || item.valAcrescimo > 0) && (
+                                                    <span className="text-xs mt-0.5 flex gap-2">
+                                                        {item.valDesconto > 0 && <span className="text-green-600 dark:text-green-400">-{formatCurrency(item.valDesconto)}</span>}
+                                                        {item.valAcrescimo > 0 && <span className="text-orange-600 dark:text-orange-400">+{formatCurrency(item.valAcrescimo)}</span>}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <p className={`font-bold ${item.isento ? 'text-gray-400 line-through decoration-2' : 'text-text-light dark:text-text-dark'}`}>
+                                                {formatCurrency(item.total)}
+                                            </p>
+                                            {item.isento && (
+                                                <span className="text-[10px] font-bold uppercase text-purple-600 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300 px-1.5 py-0.5 rounded">
+                                                    Isento
                                                 </span>
-                                            );
-                                        })()}
-                                    </div>
+                                            )}
+                                        </div>
+                                        {os.status !== 'finalizada' && os.status !== 'cancelada' && (
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => {
+                                                        const novosItens = os.itens.map(i => i.id === item.id ? { ...i, isento: !i.isento } : i);
 
-                                    {/* Lista de pagamentos */}
+                                                        const { totalFinal } = calcularResumoFinanceiro(
+                                                            novosItens,
+                                                            os.descontoGlobalTipo, os.descontoGlobalValor,
+                                                            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                                        );
+
+                                                        setOs(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
+                                                        setForm(prev => ({ ...prev, itens: novosItens, valorTotal: totalFinal }));
+                                                        setIsDirty(true);
+                                                    }}
+                                                    className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 ${item.isento ? 'text-purple-600' : 'text-gray-400'}`}
+                                                    title={item.isento ? "Cobrar este item" : "Marcar como isento/garantia"}
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">
+                                                        {item.isento ? 'money_off' : 'attach_money'}
+                                                    </span>
+                                                </button>
+                                                <button
+                                                    onClick={() => setItemEditando(item)}
+                                                    className="p-1 rounded text-primary hover:bg-primary/10"
+                                                    title="Editar item"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">edit</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => removerItem(item.id)}
+                                                    className="p-1 rounded text-error hover:bg-error/10"
+                                                    title="Remover item"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">close</span>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Total */}
+                                {/* Total e Descontos/Acréscimos Globais */}
+                                <div className="space-y-2 pt-3 border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
+                                    {/* Inputs de Desconto/Acréscimo Global (Apenas se configurado) */}
+                                    {os.status !== 'finalizada' && os.status !== 'cancelada' && ((configuracoes?.descontoNoTotal !== false && configuracoes?.descontoNoTotal !== 'false') || (configuracoes?.acrescimoNoTotal === true || configuracoes?.acrescimoNoTotal === 'true')) && (
+                                        <div className="grid grid-cols-2 gap-3 mb-2">
+                                            {(configuracoes?.descontoNoTotal !== false && configuracoes?.descontoNoTotal !== 'false') && (
+                                                <div>
+                                                    <label className="text-[10px] uppercase font-bold text-text-secondary-light dark:text-text-secondary-dark tracking-wider mb-1 block">Desconto</label>
+                                                    <div className="flex rounded-lg shadow-sm">
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={os.descontoGlobalValor || ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    os.descontoGlobalTipo, val,
+                                                                    os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                                                );
+                                                                setOs(prev => ({ ...prev, descontoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, descontoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            placeholder="0,00"
+                                                            className="input text-xs h-8 py-1 px-2 min-w-0"
+                                                        />
+                                                        <select
+                                                            value={os.descontoGlobalTipo || 'valor'}
+                                                            onChange={(e) => {
+                                                                const tipo = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    tipo, os.descontoGlobalValor,
+                                                                    os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                                                );
+                                                                setOs(prev => ({ ...prev, descontoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, descontoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-xs px-1 rounded-r-lg focus:ring-0"
+                                                        >
+                                                            <option value="valor">R$</option>
+                                                            <option value="porcentagem">%</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {(configuracoes?.acrescimoNoTotal === true || configuracoes?.acrescimoNoTotal === 'true') && (
+                                                <div>
+                                                    <label className="text-[10px] uppercase font-bold text-text-secondary-light dark:text-text-secondary-dark tracking-wider mb-1 block">Acréscimo</label>
+                                                    <div className="flex rounded-lg shadow-sm">
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={os.acrescimoGlobalValor || ''}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    os.descontoGlobalTipo, os.descontoGlobalValor,
+                                                                    os.acrescimoGlobalTipo, val
+                                                                );
+                                                                setOs(prev => ({ ...prev, acrescimoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, acrescimoGlobalValor: val, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            placeholder="0,00"
+                                                            className="input text-xs h-8 py-1 px-2 min-w-0"
+                                                        />
+                                                        <select
+                                                            value={os.acrescimoGlobalTipo || 'valor'}
+                                                            onChange={(e) => {
+                                                                const tipo = e.target.value;
+                                                                const { totalFinal } = calcularResumoFinanceiro(
+                                                                    os.itens || [],
+                                                                    os.descontoGlobalTipo, os.descontoGlobalValor,
+                                                                    tipo, os.acrescimoGlobalValor
+                                                                );
+                                                                setOs(prev => ({ ...prev, acrescimoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setForm(prev => ({ ...prev, acrescimoGlobalTipo: tipo, valorTotal: totalFinal }));
+                                                                setIsDirty(true);
+                                                            }}
+                                                            className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-xs px-1 rounded-r-lg focus:ring-0"
+                                                        >
+                                                            <option value="valor">R$</option>
+                                                            <option value="porcentagem">%</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Resumo Financeiro */}
                                     {(() => {
-                                        if (!os) return null;
-                                        const { pagamentos, totalPago, restante } = calcularPagamentos();
+                                        const resumo = calcularResumoFinanceiro(
+                                            os.itens || [],
+                                            os.descontoGlobalTipo, os.descontoGlobalValor,
+                                            os.acrescimoGlobalTipo, os.acrescimoGlobalValor
+                                        );
                                         return (
                                             <>
-                                                {pagamentos.length === 0 ? (
-                                                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark text-center py-4">
-                                                        Nenhum pagamento registrado
-                                                    </p>
-                                                ) : (
-                                                    <div className="space-y-2 mb-3">
-                                                        {pagamentos.map((pag) => (
-                                                            <div key={pag.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-sm">
-                                                                <div>
-                                                                    <p className="font-medium text-text-light dark:text-text-dark">
-                                                                        {formatCurrency(pag.valor)}
-                                                                    </p>
-                                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                                                                        {pag.formaPagamento === 'dinheiro' && '💵 Dinheiro'}
-                                                                        {pag.formaPagamento === 'pix' && '📱 PIX'}
-                                                                        {pag.formaPagamento === 'cartao_credito' && '💳 Cartão Crédito'}
-                                                                        {pag.formaPagamento === 'cartao_debito' && '💳 Cartão Débito'}
-                                                                        {pag.formaPagamento === 'transferencia' && '🏦 Transferência'}
-                                                                    </p>
-                                                                </div>
-                                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                                                                    {formatDateTime(pag.criadoEm)}
-                                                                </p>
-                                                            </div>
-                                                        ))}
+                                                <div className="flex justify-between text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                                    <span>Subtotal</span>
+                                                    <span>{formatCurrency(resumo.somaItens)}</span>
+                                                </div>
+                                                {resumo.valDescontoGlobal > 0 && (
+                                                    <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
+                                                        <span>Desconto Global</span>
+                                                        <span>- {formatCurrency(resumo.valDescontoGlobal)}</span>
                                                     </div>
                                                 )}
-
-                                                {/* Resumo */}
-                                                <div className="border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] pt-3 space-y-1">
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-text-secondary-light dark:text-text-secondary-dark">Total da OS</span>
-                                                        <span className="text-text-light dark:text-text-dark">{formatCurrency(os.valorTotal || 0)}</span>
+                                                {resumo.valAcrescimoGlobal > 0 && (
+                                                    <div className="flex justify-between text-xs text-orange-600 dark:text-orange-400">
+                                                        <span>Acréscimo Global</span>
+                                                        <span>+ {formatCurrency(resumo.valAcrescimoGlobal)}</span>
                                                     </div>
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-text-secondary-light dark:text-text-secondary-dark">Pago</span>
-                                                        <span className="text-green-600 dark:text-green-400 font-medium">{formatCurrency(totalPago)}</span>
-                                                    </div>
-                                                    {restante > 0 && (
-                                                        <div className="flex justify-between text-sm font-semibold">
-                                                            <span className="text-text-light dark:text-text-dark">Restante</span>
-                                                            <span className="text-orange-600 dark:text-orange-400">{formatCurrency(restante)}</span>
-                                                        </div>
-                                                    )}
+                                                )}
+                                                <div className="flex items-center justify-between pt-2">
+                                                    <p className="font-semibold text-text-light dark:text-text-dark">Total</p>
+                                                    <p className="text-xl font-bold text-primary">
+                                                        {formatCurrency(resumo.totalFinal)}
+                                                    </p>
                                                 </div>
                                             </>
                                         );
                                     })()}
                                 </div>
-                            )
-                        }
-
-                        {/* Fotos */}
-                        <div className="card p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <p className="font-semibold text-text-light dark:text-text-dark">
-                                    Fotos ({(os.fotos || []).length}/5)
-                                </p>
-                                {os.status !== 'finalizada' && os.status !== 'cancelada' && (os.fotos || []).length < 5 && (
-                                    <label className="text-sm text-primary hover:underline flex items-center gap-1 cursor-pointer">
-                                        <span className="material-symbols-outlined text-lg">add_a_photo</span>
-                                        Adicionar
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={adicionarFoto}
-                                        />
-                                    </label>
-                                )}
                             </div>
+                        )}
+                    </div>
 
-                            {(!os.fotos || os.fotos.length === 0) ? (
-                                <div className="text-center py-6">
-                                    <span className="material-symbols-outlined text-3xl text-gray-400 mb-2">photo_library</span>
-                                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                        Nenhuma foto adicionada
+                    {/* Seção de Pagamentos */}
+                    {
+                        (os.status === 'execucao' || os.status === 'finalizada') && (os.valorTotal || 0) > 0 && (
+                            <div className="card p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <p className="font-semibold text-text-light dark:text-text-dark flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg">payments</span>
+                                        Pagamentos
                                     </p>
+                                    {(() => {
+                                        const { restante } = calcularPagamentos();
+                                        return restante > 0 ? (
+                                            <button
+                                                onClick={() => setShowPagamento(true)}
+                                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">add_circle</span>
+                                                Registrar
+                                            </button>
+                                        ) : (
+                                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                                QUITADO
+                                            </span>
+                                        );
+                                    })()}
                                 </div>
-                            ) : (
-                                <div className="grid grid-cols-3 gap-3">
-                                    {os.fotos.map((foto) => (
-                                        <div
-                                            key={foto.id}
-                                            onClick={() => setShowFotoModal(foto)}
-                                            className="group aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer shadow-sm hover:shadow-lg transition-all duration-200 relative"
-                                        >
-                                            <img
-                                                src={foto.data}
-                                                alt={foto.nome}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                            />
-                                            {/* Overlay com ícone de expandir */}
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-2xl drop-shadow-lg">zoom_in</span>
+
+                                {/* Lista de pagamentos */}
+                                {(() => {
+
+
+                                    if (!os) return null;
+
+                                    const { pagamentos, totalPago, restante } = calcularPagamentos();
+                                    return (
+                                        <>
+                                            {pagamentos.length === 0 ? (
+                                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark text-center py-4">
+                                                    Nenhum pagamento registrado
+                                                </p>
+                                            ) : (
+                                                <div className="space-y-2 mb-3">
+                                                    {pagamentos.map((pag) => (
+                                                        <div key={pag.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-sm">
+                                                            <div>
+                                                                <p className="font-medium text-text-light dark:text-text-dark">
+                                                                    {formatCurrency(pag.valor)}
+                                                                </p>
+                                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                                                    {pag.formaPagamento === 'dinheiro' && '💵 Dinheiro'}
+                                                                    {pag.formaPagamento === 'pix' && '📱 PIX'}
+                                                                    {pag.formaPagamento === 'cartao_credito' && '💳 Cartão Crédito'}
+                                                                    {pag.formaPagamento === 'cartao_debito' && '💳 Cartão Débito'}
+                                                                    {pag.formaPagamento === 'transferencia' && '🏦 Transferência'}
+                                                                </p>
+                                                            </div>
+                                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                                                {formatDateTime(pag.criadoEm)}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Resumo */}
+                                            <div className="border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] pt-3 space-y-1">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-text-secondary-light dark:text-text-secondary-dark">Total da OS</span>
+                                                    <span className="text-text-light dark:text-text-dark">{formatCurrency(os.valorTotal || 0)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-text-secondary-light dark:text-text-secondary-dark">Pago</span>
+                                                    <span className="text-green-600 dark:text-green-400 font-medium">{formatCurrency(totalPago)}</span>
+                                                </div>
+                                                {restante > 0 && (
+                                                    <div className="flex justify-between text-sm font-semibold">
+                                                        <span className="text-text-light dark:text-text-dark">Restante</span>
+                                                        <span className="text-orange-600 dark:text-orange-400">{formatCurrency(restante)}</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        )
+                    }
+
+                    {/* Observações */}
+                    <div className="card p-4">
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-2">Observações</p>
+                        {os.status === 'aberta' || os.status === 'execucao' ? (
+                            <textarea
+                                value={form?.observacoes || ''}
+                                onChange={(e) => handleFormChange('observacoes', e.target.value)}
+                                className="input min-h-[80px] resize-y"
+                                placeholder="Observações internas..."
+                            />
+                        ) : (
+                            <p className="text-text-light dark:text-text-dark">
+                                {os.observacoes || 'Nenhuma observação'}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Fotos */}
+                    <div className="card p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="font-semibold text-text-light dark:text-text-dark">
+                                Fotos ({(os.fotos || []).length}/5)
+                            </p>
+                            {os.status !== 'finalizada' && os.status !== 'cancelada' && (os.fotos || []).length < 5 && (
+                                <label className="text-sm text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                                    <span className="material-symbols-outlined text-lg">add_a_photo</span>
+                                    Adicionar
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={adicionarFoto}
+                                    />
+                                </label>
                             )}
                         </div>
 
-                        {/* Meta */}
-                        <div className="text-center text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                            <p>Criada em {formatDateTime(os.criadoEm)}</p>
-                            {os.atualizadoEm && <p>Última atualização: {formatDateTime(os.atualizadoEm)}</p>}
-                        </div>
-
-                        {/* Assinatura do Cliente */}
-                        {
-                            os.assinaturaCliente && (
-                                <div className="card p-4 mt-4">
-                                    <h3 className="font-semibold text-text-light dark:text-text-dark mb-4 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] pb-2 flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-primary">draw</span>
-                                        Assinatura do Cliente
-                                    </h3>
-                                    <div className="flex justify-center bg-white rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        {(!os.fotos || os.fotos.length === 0) ? (
+                            <div className="text-center py-6">
+                                <span className="material-symbols-outlined text-3xl text-gray-400 mb-2">photo_library</span>
+                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                    Nenhuma foto adicionada
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-2">
+                                {os.fotos.map((foto) => (
+                                    <div
+                                        key={foto.id}
+                                        onClick={() => setShowFotoModal(foto)}
+                                        className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer hover:opacity-80 transition-opacity"
+                                    >
                                         <img
-                                            src={os.assinaturaCliente}
-                                            alt="Assinatura do Cliente"
-                                            className="max-h-32 object-contain"
+                                            src={foto.data}
+                                            alt={foto.nome}
+                                            className="w-full h-full object-cover"
                                         />
                                     </div>
-                                </div>
-                            )
-                        }
+                                ))}
+                            </div>
+                        )}
                     </div>
-                </div>
+
+                    {/* Meta */}
+                    <div className="text-center text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                        <p>Criada em {formatDateTime(os.criadoEm)}</p>
+                        {os.atualizadoEm && <p>Última atualização: {formatDateTime(os.atualizadoEm)}</p>}
+                    </div>
+
+                    {/* Assinatura do Cliente */}
+                    {
+                        os.assinaturaCliente && (
+                            <div className="card p-4 mt-4">
+                                <h3 className="font-semibold text-text-light dark:text-text-dark mb-4 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] pb-2 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">draw</span>
+                                    Assinatura do Cliente
+                                </h3>
+                                <div className="flex justify-center bg-white rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                    <img
+                                        src={os.assinaturaCliente}
+                                        alt="Assinatura do Cliente"
+                                        className="max-h-32 object-contain"
+                                    />
+                                </div>
+                            </div>
+                        )
+                    }
+                </div >
+
             </div> {/* Fim do Scrollable Content */}
 
-            {/* Footer Fixo - Sempre Visível */}
-            <div className="p-3 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-[5000] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex-none">
-                <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-                    {/* Resumo Financeiro - Totais por Tipo */}
-                    <div className="flex items-center gap-4">
-                        {(() => {
-                            // Calcular totais por tipo
-                            const totalProdutos = (form.itens || [])
-                                .filter(item => item.tipo === 'produto' && !item.isento)
-                                .reduce((acc, item) => acc + (item.total || 0), 0);
-
-                            const totalServicos = (form.itens || [])
-                                .filter(item => item.tipo === 'servico' && !item.isento)
-                                .reduce((acc, item) => acc + (item.total || 0), 0);
-
-                            return (
-                                <>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-sm text-text-secondary-light dark:text-text-secondary-dark">inventory_2</span>
-                                        <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Produtos:</span>
-                                        <span className="text-sm font-semibold text-text-light dark:text-text-dark">
-                                            {formatCurrency(totalProdutos)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-sm text-text-secondary-light dark:text-text-secondary-dark">build</span>
-                                        <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Serviços:</span>
-                                        <span className="text-sm font-semibold text-text-light dark:text-text-dark">
-                                            {formatCurrency(totalServicos)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 pl-2 border-l border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                                        <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Total:</span>
-                                        <span className="text-lg font-bold text-primary">
-                                            {formatCurrency(os.valorTotal || 0)}
-                                        </span>
-                                    </div>
-                                </>
-                            );
-                        })()}
-                    </div>
-
-                    {/* Botões de Ação */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => {
-                                if (isDirty) {
-                                    setShowConfirmarSaida(true);
-                                } else {
-                                    // Modo aba ou janela usa onClose, rota usa navigate
-                                    (isTabMode || isWindowMode) ? onClose?.() : navigate('/os');
-                                }
-                            }}
-                            className="btn-secondary px-4"
-                        >
-                            <span className="material-symbols-outlined">arrow_back</span>
-                            Voltar
-                        </button>
-                        <button
-                            onClick={() => salvarOS()}
-                            className={`btn-primary px-6 ${isDirty && os.status !== 'finalizada' && os.status !== 'cancelada' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
-                            disabled={!isDirty || salvando || os.status === 'finalizada' || os.status === 'cancelada'}
-                        >
-                            {salvando ? (
-                                <>
-                                    <span className="material-symbols-outlined animate-spin">sync</span>
-                                    Salvando...
-                                </>
-                            ) : (
-                                <>
-                                    <span className="material-symbols-outlined">save</span>
-                                    Salvar
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="h-0"></div>
-
-            {/* Modal Confirmar Saída (quando há alterações não salvas) */}
-            {showConfirmarSaida && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                    <div className="card p-6 w-full max-w-md animate-slideUp">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-2xl text-amber-600">warning</span>
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-text-light dark:text-text-dark">
-                                    Alterações não salvas
-                                </h2>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    O que deseja fazer?
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            {/* Salvar e Sair */}
+            {/* Footer com ações de Edição */}
+            {
+                isDirty && (
+                    <div className="p-4 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-[5000] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] animate-slideUp flex-none">
+                        <div className="max-w-3xl mx-auto flex gap-3">
                             <button
-                                onClick={async () => {
-                                    await salvarOS();
-                                    setShowConfirmarSaida(false);
-                                    (isTabMode || isWindowMode) ? onClose?.() : navigate('/os');
-                                }}
-                                className="w-full btn-primary bg-green-600 hover:bg-green-700 justify-start"
+                                onClick={cancelarEdicao}
+                                className="btn-secondary flex-1"
                                 disabled={salvando}
                             >
-                                <span className="material-symbols-outlined">save</span>
-                                Salvar e sair
+                                <span className="material-symbols-outlined">undo</span>
+                                Cancelar Alterações
                             </button>
-
-                            {/* Minimizar (só em Window Mode) */}
-                            {isWindowMode && onMinimize && (
-                                <button
-                                    onClick={() => {
-                                        setShowConfirmarSaida(false);
-                                        onMinimize();
-                                    }}
-                                    className="w-full btn-secondary justify-start"
-                                >
-                                    <span className="material-symbols-outlined">remove</span>
-                                    Minimizar (manter no Dock)
-                                </button>
-                            )}
-
-                            {/* Descartar */}
                             <button
-                                onClick={async () => {
-                                    await carregarDados(true); // Recarrega dados originais
-                                    setIsDirty(false);
-                                    setShowConfirmarSaida(false);
-                                    (isTabMode || isWindowMode) ? onClose?.() : navigate('/os');
-                                }}
-                                className="w-full btn-secondary text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 justify-start"
+                                onClick={() => salvarOS()}
+                                className="btn-primary flex-1 bg-green-600 hover:bg-green-700 sm:flex-none sm:w-1/2"
+                                disabled={salvando}
                             >
-                                <span className="material-symbols-outlined">delete</span>
-                                Descartar alterações
-                            </button>
-
-                            {/* Cancelar */}
-                            <button
-                                onClick={() => setShowConfirmarSaida(false)}
-                                className="w-full text-center text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark py-2"
-                            >
-                                Cancelar
+                                {salvando ? (
+                                    <>
+                                        <span className="material-symbols-outlined animate-spin">sync</span>
+                                        Salvando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">save</span>
+                                        Salvar Alterações
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
+
+            <div className="h-0"></div>
 
             {/* Modal Adicionar Item */}
             {
@@ -2338,10 +2142,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                     <AtribuirTecnicoModal
                         tecnicos={tecnicos}
                         tecnicoAtualId={os.tecnicoId}
-                        onClose={() => {
-                            setShowAtribuirTecnico(false);
-                            setAtribuirParaIniciarExecucao(false); // Limpa flag se fechou sem selecionar
-                        }}
+                        onClose={() => setShowAtribuirTecnico(false)}
                         onSelect={atribuirTecnico}
                     />
                 )
@@ -2451,33 +2252,9 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                             </div>
 
                             {os.status === 'finalizada' && (os.itens || []).filter(i => i.tipo === 'produto').length > 0 && (
-                                <div className="mb-4 p-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-700">
-                                    <div className="flex items-start gap-3">
-                                        <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl shrink-0">inventory</span>
-                                        <div>
-                                            <p className="font-bold text-orange-800 dark:text-orange-300 mb-1">Estorno de Estoque</p>
-                                            <p className="text-sm text-orange-700 dark:text-orange-400">
-                                                {(os.itens || []).filter(i => i.tipo === 'produto').length} peça(s) serão devolvidas ao estoque automaticamente.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Alerta Financeiro - Mostra para QUALQUER OS com valor pago (sinal ou pagamento total) */}
-                            {(os.valorPago || 0) > 0 && (
-                                <div className="mb-4 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700">
-                                    <div className="flex items-start gap-3">
-                                        <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl shrink-0">payments</span>
-                                        <div>
-                                            <p className="font-bold text-blue-800 dark:text-blue-300 mb-1">Impacto Financeiro</p>
-                                            <p className="text-sm text-blue-700 dark:text-blue-400">
-                                                Esta OS possui R$ {(os.valorPago || 0).toFixed(2).replace('.', ',')} já pago.
-                                                Os valores <strong>NÃO</strong> serão estornados automaticamente.
-                                                Gerencie manualmente no módulo Financeiro se necessário.
-                                            </p>
-                                        </div>
-                                    </div>
+                                <div className="mb-4 p-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-sm flex items-center gap-2">
+                                    <span className="material-symbols-outlined">inventory</span>
+                                    {(os.itens || []).filter(i => i.tipo === 'produto').length} peça(s) serão devolvidas ao estoque.
                                 </div>
                             )}
 
@@ -2513,80 +2290,6 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                         <span className="material-symbols-outlined">cancel</span>
                                     )}
                                     Cancelar OS
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-
-            {/* Modal Confirmar Reabertura */}
-            {
-                showReabrirModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                        <div className="card p-6 w-full max-w-md animate-slideUp">
-                            <div className="text-center mb-6">
-                                <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/30 mx-auto mb-4 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-3xl text-orange-600 dark:text-orange-400">lock_open</span>
-                                </div>
-                                <h3 className="text-lg font-semibold text-text-light dark:text-text-dark">
-                                    Reabrir Ordem de Serviço
-                                </h3>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-2">
-                                    Ao reabrir esta OS, as peças utilizadas serão devolvidas ao estoque.
-                                </p>
-                            </div>
-
-                            {/* Alerta de Estorno de Estoque */}
-                            {(os.itens || []).filter(i => i.tipo === 'produto').length > 0 && (
-                                <div className="mb-4 p-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-700">
-                                    <div className="flex items-start gap-3">
-                                        <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl shrink-0">inventory</span>
-                                        <div>
-                                            <p className="font-bold text-orange-800 dark:text-orange-300 mb-1">Estorno de Estoque</p>
-                                            <p className="text-sm text-orange-700 dark:text-orange-400">
-                                                {(os.itens || []).filter(i => i.tipo === 'produto').length} peça(s) serão devolvidas ao estoque automaticamente.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Alerta Financeiro */}
-                            {(os.valorPago || 0) > 0 && (
-                                <div className="mb-4 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700">
-                                    <div className="flex items-start gap-3">
-                                        <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl shrink-0">payments</span>
-                                        <div>
-                                            <p className="font-bold text-blue-800 dark:text-blue-300 mb-1">Atenção: Pagamentos</p>
-                                            <p className="text-sm text-blue-700 dark:text-blue-400">
-                                                Esta OS possui R$ {(os.valorPago || 0).toFixed(2).replace('.', ',')} já pago.
-                                                Os valores permanecem registrados.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowReabrirModal(false)}
-                                    className="btn-secondary flex-1"
-                                    disabled={salvando}
-                                >
-                                    Voltar
-                                </button>
-                                <button
-                                    onClick={confirmarReabertura}
-                                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white font-medium rounded-xl hover:bg-orange-700 transition-all"
-                                    disabled={salvando}
-                                >
-                                    {salvando ? (
-                                        <span className="material-symbols-outlined animate-spin">sync</span>
-                                    ) : (
-                                        <span className="material-symbols-outlined">lock_open</span>
-                                    )}
-                                    Reabrir OS
                                 </button>
                             </div>
                         </div>
@@ -2766,9 +2469,8 @@ const PagamentoModal = ({ valorRestante, onClose, onSubmit }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (valor <= 0 || valor > valorRestante) return;
         onSubmit({
-            valor,
+            valor: parseFloat(valor),
             formaPagamento,
             observacao,
         });
@@ -2788,16 +2490,24 @@ const PagamentoModal = ({ valorRestante, onClose, onSubmit }) => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Valor */}
-                    <CurrencyInput
-                        label="Valor R$"
-                        value={valor}
-                        onChange={setValor}
-                        max={valorRestante}
-                        hint={`Saldo restante: ${formatCurrency(valorRestante)}`}
-                        size="lg"
-                        required
-                        autoFocus
-                    />
+                    <div>
+                        <label className="text-sm font-medium text-text-light dark:text-text-dark mb-1 block">
+                            Valor R$
+                        </label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={valor}
+                            onChange={(e) => setValor(e.target.value)}
+                            className="input text-lg font-bold"
+                            required
+                            min="0.01"
+                            max={valorRestante}
+                        />
+                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                            Saldo restante: R$ {valorRestante.toFixed(2)}
+                        </p>
+                    </div>
 
                     {/* Forma de Pagamento */}
                     <div>
@@ -2844,11 +2554,7 @@ const PagamentoModal = ({ valorRestante, onClose, onSubmit }) => {
                         <button type="button" onClick={onClose} className="btn-secondary flex-1">
                             Cancelar
                         </button>
-                        <button
-                            type="submit"
-                            className="btn-primary flex-1"
-                            disabled={valor <= 0 || valor > valorRestante}
-                        >
+                        <button type="submit" className="btn-primary flex-1">
                             <span className="material-symbols-outlined">check</span>
                             Confirmar
                         </button>
@@ -2865,7 +2571,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
     const [produtoId, setProdutoId] = useState('');
     const [quantidade, setQuantidade] = useState(initialValues?.quantidade || 1);
     const [unidade, setUnidade] = useState('');
-    const [precoUnitario, setPrecoUnitario] = useState(0);
+    const [precoUnitario, setPrecoUnitario] = useState('');
     const [showTemplates, setShowTemplates] = useState(true);
     const [busca, setBusca] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
@@ -2899,7 +2605,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
 
     // Cálculos em tempo real
     const qtd = parseFloat(quantidade) || 0;
-    const preco = precoUnitario || 0;
+    const preco = parseFloat(precoUnitario) || 0;
     const totalBruto = qtd * preco;
 
     let valDesconto = 0;
@@ -2921,6 +2627,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
         const prod = produtos.find((p) => p.id === id);
         if (prod) {
             setPrecoUnitario(prod.precoVenda);
+            setPrecoUnitario(prod.precoVenda);
             // Legado: Se for SV, força UN. Se não tiver, UN.
             const unit = (!prod.unidade || prod.unidade === 'SV') ? 'UN' : prod.unidade;
             setUnidade(unit);
@@ -2937,6 +2644,8 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
 
         onAdd({
             produtoId,
+            nome: prod.nome,
+            tipo: prod.tipo,
             nome: prod.nome,
             tipo: prod.tipo,
             unidade: unidade || 'UN',
@@ -2956,7 +2665,9 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
         // Limpar campos e manter foco para próxima inserção
         setBusca('');
         setProdutoId('');
-        setPrecoUnitario(0);
+        setBusca('');
+        setProdutoId('');
+        setPrecoUnitario('');
         setUnidade('');
         setQuantidade(1);
         setDescontoValor('');
@@ -2983,6 +2694,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
     const adicionarServicoRapido = (servico) => {
         onAdd({
             produtoId: servico.id,
+            nome: servico.nome,
             nome: servico.nome,
             tipo: 'servico',
             // Legado: Se for SV, força UN
@@ -3062,7 +2774,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
                                 setProdutoId('');
                                 setBusca('');
                                 setUnidade('UN');
-                                setPrecoUnitario(0);
+                                setPrecoUnitario('');
                                 setQuantidade(1);
                                 setDescontoValor('');
                                 setAcrescimoValor('');
@@ -3082,7 +2794,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
                                 setProdutoId('');
                                 setBusca('');
                                 setUnidade('UN');
-                                setPrecoUnitario(0);
+                                setPrecoUnitario('');
                                 setQuantidade(1);
                                 setDescontoValor('');
                                 setAcrescimoValor('');
@@ -3214,12 +2926,16 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
 
                         {/* Preço Unitário */}
                         <div className="col-span-3">
-                            <CurrencyInput
-                                label="Preço R$"
+                            <label className="block text-xs font-medium text-text-light dark:text-text-dark mb-1">
+                                Preço Unit.
+                            </label>
+                            <input
+                                type="number"
                                 value={precoUnitario}
-                                onChange={setPrecoUnitario}
-                                labelClassName="text-xs"
-                                className="!p-3 !text-sm"
+                                onChange={(e) => setPrecoUnitario(e.target.value)}
+                                className="input"
+                                min="0"
+                                step="0.01"
                                 required
                             />
                         </div>
@@ -3229,7 +2945,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
                             <label className="block text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
                                 Total Bruto
                             </label>
-                            <div className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm cursor-not-allowed">
+                            <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-text-secondary-light dark:text-text-secondary-dark font-medium cursor-not-allowed">
                                 {formatCurrency(totalBruto)}
                             </div>
                         </div>
@@ -3255,7 +2971,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
                                             <select
                                                 value={descontoTipo}
                                                 onChange={(e) => setDescontoTipo(e.target.value)}
-                                                className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer w-14"
+                                                className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer w-12"
                                             >
                                                 <option value="valor">R$</option>
                                                 <option value="porcentagem">%</option>
@@ -3281,7 +2997,7 @@ const AddItemModal = ({ produtos, onClose, onAdd, initialValues, configuracoes }
                                             <select
                                                 value={acrescimoTipo}
                                                 onChange={(e) => setAcrescimoTipo(e.target.value)}
-                                                className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer w-14"
+                                                className="bg-gray-100 dark:bg-gray-700 border border-l-0 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs rounded-l-none px-2 focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 cursor-pointer w-12"
                                             >
                                                 <option value="valor">R$</option>
                                                 <option value="porcentagem">%</option>
@@ -3502,7 +3218,7 @@ const EditItemModal = ({ item, onClose, onSave, configuracoes }) => {
 
     // Cálculos em tempo real
     const qtd = parseFloat(quantidade) || 0;
-    const preco = precoUnitario || 0;
+    const preco = parseFloat(precoUnitario) || 0;
     const totalBruto = qtd * preco;
 
     let valDesconto = 0;
@@ -3614,10 +3330,16 @@ const EditItemModal = ({ item, onClose, onSave, configuracoes }) => {
                             />
                         </div>
                         <div>
-                            <CurrencyInput
-                                label="Preço R$"
+                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                Preço Unitário
+                            </label>
+                            <input
+                                type="number"
                                 value={precoUnitario}
-                                onChange={setPrecoUnitario}
+                                onChange={(e) => setPrecoUnitario(e.target.value)}
+                                className="input"
+                                min="0"
+                                step="0.01"
                                 required
                             />
                         </div>

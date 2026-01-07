@@ -8,8 +8,9 @@ import BuscaGlobal from '../common/BuscaGlobal';
 import { useNotification } from '../../contexts/NotificationContext';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 import { RestartTourButton } from '../../components/onboarding/OnboardingTour';
-import { OSProvider, useOS } from '../../contexts/OSContext';
-import OSWindowManager from '../../components/layout/OSWindowManager';
+import { TabsProvider, useTabs } from '../../contexts/TabsContext';
+import TabBar from '../../components/layout/TabBar';
+import TabContent from '../../components/layout/TabContent';
 import UserProfileModal from '../../components/users/UserProfileModal';
 
 const MainLayoutContent = () => {
@@ -18,7 +19,7 @@ const MainLayoutContent = () => {
     const { isDark, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
-    const { openOS, windows } = useOS();
+    const { openTab, tabs, activeTabId, clearActiveTab } = useTabs();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const lastKeyRef = useRef('');
@@ -235,7 +236,7 @@ const MainLayoutContent = () => {
             <aside
                 className={`
                     fixed lg:static inset-y-0 left-0
-                    ${windows?.some(w => !w.minimized) ? 'z-[2010] relative' : 'z-50'}
+                ${tabs?.length > 0 ? 'z-[2010] relative' : 'z-50'}
                     ${sidebarCollapsed ? 'w-[72px]' : 'w-56'}
                     bg-surface-light dark:bg-surface-dark
                     border-r border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]
@@ -396,7 +397,10 @@ const MainLayoutContent = () => {
                                                                 : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark hover:bg-gray-50 dark:hover:bg-gray-800/50'
                                                             }
                                                         `}
-                                                        onClick={() => setSidebarOpen(false)}
+                                                        onClick={() => {
+                                                            setSidebarOpen(false);
+                                                            clearActiveTab(); // Permite ver rotas com abas abertas
+                                                        }}
                                                     >
                                                         {sub.label}
                                                     </NavLink>
@@ -422,7 +426,10 @@ const MainLayoutContent = () => {
                                         : 'text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800'
                                     }
                                 `}
-                                onClick={() => setSidebarOpen(false)}
+                                onClick={() => {
+                                    setSidebarOpen(false);
+                                    clearActiveTab(); // Permite ver rotas com abas abertas
+                                }}
                                 title={sidebarCollapsed ? item.label : undefined}
                                 data-tour={item.tour}
                             >
@@ -444,7 +451,7 @@ const MainLayoutContent = () => {
             </aside >
 
             {/* Main Content */}
-            < div className="flex-1 flex flex-col min-h-screen overflow-hidden" >
+            < div className="flex-1 flex flex-col h-screen overflow-hidden" >
                 {/* Header - mais compacto */}
                 < header className="h-14 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] flex items-center justify-between px-4 shrink-0" >
                     {/* Menu toggle (mobile) */}
@@ -623,17 +630,34 @@ const MainLayoutContent = () => {
                     </div >
                 </header >
 
-                {/* Page Content */}
-                < main className="flex-1 overflow-auto" >
-                    <Outlet />
-                </main >
-            </div >
+                {/* TabBar - Sistema de Abas (sempre visível se há abas) */}
+                {tabs?.length > 0 && <TabBar />}
+
+                {/* 
+                    Page Content - Renderiza AMBOS para manter estado:
+                    - TabContent: sempre renderizado (hidden via CSS quando não ativo)
+                    - Outlet: visível quando não há aba ativa
+                */}
+                <TabContent />
+                {!activeTabId && (
+                    <main className="flex-1 overflow-auto">
+                        <Outlet />
+                    </main>
+                )}
+            </div>
             {showNovaOS && (
                 <NovaOSModal
                     onClose={() => setShowNovaOS(false)}
                     onSave={(novaOS) => {
                         setShowNovaOS(false);
-                        if (novaOS?.id) openOS(novaOS.id);
+                        if (novaOS?.id) {
+                            openTab({
+                                id: `os-${novaOS.id}`,
+                                type: 'os',
+                                title: `OS #${novaOS.numero || 'Nova'}`,
+                                data: { osId: novaOS.id }
+                            });
+                        }
                     }}
                     dados={novaOSData}
                     loading={loadingNovaOS}
@@ -648,18 +672,15 @@ const MainLayoutContent = () => {
                     />
                 )
             }
-
-            {/* Gerenciador de Janelas (OS) - Recebe estado da sidebar para posicionamento */}
-            <OSWindowManager sidebarCollapsed={sidebarCollapsed} />
-        </div >
+        </div>
     );
 };
 
 const MainLayout = () => {
     return (
-        <OSProvider>
+        <TabsProvider>
             <MainLayoutContent />
-        </OSProvider>
+        </TabsProvider>
     );
 };
 

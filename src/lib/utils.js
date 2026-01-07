@@ -63,6 +63,35 @@ export const formatCurrency = (value) => {
 };
 
 /**
+ * Converte string formatada em moeda para número
+ * Ex: "R$ 1.234,56" -> 1234.56
+ */
+export const parseCurrency = (value) => {
+    if (typeof value === 'number') return value;
+    if (!value) return 0;
+    // Remove tudo exceto números e vírgula
+    const cleaned = value.replace(/[^\d,]/g, '');
+    // Substitui vírgula por ponto para parse
+    const normalized = cleaned.replace(',', '.');
+    return parseFloat(normalized) || 0;
+};
+
+/**
+ * Formata valor como número decimal enquanto digita (para inputs)
+ * Ex: "12345" -> "123,45" (sem o prefixo R$)
+ */
+export const formatCurrencyInput = (value) => {
+    if (!value) return '';
+    // Remove tudo que não é número
+    const numbers = value.toString().replace(/\D/g, '');
+    if (!numbers) return '';
+    // Converte para centavos
+    const cents = parseInt(numbers, 10);
+    // Formata como número decimal brasileiro (sem R$)
+    return (cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+/**
  * Parse seguro de datas para evitar problemas de timezone (UTC)
  * Garante que strings YYYY-MM-DD sejam interpretadas como dia local (00:00)
  * @param {string|Date} date - String de data ou objeto Date

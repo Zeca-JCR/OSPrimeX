@@ -1,19 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { validaCPF, validaCNPJ } from '../../lib/utils';
 import { consultarCNPJ, consultarCEP } from '../../services/api';
 
-const CadastroFornecedor = () => {
+const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
     const { empresa } = useAuth();
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
-    const { id } = useParams();
+    const params = useParams();
+    const id = fornecedorId || params.id; // Prioriza prop (TabMode) sobre URL
     const isEdicao = !!id;
 
     const [loading, setLoading] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
 
     const [form, setForm] = useState({
         tipo: 'pj',
@@ -41,6 +45,39 @@ const CadastroFornecedor = () => {
             carregarFornecedor();
         }
     }, [id]);
+
+    // Comunicar dirty state para aba
+    useEffect(() => {
+        if (isTabMode) onDirtyChange?.(isDirty);
+    }, [isDirty, isTabMode, onDirtyChange]);
+
+    // Comunicar título para aba
+    useEffect(() => {
+        if (isTabMode) {
+            onTitleChange?.(form?.nome || 'Novo Fornecedor');
+        }
+    }, [form?.nome, isTabMode, onTitleChange]);
+
+    // Função de salvar para saveHandler
+    const salvarFornecedor = useCallback(async () => {
+        if (!form.nome.trim()) throw new Error('Nome/Razão Social é obrigatório');
+        const payload = { ...form, empresaId: empresa.id };
+        if (isEdicao) {
+            await storage.update('fornecedores', id, payload);
+        } else {
+            await storage.create('fornecedores', payload, empresa.id);
+        }
+        setIsDirty(false);
+    }, [form, id, isEdicao, empresa?.id]);
+
+    // Registrar saveHandler
+    useEffect(() => {
+        if (isTabMode && fornecedorId) {
+            const tabId = `fornecedor-${fornecedorId}`;
+            registerSaveHandler(tabId, salvarFornecedor);
+            return () => unregisterSaveHandler(tabId);
+        }
+    }, [isTabMode, fornecedorId, salvarFornecedor, registerSaveHandler, unregisterSaveHandler]);
 
     const carregarFornecedor = async () => {
         setLoading(true);
@@ -78,11 +115,13 @@ const CadastroFornecedor = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        setIsDirty(true);
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
     const handleEnderecoChange = (e) => {
         const { name, value } = e.target;
+        setIsDirty(true);
         setForm(prev => ({
             ...prev,
             endereco: { ...prev.endereco, [name]: value }
@@ -167,7 +206,12 @@ const CadastroFornecedor = () => {
                 await storage.create('fornecedores', payload, empresa.id);
             }
 
-            navigate('/fornecedores');
+            setIsDirty(false);
+            if (isTabMode) {
+                onClose?.();
+            } else {
+                navigate('/fornecedores');
+            }
         } catch (error) {
             setError(error.message || 'Erro ao salvar');
         } finally {
@@ -180,8 +224,21 @@ const CadastroFornecedor = () => {
 
         if (window.confirm('Deseja realmente excluir este fornecedor?')) {
             try {
+                // Validação: Verificar vínculo com Produtos
+                const produtos = await storage.getAll('produtos', empresa?.id);
+                const temProdutos = produtos.some(p => p.fornecedorId === id);
+
+                if (temProdutos) {
+                    alert('Não é possível excluir este fornecedor pois existem Produtos vinculados a ele.');
+                    return;
+                }
+
                 await storage.softDelete('fornecedores', id);
-                navigate('/fornecedores');
+                if (isTabMode) {
+                    onClose?.();
+                } else {
+                    navigate('/fornecedores');
+                }
             } catch (error) {
                 console.error('Erro ao excluir:', error);
                 setError('Erro ao excluir fornecedor');
@@ -206,7 +263,7 @@ const CadastroFornecedor = () => {
                 <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto w-full">
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={() => navigate('/fornecedores')}
+                            onClick={() => isTabMode ? onClose?.() : navigate('/fornecedores')}
                             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
                         >
                             <span className="material-symbols-outlined">arrow_back</span>
@@ -511,7 +568,7 @@ const CadastroFornecedor = () => {
                     )}
                     <button
                         type="button"
-                        onClick={() => navigate('/fornecedores')}
+                        onClick={() => isTabMode ? onClose?.() : navigate('/fornecedores')}
                         className="btn-secondary flex-1"
                     >
                         Cancelar

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatTelefone, formatDocumento, getIniciais, toTitleCase } from '../../lib/utils';
 import ImportarClientesModal from '../../components/clientes/ImportarClientesModal';
@@ -12,6 +13,7 @@ const ListaClientes = () => {
     const { empresa } = useAuth();
     const { showSaveToast } = useToast();
     const navigate = useNavigate();
+    const { openTab } = useTabs();
     const [clientes, setClientes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState('');
@@ -66,6 +68,15 @@ const ListaClientes = () => {
 
         if (showSaveToast) showSaveToast(msg);
         else alert(msg);
+    };
+
+    const handleOpenCliente = (cliente) => {
+        openTab({
+            id: `cliente-${cliente.id}`,
+            type: 'cliente',
+            title: cliente.nome || 'Cliente',
+            data: { clienteId: cliente.id }
+        });
     };
 
     // Filtrar clientes
@@ -223,7 +234,7 @@ const ListaClientes = () => {
                                 {clientesFiltrados.map((cliente, index) => (
                                     <tr
                                         key={cliente.id}
-                                        onClick={() => navigate(`/clientes/${cliente.id}`)}
+                                        onClick={() => handleOpenCliente(cliente)}
                                         className={`
                                             cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50
                                             ${index !== clientesFiltrados.length - 1 ? 'border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]' : ''}

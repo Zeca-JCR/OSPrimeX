@@ -54,6 +54,15 @@ const RastreamentoPublico = () => {
 
             setOs(osEncontrada);
 
+            // Registrar visualização (Incrementar contador)
+            try {
+                await storage.update('ordens_servico', osEncontrada.id, {
+                    visualizacoes: (osEncontrada.visualizacoes || 0) + 1
+                });
+            } catch (err) {
+                console.error('Erro ao registrar visualização:', err);
+            }
+
             // Carregar dados relacionados
             const [clienteData, veiculoData, empresaData] = await Promise.all([
                 osEncontrada.clienteId ? storage.getById('clientes', osEncontrada.clienteId) : null,

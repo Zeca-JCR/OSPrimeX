@@ -1,19 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { validaCPF, validaCNPJ } from '../../lib/utils';
 import { consultarCNPJ, consultarCEP } from '../../services/api';
 
-const CadastroCliente = () => {
+const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
     const { empresa } = useAuth();
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
-    const { id } = useParams(); // Se existir, é edição
+    const params = useParams();
+    const id = clienteId || params.id; // Prioriza prop (TabMode) sobre URL
     const isEdicao = !!id;
 
     const [loading, setLoading] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
 
     const [form, setForm] = useState({
         tipo: 'pf',
@@ -61,6 +65,49 @@ const CadastroCliente = () => {
         }
     }, [id]);
 
+    // Comunicar dirty state para aba
+    useEffect(() => {
+        if (isTabMode) onDirtyChange?.(isDirty);
+    }, [isDirty, isTabMode, onDirtyChange]);
+
+    // Comunicar título para aba
+    useEffect(() => {
+        if (isTabMode && form?.nome) {
+            onTitleChange?.(form.nome || 'Novo Cliente');
+        }
+    }, [form?.nome, isTabMode, onTitleChange]);
+
+    // Função de salvar que pode ser chamada externamente (pelo TabBar)
+    const salvarCliente = useCallback(async () => {
+        // Validações básicas
+        if (!form.nome.trim()) {
+            throw new Error('Nome é obrigatório');
+        }
+        if (form.documento) {
+            const valido = form.tipo === 'pf' ? validaCPF(form.documento) : validaCNPJ(form.documento);
+            if (!valido) throw new Error(`${form.tipo === 'pf' ? 'CPF' : 'CNPJ'} inválido`);
+        }
+        if (!form.telefone.trim()) {
+            throw new Error('Telefone é obrigatório');
+        }
+
+        if (isEdicao) {
+            await storage.update('clientes', id, form);
+        } else {
+            await storage.create('clientes', form, empresa.id);
+        }
+        setIsDirty(false);
+    }, [form, id, isEdicao, empresa?.id]);
+
+    // Registrar saveHandler para o TabBar poder chamar "Salvar e sair"
+    useEffect(() => {
+        if (isTabMode && clienteId) {
+            const tabId = `cliente-${clienteId}`;
+            registerSaveHandler(tabId, salvarCliente);
+            return () => unregisterSaveHandler(tabId);
+        }
+    }, [isTabMode, clienteId, salvarCliente, registerSaveHandler, unregisterSaveHandler]);
+
     const carregarCliente = async () => {
         setLoading(true);
         try {
@@ -99,6 +146,7 @@ const CadastroCliente = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        setIsDirty(true);
 
         if (name.startsWith('endereco.')) {
             const campo = name.split('.')[1];
@@ -187,6 +235,45 @@ const CadastroCliente = () => {
         if (valido) setError('');
     };
 
+    const handleDelete = async () => {
+        if (!confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) return;
+
+        setSalvando(true);
+        try {
+            // 1. Verificar vínculo com Veículos
+            const veiculos = await storage.getAll('veiculos', empresa?.id);
+            const temVeiculos = veiculos.some(v => v.clienteId === id);
+
+            if (temVeiculos) {
+                alert('Não é possível excluir este cliente pois ele possui Veículos cadastrados.');
+                return;
+            }
+
+            // 2. Verificar vínculo com OS
+            const ordens = await storage.getAll('ordens_servico', empresa?.id);
+            const temOS = ordens.some(os => os.clienteId === id);
+
+            if (temOS) {
+                alert('Não é possível excluir este cliente pois ele possui Ordens de Serviço (histórico).');
+                return;
+            }
+
+            // Se passou, exclui
+            await storage.delete('clientes', id);
+
+            if (isTabMode) {
+                onClose?.();
+            } else {
+                navigate('/clientes');
+            }
+        } catch (error) {
+            console.error('Erro ao excluir cliente:', error);
+            setError('Erro ao excluir cliente: ' + error.message);
+        } finally {
+            setSalvando(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -214,7 +301,12 @@ const CadastroCliente = () => {
                 await storage.create('clientes', form, empresa.id);
             }
 
-            navigate('/clientes');
+            setIsDirty(false);
+            if (isTabMode) {
+                onClose?.();
+            } else {
+                navigate('/clientes');
+            }
         } catch (error) {
             setError(error.message || 'Erro ao salvar cliente');
         } finally {
@@ -238,7 +330,7 @@ const CadastroCliente = () => {
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="flex items-center gap-3 px-4 py-3">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => isTabMode ? onClose?.() : navigate(-1)}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
@@ -590,18 +682,29 @@ const CadastroCliente = () => {
 
                 {/* Sticky Footer Actions */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-20">
-                    <div className="max-w-2xl mx-auto flex gap-3">
+                    <div className="max-w-2xl mx-auto flex gap-3 items-center">
+                        {isEdicao && (
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mr-auto"
+                                title="Excluir Cliente"
+                                disabled={salvando}
+                            >
+                                <span className="material-symbols-outlined">delete</span>
+                            </button>
+                        )}
                         <button
                             type="button"
-                            onClick={() => navigate(-1)}
-                            className="btn-secondary flex-1"
+                            onClick={() => isTabMode ? onClose?.() : navigate(-1)}
+                            className={`btn-secondary ${isEdicao ? '' : 'flex-1'}`}
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={salvando}
-                            className="btn-primary flex-1 shadow-lg shadow-primary/20"
+                            className={`btn-primary shadow-lg shadow-primary/20 ${isEdicao ? '' : 'flex-1'}`}
                         >
                             {salvando ? (
                                 <>

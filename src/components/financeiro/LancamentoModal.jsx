@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import storage from '../../lib/storage';
 import { toISODate } from '../../lib/utils';
+import CurrencyInput from '../common/CurrencyInput';
 
 const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pago' }) => {
     const isReceita = tipo === 'receita';
     const [form, setForm] = useState({
         descricao: '',
-        valor: '',
+        valor: 0,
         categoria: '',
         data: toISODate(new Date()),
         dataVencimento: toISODate(new Date()),
@@ -325,17 +326,10 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Valor (R$) *
-                            </label>
-                            <input
-                                type="number"
-                                name="valor"
+                            <CurrencyInput
+                                label="Valor R$"
                                 value={form.valor}
-                                onChange={handleChange}
-                                className="input"
-                                min="0.01"
-                                step="0.01"
+                                onChange={(val) => setForm(prev => ({ ...prev, valor: val }))}
                                 required
                             />
                         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useOS } from '../../contexts/OSContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDate, toISODate, calculateWorkingTime } from '../../lib/utils';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
@@ -11,7 +11,18 @@ const KanbanOS = () => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const { openOS } = useOS();
+    const { openTab } = useTabs();
+
+    // Função helper para abrir OS como aba
+    const openOS = (osId) => {
+        const os = ordens.find(o => o.id === osId);
+        openTab({
+            id: `os-${osId}`,
+            type: 'os',
+            title: `OS #${os?.numero || osId.slice(-4)}`,
+            data: { osId }
+        });
+    };
     const [ordens, setOrdens] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [veiculos, setVeiculos] = useState([]);
@@ -22,6 +33,12 @@ const KanbanOS = () => {
     const [showAtribuirTecnico, setShowAtribuirTecnico] = useState(false);
     const [osParaAtribuir, setOsParaAtribuir] = useState(null); // { id: string, novoStatus: string }
     const [dragging, setDragging] = useState(null);
+
+    // Estados para modal de cancelamento com estorno
+    const [showConfirmarCancelamento, setShowConfirmarCancelamento] = useState(false);
+    const [osParaCancelar, setOsParaCancelar] = useState(null); // OS que será cancelada
+    const [motivoCancelamento, setMotivoCancelamento] = useState('');
+    const [processandoCancelamento, setProcessandoCancelamento] = useState(false);
 
     // Visualização e filtros
     const [visualizacao, setVisualizacao] = useState('kanban'); // 'kanban' ou 'lista'
@@ -201,14 +218,17 @@ const KanbanOS = () => {
         return veiculo ? `${veiculo.marca} ${veiculo.modelo} - ${veiculo.placa}` : 'Veículo';
     };
 
-    // Verificar se existe rascunho local para a OS
-    const checkDraft = (osId) => {
-        return !!localStorage.getItem(`draft_os_${osId}`);
-    };
+
 
     // Verificar se existe link de rastreio ativo
     const hasLinkRastreavel = (osId) => {
         return linksRastreaveis?.some(l => l.osId === osId && l.ativo !== false);
+    };
+
+    // Verificar se a OS tem um técnico válido (existe na lista de colaboradores)
+    const hasTecnicoValido = (os) => {
+        if (!os.tecnicoId) return false;
+        return tecnicos.some(t => t.id === os.tecnicoId);
     };
 
     // Helper para calcular tempo de execução para exibição no card
@@ -266,6 +286,15 @@ const KanbanOS = () => {
             return;
         }
 
+        // CANCELAMENTO: Requer confirmação especial se vem de finalizada (estorno)
+        if (novoStatus === 'cancelada') {
+            setOsParaCancelar(os);
+            setMotivoCancelamento('');
+            setShowConfirmarCancelamento(true);
+            setDragging(null);
+            return;
+        }
+
         const dadosUpdate = { status: novoStatus };
 
         // Timer de execução: registrar início quando entra em execução
@@ -292,6 +321,70 @@ const KanbanOS = () => {
         }
 
         setDragging(null);
+    };
+
+    // Função para estornar estoque (devolver peças)
+    const estornarEstoque = async (os) => {
+        const itens = os.itens || [];
+        for (const item of itens) {
+            if (item.tipo === 'produto' && item.produtoId) {
+                try {
+                    const produto = await storage.getById('produtos', item.produtoId);
+                    if (produto) {
+                        const estoqueAtual = Number(produto.quantidade) || 0;
+                        const novoEstoque = estoqueAtual + item.quantidade;
+
+                        await storage.update('produtos', item.produtoId, { quantidade: novoEstoque });
+
+                        await storage.create('movimentacoes_estoque', {
+                            produtoId: item.produtoId,
+                            osId: os.id,
+                            tipo: 'entrada',
+                            quantidade: item.quantidade,
+                            motivo: `Estorno - OS #${os.numero || os.id.slice(-6)} (Kanban)`,
+                            estoqueAnterior: estoqueAtual,
+                            estoqueAtual: novoEstoque,
+                        }, empresa.id);
+                    }
+                } catch (error) {
+                    console.error('Erro no estorno de estoque:', error);
+                }
+            }
+        }
+    };
+
+    // Confirmar cancelamento (chamado pelo modal)
+    const confirmarCancelamento = async () => {
+        if (!osParaCancelar) return;
+
+        setProcessandoCancelamento(true);
+        try {
+            // Se a OS estava finalizada, estornar estoque
+            if (osParaCancelar.status === 'finalizada') {
+                await estornarEstoque(osParaCancelar);
+            }
+
+            // Salvar motivo nas observações
+            const observacaoAtual = osParaCancelar.observacoes || '';
+            const novaObservacao = motivoCancelamento
+                ? `${observacaoAtual}\n[CANCELADO] ${motivoCancelamento}`.trim()
+                : observacaoAtual;
+
+            await storage.update('ordens_servico', osParaCancelar.id, {
+                status: 'cancelada',
+                observacoes: novaObservacao
+            });
+
+            carregarDados();
+            setShowConfirmarCancelamento(false);
+            setOsParaCancelar(null);
+            setMotivoCancelamento('');
+        } catch (error) {
+            console.error('Erro ao cancelar:', error);
+            alert('Erro ao cancelar OS');
+        } finally {
+            setProcessandoCancelamento(false);
+        }
     };
 
     const handleAtribuirTecnico = async (tecnicoId) => {
@@ -613,11 +706,6 @@ const KanbanOS = () => {
                                                                 <div className="flex flex-col gap-1">
                                                                     <span className="text-xs font-bold text-primary flex items-center gap-1">
                                                                         #{os.numero}
-                                                                        {checkDraft(os.id) && (
-                                                                            <span className="material-symbols-outlined text-amber-500 text-sm" title="Rascunho não salvo encontrado">
-                                                                                edit_note
-                                                                            </span>
-                                                                        )}
                                                                         {hasLinkRastreavel(os.id) && (
                                                                             <span className="material-symbols-outlined text-blue-500 text-sm" title="Rastreio Ativo">
                                                                                 share_location
@@ -691,7 +779,7 @@ const KanbanOS = () => {
                                                                         </span>
                                                                     ) : null
                                                                 )}
-                                                                {!os.tecnicoId && os.status === 'execucao' ? (
+                                                                {!hasTecnicoValido(os) && os.status === 'execucao' ? (
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
@@ -704,7 +792,7 @@ const KanbanOS = () => {
                                                                         <span className="material-symbols-outlined text-[14px]">person_add</span>
                                                                         Atribuir Técnico
                                                                     </button>
-                                                                ) : !os.tecnicoId && os.status !== 'finalizada' && os.status !== 'cancelada' && (
+                                                                ) : !hasTecnicoValido(os) && os.status !== 'finalizada' && os.status !== 'cancelada' && (
                                                                     <span className="text-xs px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-900/20 text-red-500 font-medium flex items-center gap-1" title="Sem técnico atribuído">
                                                                         <span className="material-symbols-outlined text-[14px]">person_off</span>
                                                                     </span>
@@ -759,11 +847,6 @@ const KanbanOS = () => {
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-primary">#{os.numero}</span>
-                                                        {checkDraft(os.id) && (
-                                                            <span className="material-symbols-outlined text-amber-500 text-sm" title="Rascunho não salvo encontrado">
-                                                                edit_note
-                                                            </span>
-                                                        )}
                                                         {hasLinkRastreavel(os.id) && (
                                                             <span className="material-symbols-outlined text-blue-500 text-sm" title="Rastreio Ativo">
                                                                 share_location
@@ -832,6 +915,99 @@ const KanbanOS = () => {
                     }}
                     onSelect={handleAtribuirTecnico}
                 />
+            )}
+
+            {/* Modal Confirmar Cancelamento */}
+            {showConfirmarCancelamento && osParaCancelar && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="card p-6 w-full max-w-md animate-scaleIn">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 mx-auto mb-4 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-3xl text-red-600 dark:text-red-400">cancel</span>
+                            </div>
+                            <h3 className="text-lg font-semibold text-text-light dark:text-text-dark">
+                                Cancelar OS #{osParaCancelar.numero}
+                            </h3>
+                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-2">
+                                {osParaCancelar.status === 'finalizada'
+                                    ? 'Esta OS está finalizada. Ao cancelar, as peças serão estornadas ao estoque.'
+                                    : 'Informe o motivo do cancelamento (opcional).'
+                                }
+                            </p>
+                        </div>
+
+                        {/* Alerta de Estorno para OS Finalizada */}
+                        {osParaCancelar.status === 'finalizada' && (
+                            <div className="mb-4 p-4 rounded-xl bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-700">
+                                <div className="flex items-start gap-3">
+                                    <span className="material-symbols-outlined text-orange-600 dark:text-orange-400 text-xl shrink-0">warning</span>
+                                    <div>
+                                        <p className="font-bold text-orange-800 dark:text-orange-300 mb-1">ATENÇÃO: Estorno de Estoque</p>
+                                        <p className="text-sm text-orange-700 dark:text-orange-400">
+                                            {(osParaCancelar.itens || []).filter(i => i.tipo === 'produto').length} peça(s) serão devolvidas ao estoque automaticamente.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Alerta Financeiro - Mostra para QUALQUER OS com valor pago (sinal ou pagamento total) */}
+                        {(osParaCancelar.valorPago || 0) > 0 && (
+                            <div className="mb-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700">
+                                <div className="flex items-start gap-3">
+                                    <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl shrink-0">payments</span>
+                                    <div>
+                                        <p className="font-bold text-blue-800 dark:text-blue-300 mb-1">Impacto Financeiro</p>
+                                        <p className="text-sm text-blue-700 dark:text-blue-400">
+                                            Esta OS possui R$ {(osParaCancelar.valorPago || 0).toFixed(2).replace('.', ',')} já pago.
+                                            Os valores <strong>NÃO</strong> serão estornados automaticamente.
+                                            Gerencie manualmente no módulo Financeiro se necessário.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
+                                Motivo do cancelamento
+                            </label>
+                            <textarea
+                                value={motivoCancelamento}
+                                onChange={(e) => setMotivoCancelamento(e.target.value)}
+                                className="input w-full"
+                                rows={3}
+                                placeholder="Descreva o motivo..."
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowConfirmarCancelamento(false);
+                                    setOsParaCancelar(null);
+                                    setMotivoCancelamento('');
+                                }}
+                                className="btn-secondary flex-1"
+                                disabled={processandoCancelamento}
+                            >
+                                Voltar
+                            </button>
+                            <button
+                                onClick={confirmarCancelamento}
+                                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-all"
+                                disabled={processandoCancelamento}
+                            >
+                                {processandoCancelamento ? (
+                                    <span className="material-symbols-outlined animate-spin">sync</span>
+                                ) : (
+                                    <span className="material-symbols-outlined">cancel</span>
+                                )}
+                                Cancelar OS
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

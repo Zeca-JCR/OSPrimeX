@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { toTitleCase } from '../../lib/utils';
 import useTableColumns from '../../hooks/useTableColumns';
@@ -9,6 +10,7 @@ import ColumnToggler from '../../components/common/ColumnToggler';
 const ListaVeiculos = () => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
+    const { openTab } = useTabs();
     const [veiculos, setVeiculos] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -49,6 +51,15 @@ const ListaVeiculos = () => {
     const getClienteNome = (clienteId) => {
         const cliente = clientes.find((c) => c.id === clienteId);
         return cliente?.nome || '-';
+    };
+
+    const handleOpenVeiculo = (veiculo) => {
+        openTab({
+            id: `veiculo-${veiculo.id}`,
+            type: 'veiculo',
+            title: veiculo.placa || 'Veículo',
+            data: { veiculoId: veiculo.id }
+        });
     };
 
     const veiculosFiltrados = veiculos.filter((veiculo) => {
@@ -168,7 +179,7 @@ const ListaVeiculos = () => {
                                     {veiculosFiltrados.map((veiculo, index) => (
                                         <tr
                                             key={veiculo.id}
-                                            onClick={() => navigate(`/veiculos/${veiculo.id}/editar`)}
+                                            onClick={() => handleOpenVeiculo(veiculo)}
                                             className={`
                                             cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50
                                             ${index !== veiculosFiltrados.length - 1 ? 'border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]' : ''}

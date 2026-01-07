@@ -1,20 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'; // Navigation hooks
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage'; // Data access
 import { formatCurrency } from '../../lib/utils';
 import CreatableSelect from '../../components/common/CreatableSelect';
+import CurrencyInput from '../../components/common/CurrencyInput';
 import { useTenant } from '../../contexts/TenantContext'; // Contexts
 
-const CadastroProduto = () => {
+const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
     const { empresa } = useAuth(); // Get current company context
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
-    const { id } = useParams(); // Get ID from URL if editing
+    const params = useParams();
+    const id = produtoId || params.id; // Prioriza prop (TabMode) sobre URL
     const isEdicao = !!id;
 
     const [loading, setLoading] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
     const [estoqueOriginal, setEstoqueOriginal] = useState(0); // To track stock changes
 
     // Initial Form State
@@ -23,8 +28,8 @@ const CadastroProduto = () => {
         nome: '',
         descricao: '',
         unidade: 'UN',
-        precoCusto: '',
-        precoVenda: '',
+        precoCusto: 0,
+        precoVenda: 0,
         quantidade: 0,
         estoqueMinimo: 0,
         servicoRapido: false,
@@ -44,6 +49,48 @@ const CadastroProduto = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
+
+    // Comunicar dirty state para aba
+    useEffect(() => {
+        if (isTabMode) onDirtyChange?.(isDirty);
+    }, [isDirty, isTabMode, onDirtyChange]);
+
+    // Comunicar título para aba
+    useEffect(() => {
+        if (isTabMode) {
+            onTitleChange?.(form?.nome || 'Novo Item');
+        }
+    }, [form?.nome, isTabMode, onTitleChange]);
+
+    // Função de salvar para saveHandler
+    const salvarProduto = useCallback(async () => {
+        if (!form.nome.trim()) throw new Error('Nome é obrigatório');
+        if (!form.precoVenda) throw new Error('Preço de venda é obrigatório');
+
+        const payload = {
+            ...form,
+            precoCusto: form.precoCusto ? parseFloat(form.precoCusto) : 0,
+            precoVenda: parseFloat(form.precoVenda),
+            quantidade: isProduto ? parseInt(form.quantidade) || 0 : null,
+            estoqueMinimo: isProduto ? parseInt(form.estoqueMinimo) || 0 : null,
+        };
+
+        if (isEdicao) {
+            await storage.update('produtos', id, payload);
+        } else {
+            await storage.create('produtos', payload, empresa.id);
+        }
+        setIsDirty(false);
+    }, [form, id, isEdicao, isProduto, empresa?.id]);
+
+    // Registrar saveHandler
+    useEffect(() => {
+        if (isTabMode && produtoId) {
+            const tabId = `produto-${produtoId}`;
+            registerSaveHandler(tabId, salvarProduto);
+            return () => unregisterSaveHandler(tabId);
+        }
+    }, [isTabMode, produtoId, salvarProduto, registerSaveHandler, unregisterSaveHandler]);
 
     // Load Data (Suppliers + Product if editing)
     useEffect(() => {
@@ -65,8 +112,8 @@ const CadastroProduto = () => {
                             nome: produto.nome || '',
                             descricao: produto.descricao || '',
                             unidade: produto.unidade || 'UN',
-                            precoCusto: produto.precoCusto || '',
-                            precoVenda: produto.precoVenda || '',
+                            precoCusto: produto.precoCusto || 0,
+                            precoVenda: produto.precoVenda || 0,
                             quantidade: produto.quantidade || 0,
                             estoqueMinimo: produto.estoqueMinimo || 0,
                             servicoRapido: produto.servicoRapido || false,
@@ -95,6 +142,7 @@ const CadastroProduto = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        setIsDirty(true);
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
@@ -155,7 +203,12 @@ const CadastroProduto = () => {
                 }
             }
 
-            navigate('/estoque'); // Voltar para a lista
+            setIsDirty(false);
+            if (isTabMode) {
+                onClose?.();
+            } else {
+                navigate('/estoque'); // Voltar para a lista
+            }
         } catch (error) {
             setError(error.message || 'Erro ao salvar');
         } finally {
@@ -165,13 +218,43 @@ const CadastroProduto = () => {
 
     const handleDelete = async () => {
         if (!confirm('Tem certeza que deseja excluir este item?')) return;
+
+        setLoading(true); // Usar loading ou salvando para feedback visual
         try {
+            // 1. Verificar em Movimentações de Estoque
+            const movimentacoes = await storage.getAll('movimentacoes_estoque', empresa?.id);
+            const temMovimento = movimentacoes.some(m => m.produtoId === id);
+
+            if (temMovimento) {
+                alert('Não é possível excluir este item pois existem movimentações de estoque registradas.');
+                setLoading(false);
+                return;
+            }
+
+            // 2. Verificar em Ordens de Serviço (percorrer itens das OSs)
+            const ordens = await storage.getAll('ordens_servico', empresa?.id);
+            const emUsoOS = ordens.some(os =>
+                os.itens && os.itens.some(item => item.produtoId === id)
+            );
+
+            if (emUsoOS) {
+                alert('Não é possível excluir este item pois ele foi utilizado em Ordens de Serviço.');
+                setLoading(false);
+                return;
+            }
+
             await storage.softDelete('produtos', id);
-            navigate('/estoque');
+            if (isTabMode) {
+                onClose?.();
+            } else {
+                navigate('/estoque');
+            }
         } catch (err) {
-            setError('Erro ao excluir item.');
+            console.error('Erro ao excluir produto:', err);
+            setError('Erro ao excluir item: ' + err.message);
+            setLoading(false);
         }
-    }
+    };
 
 
     if (loading) {
@@ -190,7 +273,7 @@ const CadastroProduto = () => {
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto w-full">
                     <button
-                        onClick={() => navigate('/estoque')}
+                        onClick={() => isTabMode ? onClose?.() : navigate('/estoque')}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark transition-colors"
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
@@ -427,34 +510,19 @@ const CadastroProduto = () => {
                     <div className="grid grid-cols-2 gap-4">
                         {isProduto && (
                             <div>
-                                <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                    Custo (R$)
-                                </label>
-                                <input
-                                    type="number"
-                                    name="precoCusto"
+                                <CurrencyInput
+                                    label="Custo R$"
                                     value={form.precoCusto}
-                                    onChange={handleChange}
-                                    className="input"
-                                    placeholder="0,00"
-                                    min="0"
-                                    step="0.01"
+                                    onChange={(val) => setForm(prev => ({ ...prev, precoCusto: val }))}
                                 />
                             </div>
                         )}
                         <div className={isProduto ? '' : 'col-span-2'}>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Preço Venda (R$) *
-                            </label>
-                            <input
-                                type="number"
-                                name="precoVenda"
+                            <CurrencyInput
+                                label="Preço Venda R$"
                                 value={form.precoVenda}
-                                onChange={handleChange}
-                                className="input font-bold text-primary text-lg"
-                                placeholder="0,00"
-                                min="0"
-                                step="0.01"
+                                onChange={(val) => setForm(prev => ({ ...prev, precoVenda: val }))}
+                                size="lg"
                                 required
                             />
                         </div>
@@ -524,7 +592,7 @@ const CadastroProduto = () => {
                         )}
                         <button
                             type="button"
-                            onClick={() => navigate('/estoque')}
+                            onClick={() => isTabMode ? onClose?.() : navigate('/estoque')}
                             className="btn-secondary flex-1"
                         >
                             Cancelar

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import { useTenant } from '../../contexts/TenantContext'; // Novo import
 import { useToast } from '../../contexts/ToastContext';
 import storage from '../../lib/storage';
@@ -14,6 +15,7 @@ const ListaProdutos = () => {
     const { empresa } = useAuth();
     const { hasAddon } = useTenant(); // Novo hook
     const { showSaveToast } = useToast();
+    const { openTab } = useTabs();
     const [produtos, setProdutos] = useState([]);
     const [fornecedores, setFornecedores] = useState([]);
     const [ordensServico, setOrdensServico] = useState([]);
@@ -148,7 +150,12 @@ const ListaProdutos = () => {
     const servicosLista = produtosFiltrados.filter((p) => p.tipo === 'servico');
 
     const handleEdit = (produto) => {
-        navigate(`/estoque/${produto.id}/editar`);
+        openTab({
+            id: `produto-${produto.id}`,
+            type: 'produto',
+            title: produto.nome || 'Item',
+            data: { produtoId: produto.id }
+        });
     };
 
     const handleNew = () => {

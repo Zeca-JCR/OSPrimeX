@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 
-const CadastroColaborador = () => {
+const CadastroColaborador = ({ colaboradorId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
     const { empresa } = useAuth();
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
-    const { id } = useParams();
+    const params = useParams();
+    const id = colaboradorId || params.id; // Prioriza prop (TabMode) sobre URL
     const isEdicao = !!id;
 
     const [loading, setLoading] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
 
     const [form, setForm] = useState({
         nome: '',
@@ -26,6 +30,43 @@ const CadastroColaborador = () => {
             carregarColaborador();
         }
     }, [id]);
+
+    // Comunicar dirty state para aba
+    useEffect(() => {
+        if (isTabMode) onDirtyChange?.(isDirty);
+    }, [isDirty, isTabMode, onDirtyChange]);
+
+    // Comunicar título para aba
+    useEffect(() => {
+        if (isTabMode) {
+            onTitleChange?.(form?.nome || 'Novo Colaborador');
+        }
+    }, [form?.nome, isTabMode, onTitleChange]);
+
+    // Função de salvar para saveHandler
+    const salvarColaborador = useCallback(async () => {
+        if (!form.nome.trim()) throw new Error('Nome é obrigatório');
+        const payload = {
+            ...form,
+            comissao: parseFloat(form.comissao) || 0,
+            empresaId: empresa.id
+        };
+        if (isEdicao) {
+            await storage.update('colaboradores', id, payload);
+        } else {
+            await storage.create('colaboradores', payload, empresa.id);
+        }
+        setIsDirty(false);
+    }, [form, id, isEdicao, empresa?.id]);
+
+    // Registrar saveHandler
+    useEffect(() => {
+        if (isTabMode && colaboradorId) {
+            const tabId = `colaborador-${colaboradorId}`;
+            registerSaveHandler(tabId, salvarColaborador);
+            return () => unregisterSaveHandler(tabId);
+        }
+    }, [isTabMode, colaboradorId, salvarColaborador, registerSaveHandler, unregisterSaveHandler]);
 
     const carregarColaborador = async () => {
         setLoading(true);
@@ -50,6 +91,7 @@ const CadastroColaborador = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        setIsDirty(true);
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
@@ -73,7 +115,12 @@ const CadastroColaborador = () => {
                 await storage.create('colaboradores', payload, empresa.id);
             }
 
-            navigate('/colaboradores');
+            setIsDirty(false);
+            if (isTabMode) {
+                onClose?.();
+            } else {
+                navigate('/colaboradores');
+            }
         } catch (error) {
             setError(error.message || 'Erro ao salvar');
         } finally {
@@ -86,8 +133,21 @@ const CadastroColaborador = () => {
 
         if (window.confirm('Deseja realmente excluir este colaborador?')) {
             try {
+                // Validação: Verificar vínculo com OS
+                const ordens = await storage.getAll('ordens_servico', empresa?.id);
+                const emUso = ordens.some(os => os.responsavelId === id || os.mecanicoId === id);
+
+                if (emUso) {
+                    alert('Não é possível excluir este colaborador pois ele está vinculado a Ordens de Serviço (Responsável ou Mecânico).');
+                    return;
+                }
+
                 await storage.softDelete('colaboradores', id);
-                navigate('/colaboradores');
+                if (isTabMode) {
+                    onClose?.();
+                } else {
+                    navigate('/colaboradores');
+                }
             } catch (error) {
                 console.error('Erro ao excluir:', error);
                 setError('Erro ao excluir colaborador');
@@ -112,7 +172,7 @@ const CadastroColaborador = () => {
                 <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto w-full">
                     <div className="flex items-center gap-3">
                         <button
-                            onClick={() => navigate('/colaboradores')}
+                            onClick={() => isTabMode ? onClose?.() : navigate('/colaboradores')}
                             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
                         >
                             <span className="material-symbols-outlined">arrow_back</span>
@@ -248,7 +308,7 @@ const CadastroColaborador = () => {
                     )}
                     <button
                         type="button"
-                        onClick={() => navigate('/colaboradores')}
+                        onClick={() => isTabMode ? onClose?.() : navigate('/colaboradores')}
                         className="btn-secondary flex-1"
                     >
                         Cancelar

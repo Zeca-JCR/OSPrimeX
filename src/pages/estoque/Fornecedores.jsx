@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import { useNavigate, Link } from 'react-router-dom';
 import storage from '../../lib/storage';
 import { toTitleCase } from '../../lib/utils';
@@ -7,6 +8,7 @@ import { toTitleCase } from '../../lib/utils';
 const Fornecedores = () => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
+    const { openTab } = useTabs();
     const [fornecedores, setFornecedores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState('');
@@ -37,6 +39,15 @@ const Fornecedores = () => {
                 console.error('Erro ao excluir:', error);
             }
         }
+    };
+
+    const handleOpenFornecedor = (fornecedor) => {
+        openTab({
+            id: `fornecedor-${fornecedor.id}`,
+            type: 'fornecedor',
+            title: fornecedor.nome || 'Fornecedor',
+            data: { fornecedorId: fornecedor.id }
+        });
     };
 
     const fornecedoresFiltrados = fornecedores.filter((f) => {
@@ -136,7 +147,7 @@ const Fornecedores = () => {
                                 {fornecedoresFiltrados.map((fornecedor, index) => (
                                     <tr
                                         key={fornecedor.id}
-                                        onClick={() => navigate(`/fornecedores/${fornecedor.id}/editar`)}
+                                        onClick={() => handleOpenFornecedor(fornecedor)}
                                         className={`
                                             cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50
                                             ${index !== fornecedoresFiltrados.length - 1 ? 'border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]' : ''}

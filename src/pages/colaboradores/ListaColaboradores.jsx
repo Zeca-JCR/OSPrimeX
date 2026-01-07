@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import { useNavigate } from 'react-router-dom';
 import storage from '../../lib/storage';
 
 const ListaColaboradores = () => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
+    const { openTab } = useTabs();
     const [colaboradores, setColaboradores] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -43,6 +45,15 @@ const ListaColaboradores = () => {
         gerente: 'Gerente',
         atendente: 'Atendente / Recepcionista',
         auxiliar: 'Auxiliar',
+    };
+
+    const handleOpenColaborador = (colaborador) => {
+        openTab({
+            id: `colaborador-${colaborador.id}`,
+            type: 'colaborador',
+            title: colaborador.nome || 'Colaborador',
+            data: { colaboradorId: colaborador.id }
+        });
     };
 
     const cargoColors = {
@@ -110,7 +121,7 @@ const ListaColaboradores = () => {
                                 colaboradores.map((colaborador, index) => (
                                     <tr
                                         key={colaborador.id}
-                                        onClick={() => navigate(`/colaboradores/${colaborador.id}/editar`)}
+                                        onClick={() => handleOpenColaborador(colaborador)}
                                         className={`
                                             cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50
                                             ${index !== colaboradores.length - 1 ? 'border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]' : ''}
