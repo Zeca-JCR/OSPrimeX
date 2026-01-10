@@ -272,15 +272,14 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
             {/* Header Sticky */}
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto w-full">
-                    <button
-                        onClick={() => isTabMode ? onClose?.() : navigate('/estoque')}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark transition-colors"
-                    >
-                        <span className="material-symbols-outlined">arrow_back</span>
-                    </button>
-                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark">
-                        {isEdicao ? 'Editar Item' : 'Novo Item'}
-                    </h1>
+                    <div>
+                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                            {isEdicao ? 'Editar Item' : 'Novo Item'}
+                        </h1>
+                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                            {isEdicao ? 'Atualize as informações do item' : 'Cadastre um item no estoque'}
+                        </p>
+                    </div>
                 </div>
             </header>
 

@@ -72,8 +72,9 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
 
     // Registrar saveHandler
     useEffect(() => {
-        if (isTabMode && fornecedorId) {
-            const tabId = `fornecedor-${fornecedorId}`;
+        if (isTabMode) {
+            // Funciona para edição (fornecedor-{id}) e para novo (fornecedor-novo)
+            const tabId = fornecedorId ? `fornecedor-${fornecedorId}` : 'fornecedor-novo';
             registerSaveHandler(tabId, salvarFornecedor);
             return () => unregisterSaveHandler(tabId);
         }
@@ -262,18 +263,12 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
             <header className="bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] sticky top-0 z-20">
                 <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto w-full">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => isTabMode ? onClose?.() : navigate('/fornecedores')}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
-                        >
-                            <span className="material-symbols-outlined">arrow_back</span>
-                        </button>
                         <div>
                             <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
                                 {isEdicao ? 'Editar Fornecedor' : 'Novo Fornecedor'}
                             </h1>
                             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                                {isEdicao ? 'Atualize os dados do cadastro' : 'Preencha os dados do parceiro'}
+                                {isEdicao ? 'Atualize os dados do fornecedor' : 'Cadastre um novo parceiro comercial'}
                             </p>
                         </div>
                     </div>

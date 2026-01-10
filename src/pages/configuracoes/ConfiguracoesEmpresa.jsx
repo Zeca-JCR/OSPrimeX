@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 
-const ConfiguracoesEmpresa = () => {
+const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
     const { empresa, refreshEmpresa } = useAuth();
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const [loading, setLoading] = useState(true);
     const [salvando, setSalvando] = useState(false);
     const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
@@ -120,6 +122,24 @@ const ConfiguracoesEmpresa = () => {
         }
     }, [empresa]);
 
+    // Estado isDirty para rastrear alterações
+    const [isDirty, setIsDirty] = useState(false);
+    const initialFormRef = useRef(null);
+
+    // Salvar forma inicial para comparação
+    useEffect(() => {
+        if (!loading && !initialFormRef.current) {
+            initialFormRef.current = JSON.stringify(form);
+        }
+    }, [loading, form]);
+
+    // Comunicar dirty state para aba
+    useEffect(() => {
+        if (isTabMode) {
+            onDirtyChange?.(isDirty);
+        }
+    }, [isDirty, isTabMode, onDirtyChange]);
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         if (name.startsWith('endereco.')) {
@@ -131,6 +151,8 @@ const ConfiguracoesEmpresa = () => {
         } else {
             setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
         }
+        // Marcar como alterado
+        if (!isDirty) setIsDirty(true);
     };
 
     const handleLogoUpload = (e) => {
@@ -153,8 +175,8 @@ const ConfiguracoesEmpresa = () => {
         setForm(prev => ({ ...prev, logoUrl: '' }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    // Função de salvar (pode ser chamada pelo TabBar para "Salvar e sair")
+    const saveConfiguracoes = useCallback(async () => {
         setSalvando(true);
         setMensagem({ tipo: '', texto: '' });
 
@@ -167,12 +189,28 @@ const ConfiguracoesEmpresa = () => {
             }
 
             setMensagem({ tipo: 'sucesso', texto: 'Configurações salvas com sucesso!' });
+            setIsDirty(false);
+            return true;
         } catch (error) {
             console.error('Erro ao salvar:', error);
             setMensagem({ tipo: 'erro', texto: 'Erro ao salvar configurações.' });
+            throw error;
         } finally {
             setSalvando(false);
         }
+    }, [empresa?.id, form, refreshEmpresa]);
+
+    // Registrar função de salvar no TabsContext (para "Salvar e sair")
+    useEffect(() => {
+        if (isTabMode) {
+            registerSaveHandler?.('configuracoes', saveConfiguracoes);
+            return () => unregisterSaveHandler?.('configuracoes');
+        }
+    }, [isTabMode, saveConfiguracoes, registerSaveHandler, unregisterSaveHandler]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        await saveConfiguracoes();
     };
 
     if (loading) {
@@ -218,75 +256,6 @@ const ConfiguracoesEmpresa = () => {
                         <span className="material-symbols-outlined text-lg text-primary">business</span>
                         Dados da Empresa
                     </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Horário de Funcionamento
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
-                                    <input type="time" name="horarioTrabalhoInicio" value={form.horarioTrabalhoInicio} onChange={handleChange} className="input w-full" />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
-                                    <input type="time" name="horarioTrabalhoFim" value={form.horarioTrabalhoFim} onChange={handleChange} className="input w-full" />
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Intervalo de Almoço (Seg-Sex)
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
-                                    <input type="time" name="horarioAlmocoInicio" value={form.horarioAlmocoInicio} onChange={handleChange} className="input w-full" />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
-                                    <input type="time" name="horarioAlmocoFim" value={form.horarioAlmocoFim} onChange={handleChange} className="input w-full" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="md:col-span-2 border-t dark:border-gray-700 pt-4 mt-2">
-                            <div className="flex items-center gap-2 mb-4">
-                                <input
-                                    type="checkbox"
-                                    id="trabalhaSabado"
-                                    name="trabalhaSabado"
-                                    checked={form.trabalhaSabado}
-                                    onChange={handleChange}
-                                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                />
-                                <label htmlFor="trabalhaSabado" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
-                                    Trabalha aos Sábados
-                                </label>
-                            </div>
-
-                            {form.trabalhaSabado && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slideDown">
-                                    <div>
-                                        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                            Horário de Sábado
-                                        </label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
-                                                <input type="time" name="horarioSabadoInicio" value={form.horarioSabadoInicio} onChange={handleChange} className="input w-full" />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
-                                                <input type="time" name="horarioSabadoFim" value={form.horarioSabadoFim} onChange={handleChange} className="input w-full" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -378,6 +347,76 @@ const ConfiguracoesEmpresa = () => {
                                 placeholder="https://..."
                             />
                         </div>
+                    </div>
+
+                    {/* Horários de Funcionamento */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t dark:border-gray-700">
+                        <div>
+                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                Horário de Funcionamento
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
+                                    <input type="time" name="horarioTrabalhoInicio" value={form.horarioTrabalhoInicio} onChange={handleChange} className="input w-full" />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
+                                    <input type="time" name="horarioTrabalhoFim" value={form.horarioTrabalhoFim} onChange={handleChange} className="input w-full" />
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                Intervalo de Almoço (Seg-Sex)
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
+                                    <input type="time" name="horarioAlmocoInicio" value={form.horarioAlmocoInicio} onChange={handleChange} className="input w-full" />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
+                                    <input type="time" name="horarioAlmocoFim" value={form.horarioAlmocoFim} onChange={handleChange} className="input w-full" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="md:col-span-2 border-t dark:border-gray-700 pt-4 mt-2">
+                        <div className="flex items-center gap-2 mb-4">
+                            <input
+                                type="checkbox"
+                                id="trabalhaSabado"
+                                name="trabalhaSabado"
+                                checked={form.trabalhaSabado}
+                                onChange={handleChange}
+                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="trabalhaSabado" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
+                                Trabalha aos Sábados
+                            </label>
+                        </div>
+
+                        {form.trabalhaSabado && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slideDown">
+                                <div>
+                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                        Horário de Sábado
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
+                                            <input type="time" name="horarioSabadoInicio" value={form.horarioSabadoInicio} onChange={handleChange} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
+                                            <input type="time" name="horarioSabadoFim" value={form.horarioSabadoFim} onChange={handleChange} className="input w-full" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -947,15 +986,20 @@ const ConfiguracoesEmpresa = () => {
                     </div>
                 </div>
 
-                {/* Espaçador para o footer */}
-                <div className="h-24"></div>
+
 
                 {/* Sticky Footer Actions */}
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-20">
+                <div className="sticky bottom-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-20 -mx-4 lg:-mx-6 mt-6">
                     <div className="max-w-4xl mx-auto flex gap-3">
                         <button
                             type="button"
-                            onClick={() => window.history.back()}
+                            onClick={() => {
+                                if (isTabMode) {
+                                    onClose?.();
+                                } else {
+                                    window.history.back();
+                                }
+                            }}
                             className="btn-secondary flex-1"
                         >
                             Cancelar

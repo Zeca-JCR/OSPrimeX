@@ -1,18 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 
-const CadastroUsuario = () => {
+const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
     const { empresa, usuario: usuarioLogado } = useAuth();
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
-    const { id } = useParams();
+    const params = useParams();
+    const id = usuarioId || params.id; // Prioriza prop (TabMode) sobre URL
     const isEdicao = !!id;
     const isProprioUsuario = id === usuarioLogado?.id;
 
     const [loading, setLoading] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
 
     const [form, setForm] = useState({
         nome: '',
@@ -28,6 +32,59 @@ const CadastroUsuario = () => {
             carregarUsuario();
         }
     }, [id]);
+
+    // Comunicar dirty state para aba
+    useEffect(() => {
+        if (isTabMode) onDirtyChange?.(isDirty);
+    }, [isDirty, isTabMode, onDirtyChange]);
+
+    // Comunicar título para aba
+    useEffect(() => {
+        if (isTabMode) {
+            onTitleChange?.(form?.nome || 'Novo Usuário');
+        }
+    }, [form?.nome, isTabMode, onTitleChange]);
+
+    // Função de salvar para saveHandler
+    const salvarUsuario = useCallback(async () => {
+        if (!form.nome.trim()) throw new Error('Nome é obrigatório');
+        if (!form.email.trim()) throw new Error('Email é obrigatório');
+        if (!isEdicao && !form.senha) throw new Error('Senha é obrigatória');
+
+        // Verificar email duplicado
+        const usuarios = await storage.getAll('usuarios', empresa.id);
+        const emailExiste = usuarios.some(
+            (u) => u.email.toLowerCase() === form.email.toLowerCase() && u.id !== id
+        );
+        if (emailExiste) throw new Error('Email já cadastrado');
+
+        const payload = {
+            nome: form.nome,
+            email: form.email.toLowerCase(),
+            perfil: form.perfil,
+            comissao: form.perfil === 'tecnico' ? (parseFloat(form.comissao) || 0) : null,
+            ativo: form.ativo,
+            empresaId: empresa.id
+        };
+        if (form.senha) payload.senha = form.senha;
+
+        if (isEdicao) {
+            await storage.update('usuarios', id, payload);
+        } else {
+            await storage.create('usuarios', payload, empresa.id);
+        }
+        setIsDirty(false);
+    }, [form, id, isEdicao, empresa?.id]);
+
+    // Registrar saveHandler
+    useEffect(() => {
+        if (isTabMode) {
+            // Funciona para edição (usuario-{id}) e para novo (usuario-novo)
+            const tabId = usuarioId ? `usuario-${usuarioId}` : 'usuario-novo';
+            registerSaveHandler(tabId, salvarUsuario);
+            return () => unregisterSaveHandler(tabId);
+        }
+    }, [isTabMode, usuarioId, salvarUsuario, registerSaveHandler, unregisterSaveHandler]);
 
     const carregarUsuario = async () => {
         setLoading(true);
@@ -53,6 +110,7 @@ const CadastroUsuario = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        setIsDirty(true);
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
@@ -93,7 +151,12 @@ const CadastroUsuario = () => {
                 await storage.create('usuarios', payload, empresa.id);
             }
 
-            navigate('/usuarios');
+            setIsDirty(false);
+            if (isTabMode) {
+                onClose?.();
+            } else {
+                navigate('/usuarios');
+            }
         } catch (error) {
             setError(error.message || 'Erro ao salvar');
         } finally {
@@ -107,7 +170,11 @@ const CadastroUsuario = () => {
         if (window.confirm('Deseja realmente excluir este usuário?')) {
             try {
                 await storage.softDelete('usuarios', id);
-                navigate('/usuarios');
+                if (isTabMode) {
+                    onClose?.();
+                } else {
+                    navigate('/usuarios');
+                }
             } catch (error) {
                 console.error('Erro ao excluir:', error);
                 setError('Erro ao excluir usuário');
@@ -131,12 +198,6 @@ const CadastroUsuario = () => {
             <header className="bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] sticky top-0 z-20">
                 <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto w-full">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => navigate('/usuarios')}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
-                        >
-                            <span className="material-symbols-outlined">arrow_back</span>
-                        </button>
                         <div>
                             <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
                                 {isEdicao ? 'Editar Usuário' : 'Novo Usuário'}
@@ -305,8 +366,8 @@ const CadastroUsuario = () => {
                             onClick={handleDelete}
                             disabled={isProprioUsuario}
                             className={`p-2.5 rounded-xl transition-colors ${isProprioUsuario
-                                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                                    : 'text-error hover:bg-error/10'
+                                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                                : 'text-error hover:bg-error/10'
                                 }`}
                             title={isProprioUsuario ? "Você não pode se excluir" : "Excluir Usuário"}
                         >
@@ -315,7 +376,7 @@ const CadastroUsuario = () => {
                     )}
                     <button
                         type="button"
-                        onClick={() => navigate('/usuarios')}
+                        onClick={() => isTabMode ? onClose?.() : navigate('/usuarios')}
                         className="btn-secondary flex-1"
                     >
                         Cancelar

@@ -61,8 +61,9 @@ const CadastroColaborador = ({ colaboradorId, isTabMode, onClose, onDirtyChange,
 
     // Registrar saveHandler
     useEffect(() => {
-        if (isTabMode && colaboradorId) {
-            const tabId = `colaborador-${colaboradorId}`;
+        if (isTabMode) {
+            // Funciona para edição (colaborador-{id}) e para novo (colaborador-novo)
+            const tabId = colaboradorId ? `colaborador-${colaboradorId}` : 'colaborador-novo';
             registerSaveHandler(tabId, salvarColaborador);
             return () => unregisterSaveHandler(tabId);
         }
@@ -171,12 +172,6 @@ const CadastroColaborador = ({ colaboradorId, isTabMode, onClose, onDirtyChange,
             <header className="bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] sticky top-0 z-20">
                 <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto w-full">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => isTabMode ? onClose?.() : navigate('/colaboradores')}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
-                        >
-                            <span className="material-symbols-outlined">arrow_back</span>
-                        </button>
                         <div>
                             <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
                                 {isEdicao ? 'Editar Colaborador' : 'Novo Colaborador'}

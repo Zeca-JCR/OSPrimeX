@@ -18,6 +18,10 @@ const TabBar = ({ onRequestClose }) => {
             case 'produto': return 'inventory_2';
             case 'fornecedor': return 'local_shipping';
             case 'colaborador': return 'badge';
+            case 'usuario': return 'manage_accounts';
+            case 'configuracoes': return 'settings';
+            case 'relatorios': return 'assessment';
+            case 'agenda': return 'calendar_month';
             default: return 'description';
         }
     };
@@ -26,6 +30,7 @@ const TabBar = ({ onRequestClose }) => {
         e.stopPropagation();
         // Se a aba está suja, mostrar modal de confirmação
         if (isTabDirty(tabId)) {
+            focusTab(tabId); // Foca na aba para dar contexto ao modal
             setPendingCloseTabId(tabId);
         } else {
             closeTab(tabId);
@@ -88,7 +93,7 @@ const TabBar = ({ onRequestClose }) => {
                                     transition-all duration-200 whitespace-nowrap min-w-0 max-w-[200px]
                                     ${isActive
                                         ? 'bg-white dark:bg-gray-800 text-primary shadow-sm border border-primary/20'
-                                        : 'text-text-secondary-light dark:text-text-secondary-dark hover:bg-white/50 dark:hover:bg-gray-800/50'
+                                        : 'bg-white/40 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/60 text-text-secondary-light dark:text-text-secondary-dark hover:bg-white/70 dark:hover:bg-gray-800/70 hover:border-gray-300 dark:hover:border-gray-600'
                                     }
                                 `}
                             >

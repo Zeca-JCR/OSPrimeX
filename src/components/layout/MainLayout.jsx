@@ -246,7 +246,7 @@ const MainLayoutContent = () => {
                 `}
             >
                 {/* Logo */}
-                <div className={`h-14 flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-3'} border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]`}>
+                <div className={`h-14 flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'justify-center px-3'} border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] relative`}>
                     <div className="flex items-center gap-2 overflow-hidden">
                         {empresa?.logoUrl ? (
                             <img
@@ -267,10 +267,10 @@ const MainLayoutContent = () => {
                     </div>
 
 
-                    {/* Botão Recolher (Desktop) - Movido para o topo */}
+                    {/* Botão Recolher (Desktop) - Posicionado à direita */}
                     <button
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className={`hidden lg:flex p-1.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${sidebarCollapsed ? 'mx-auto' : ''}`}
+                        className={`hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${sidebarCollapsed ? 'relative right-auto translate-y-0 mx-auto' : ''}`}
                         title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
                     >
                         <span className="material-symbols-outlined text-[20px]">
@@ -292,7 +292,7 @@ const MainLayoutContent = () => {
                 {
                     !sidebarCollapsed && (
                         <div className="px-3 py-2 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                            <p className="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark truncate">
+                            <p className="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark truncate text-center">
                                 {empresa?.nomeFantasia || 'Carregando...'}
                             </p>
                         </div>
@@ -413,6 +413,53 @@ const MainLayoutContent = () => {
                         }
 
                         // Item normal (Link direto)
+                        // Definir quais rotas abrem como aba
+                        const tabRoutes = {
+                            '/configuracoes': { type: 'configuracoes', title: 'Configurações' },
+                            '/relatorios': { type: 'relatorios', title: 'Relatórios' },
+                            '/agenda': { type: 'agenda', title: 'Agenda' }
+                        };
+
+                        const isTabRoute = tabRoutes[item.path];
+
+                        if (isTabRoute) {
+                            // Renderiza como botão que abre aba
+                            return (
+                                <button
+                                    key={item.path}
+                                    onClick={() => {
+                                        setSidebarOpen(false);
+                                        openTab({
+                                            id: isTabRoute.type,
+                                            type: isTabRoute.type,
+                                            title: isTabRoute.title,
+                                            data: {}
+                                        });
+                                    }}
+                                    className={`
+                                        w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors relative
+                                        ${sidebarCollapsed ? 'justify-center' : ''}
+                                        ${active
+                                            ? 'bg-primary/10 text-primary'
+                                            : 'text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        }
+                                    `}
+                                    title={sidebarCollapsed ? item.label : undefined}
+                                    data-tour={item.tour}
+                                >
+                                    {active && (
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                                    )}
+                                    <span className={`material-symbols-outlined text-[20px] ${active ? 'text-primary' : ''}`}>
+                                        {item.icon}
+                                    </span>
+                                    {!sidebarCollapsed && (
+                                        <span className={`text-sm ${active ? 'font-medium' : ''}`}>{item.label}</span>
+                                    )}
+                                </button>
+                            );
+                        }
+
                         return (
                             <NavLink
                                 key={item.path}
@@ -639,12 +686,14 @@ const MainLayoutContent = () => {
                     - Outlet: visível quando não há aba ativa
                 */}
                 <TabContent />
-                {!activeTabId && (
-                    <main className="flex-1 overflow-auto">
-                        <Outlet />
-                    </main>
-                )}
-            </div>
+                {
+                    !activeTabId && (
+                        <main className="flex-1 overflow-auto">
+                            <Outlet />
+                        </main>
+                    )
+                }
+            </div >
             {showNovaOS && (
                 <NovaOSModal
                     onClose={() => setShowNovaOS(false)}
@@ -672,7 +721,7 @@ const MainLayoutContent = () => {
                     />
                 )
             }
-        </div>
+        </div >
     );
 };
 

@@ -56,6 +56,15 @@ const ListaColaboradores = () => {
         });
     };
 
+    const handleNovoColaborador = () => {
+        openTab({
+            id: 'colaborador-novo',
+            type: 'colaborador',
+            title: 'Novo Colaborador',
+            data: {}
+        });
+    };
+
     const cargoColors = {
         tecnico: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
         gerente: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
@@ -85,8 +94,8 @@ const ListaColaboradores = () => {
                     </p>
                 </div>
                 <button
-                    onClick={() => navigate('/colaboradores/novo')}
-                    className="btn-primary py-2 px-4 text-sm"
+                    onClick={handleNovoColaborador}
+                    className="btn-primary py-2 px-4 text-sm flex items-center gap-1"
                 >
                     <span className="material-symbols-outlined text-lg">person_add</span>
                     Novo Colaborador

@@ -8,7 +8,7 @@ import PDFLinkWrapper from '../../components/pdf/PDFLinkWrapper';
 import { FaturamentoChart, FinanceiroChart, DistributionChart } from '../../components/relatorios/RelatoriosCharts';
 import RelatorioComparativo from '../../components/relatorios/RelatorioComparativo';
 
-const Relatorios = () => {
+const Relatorios = ({ isTabMode, onClose }) => {
     const { empresa } = useAuth();
     const [loading, setLoading] = useState(true);
     const [tipoRelatorio, setTipoRelatorio] = useState('faturamento');

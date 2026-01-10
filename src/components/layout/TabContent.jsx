@@ -8,6 +8,10 @@ const CadastroVeiculo = lazy(() => import('../../pages/veiculos/CadastroVeiculo'
 const CadastroProduto = lazy(() => import('../../pages/estoque/CadastroProduto'));
 const CadastroFornecedor = lazy(() => import('../../pages/estoque/CadastroFornecedor'));
 const CadastroColaborador = lazy(() => import('../../pages/colaboradores/CadastroColaborador'));
+const CadastroUsuario = lazy(() => import('../../pages/usuarios/CadastroUsuario'));
+const ConfiguracoesEmpresa = lazy(() => import('../../pages/configuracoes/ConfiguracoesEmpresa'));
+const Relatorios = lazy(() => import('../../pages/relatorios/Relatorios'));
+const Agenda = lazy(() => import('../../pages/agenda/Agenda'));
 
 const TabContent = () => {
     const { tabs, activeTabId, closeTab, updateTab } = useTabs();
@@ -34,7 +38,7 @@ const TabContent = () => {
             {tabs.map((tab) => (
                 <div
                     key={tab.id}
-                    className={`flex-1 flex flex-col overflow-hidden ${tab.id === activeTabId ? 'block' : 'hidden'}`}
+                    className={`flex-1 flex flex-col overflow-auto ${tab.id === activeTabId ? 'block' : 'hidden'}`}
                 >
                     <Suspense fallback={<LoadingFallback />}>
                         {tab.type === 'os' && (
@@ -89,6 +93,34 @@ const TabContent = () => {
                                 onClose={() => closeTab(tab.id)}
                                 onDirtyChange={(isDirty) => updateTab(tab.id, { isDirty })}
                                 onTitleChange={(title) => updateTab(tab.id, { title })}
+                            />
+                        )}
+                        {tab.type === 'usuario' && (
+                            <CadastroUsuario
+                                usuarioId={tab.data?.usuarioId}
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                                onDirtyChange={(isDirty) => updateTab(tab.id, { isDirty })}
+                                onTitleChange={(title) => updateTab(tab.id, { title })}
+                            />
+                        )}
+                        {tab.type === 'configuracoes' && (
+                            <ConfiguracoesEmpresa
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                                onDirtyChange={(isDirty) => updateTab(tab.id, { isDirty })}
+                            />
+                        )}
+                        {tab.type === 'relatorios' && (
+                            <Relatorios
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'agenda' && (
+                            <Agenda
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
                             />
                         )}
                     </Suspense>

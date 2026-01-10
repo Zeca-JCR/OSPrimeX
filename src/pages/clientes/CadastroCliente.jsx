@@ -99,10 +99,18 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
         setIsDirty(false);
     }, [form, id, isEdicao, empresa?.id]);
 
+    // Comunicar dirty state para a aba
+    useEffect(() => {
+        if (isTabMode) {
+            onDirtyChange?.(isDirty);
+        }
+    }, [isDirty, isTabMode, onDirtyChange]);
+
     // Registrar saveHandler para o TabBar poder chamar "Salvar e sair"
     useEffect(() => {
-        if (isTabMode && clienteId) {
-            const tabId = `cliente-${clienteId}`;
+        if (isTabMode) {
+            // Funciona para edição (cliente-{id}) e para novo (cliente-novo)
+            const tabId = clienteId ? `cliente-${clienteId}` : 'cliente-novo';
             registerSaveHandler(tabId, salvarCliente);
             return () => unregisterSaveHandler(tabId);
         }
@@ -329,15 +337,14 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             {/* Header */}
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="flex items-center gap-3 px-4 py-3">
-                    <button
-                        onClick={() => isTabMode ? onClose?.() : navigate(-1)}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
-                    >
-                        <span className="material-symbols-outlined">arrow_back</span>
-                    </button>
-                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark">
-                        {isEdicao ? 'Editar Cliente' : 'Novo Cliente'}
-                    </h1>
+                    <div>
+                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                            {isEdicao ? 'Editar Cliente' : 'Novo Cliente'}
+                        </h1>
+                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                            {isEdicao ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente na base'}
+                        </p>
+                    </div>
                 </div>
             </header>
 

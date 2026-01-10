@@ -102,14 +102,7 @@ const DetalhesCliente = () => {
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-3 relative z-10">
-                        <Link
-                            to={`/clientes/${id}/editar`}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-primary"
-                        >
-                            <span className="material-symbols-outlined">edit</span>
-                        </Link>
-                    </div>
+
                 </div>
 
                 {/* Profile card */}

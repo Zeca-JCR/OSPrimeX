@@ -50,6 +50,15 @@ const Fornecedores = () => {
         });
     };
 
+    const handleNovoFornecedor = () => {
+        openTab({
+            id: 'fornecedor-novo',
+            type: 'fornecedor',
+            title: 'Novo Fornecedor',
+            data: {}
+        });
+    };
+
     const fornecedoresFiltrados = fornecedores.filter((f) => {
         const termo = busca.toLowerCase();
         return (
@@ -81,13 +90,13 @@ const Fornecedores = () => {
                         Gerencie seus parceiros de negócio
                     </p>
                 </div>
-                <Link
-                    to="/fornecedores/novo"
-                    className="btn-primary py-2 px-4 text-sm"
+                <button
+                    onClick={handleNovoFornecedor}
+                    className="btn-primary py-2 px-4 text-sm flex items-center gap-1"
                 >
                     <span className="material-symbols-outlined text-lg">add</span>
                     Novo Fornecedor
-                </Link>
+                </button>
             </div>
 
             {/* Barra de Busca */}
@@ -119,10 +128,10 @@ const Fornecedores = () => {
                         {busca ? 'Tente ajustar sua busca.' : 'Comece cadastrando seu primeiro fornecedor.'}
                     </p>
                     {!busca && (
-                        <Link to="/fornecedores/novo" className="btn-primary py-2 px-4 text-sm">
+                        <button onClick={handleNovoFornecedor} className="btn-primary py-2 px-4 text-sm flex items-center gap-1">
                             <span className="material-symbols-outlined text-lg">add</span>
                             Novo Fornecedor
-                        </Link>
+                        </button>
                     )}
                 </div>
             ) : (

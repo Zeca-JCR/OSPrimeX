@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOS } from '../../contexts/OSContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDate, formatDateTime, formatPlaca, toISODate, calculateWorkingTime, normalizeString, toTitleCase, parseCurrency, formatCurrencyInput } from '../../lib/utils';
 import { DownloadOSButton, DownloadThermalButton } from '../../components/pdf/OSDocument';
@@ -44,6 +45,7 @@ const calcularResumoFinanceiro = (itens, dTipo, dValor, aTipo, aValor) => {
 
 const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirtyChange, onTitleChange }) => {
     const { empresa } = useAuth();
+    const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
     const params = useParams();
     const id = osId || params.id; // Prioriza prop (Tab/Window Mode) sobre URL (Route Mode)
@@ -83,6 +85,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const [form, setForm] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
     const isDirtyRef = useRef(isDirty);
+    const salvarOSRef = useRef(null);
 
     // Auto-Save desabilitado - alterações ficam em memória até salvar manualmente
     // const { draftFound, loadDraft, clearDraft, isSaving: isAutoSaving, lastSaved } = useAutoSave(
@@ -173,6 +176,16 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
             onDirtyChange?.(isDirty);
         }
     }, [isDirty, isTabMode, onDirtyChange]);
+
+    // Registrar saveHandler para o TabBar poder chamar "Salvar e sair"
+    useEffect(() => {
+        if (isTabMode && id) {
+            const tabId = `os-${id}`;
+            // Usa uma função wrapper que chama a ref para sempre ter a versão atualizada
+            registerSaveHandler(tabId, () => salvarOSRef.current?.());
+            return () => unregisterSaveHandler(tabId);
+        }
+    }, [isTabMode, id, registerSaveHandler, unregisterSaveHandler]);
 
     // Listener para quando usuário clica no X da aba para fechar
     useEffect(() => {
@@ -315,6 +328,8 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
         }
     };
 
+    // Manter a ref atualizada com a versão mais recente de salvarOS
+    salvarOSRef.current = salvarOS;
     // Handler para mudanças no formulário
     const handleFormChange = (field, value) => {
         setForm(prev => {
@@ -1120,25 +1135,8 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
             {/* Header Sticky */}
             <header className="flex-none z-30 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] shadow-sm">
                 <div className="flex items-center justify-between px-4 py-3">
-                    {/* Esquerda: Voltar + Título */}
+                    {/* Título */}
                     <div className="flex items-center gap-3">
-                        {!isWindowMode && (
-                            <button
-                                onClick={() => {
-                                    if (isDirty) {
-                                        setShowConfirmarSaida(true);
-                                    } else if (isTabMode) {
-                                        onClose?.();
-                                    } else {
-                                        navigate('/os');
-                                    }
-                                }}
-                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
-                                title="Voltar"
-                            >
-                                <span className="material-symbols-outlined">arrow_back</span>
-                            </button>
-                        )}
                         <div>
                             <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                 {os.numero ? `OS #${os.numero}` : 'OS Sem Número'}
@@ -2183,8 +2181,8 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                             }}
                             className="btn-secondary px-4"
                         >
-                            <span className="material-symbols-outlined">arrow_back</span>
-                            Voltar
+                            <span className="material-symbols-outlined">close</span>
+                            Cancelar
                         </button>
                         <button
                             onClick={() => salvarOS()}
@@ -2266,7 +2264,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                 }}
                                 className="w-full btn-secondary text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 justify-start"
                             >
-                                <span className="material-symbols-outlined">delete</span>
+                                <span className="material-symbols-outlined">undo</span>
                                 Descartar alterações
                             </button>
 

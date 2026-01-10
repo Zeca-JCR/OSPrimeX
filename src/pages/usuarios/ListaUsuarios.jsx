@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { useNavigate } from 'react-router-dom';
 import storage from '../../lib/storage';
@@ -8,6 +9,7 @@ const ListaUsuarios = () => {
     const { empresa, usuario: usuarioLogado, isAdmin } = useAuth();
     const { getLimiteUsuarios } = useTenant();
     const navigate = useNavigate();
+    const { openTab } = useTabs();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -35,7 +37,12 @@ const ListaUsuarios = () => {
             alert(`Limite de ${limite} usuários atingido. Faça upgrade do plano.`);
             return;
         }
-        navigate('/usuarios/novo');
+        openTab({
+            id: 'usuario-novo',
+            type: 'usuario',
+            title: 'Novo Usuário',
+            data: {}
+        });
     };
 
     const handleExcluir = async (usuarioExcluir, e) => {
@@ -64,6 +71,15 @@ const ListaUsuarios = () => {
         admin: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
         tecnico: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
         financeiro: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    };
+
+    const handleOpenUsuario = (usuario) => {
+        openTab({
+            id: `usuario-${usuario.id}`,
+            type: 'usuario',
+            title: usuario.nome || 'Usuário',
+            data: { usuarioId: usuario.id }
+        });
     };
 
     if (loading) {
@@ -147,7 +163,7 @@ const ListaUsuarios = () => {
                             {usuarios.map((usuario, index) => (
                                 <tr
                                     key={usuario.id}
-                                    onClick={() => isAdmin && navigate(`/usuarios/${usuario.id}/editar`)}
+                                    onClick={() => isAdmin && handleOpenUsuario(usuario)}
                                     className={`
                                         ${isAdmin ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''} transition-colors
                                         ${index !== usuarios.length - 1 ? 'border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]' : ''}

@@ -7,7 +7,7 @@ import AgendaCalendar from '../../components/agenda/AgendaCalendar';
 import PatioSidebar from '../../components/agenda/PatioSidebar';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 
-const Agenda = () => {
+const Agenda = ({ isTabMode, onClose }) => {
     const { empresa } = useAuth();
     const location = useLocation();
     const [agendamentos, setAgendamentos] = useState([]);

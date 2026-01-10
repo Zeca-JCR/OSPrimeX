@@ -6,6 +6,7 @@ export const TabsProvider = ({ children }) => {
     const [tabs, setTabs] = useState([]);
     const [activeTabId, setActiveTabId] = useState(null);
     const [saveHandlers, setSaveHandlers] = useState({}); // tabId -> saveFunction
+    const [limitMessage, setLimitMessage] = useState(null); // Mensagem de limite de abas
 
     // Abrir ou focar uma aba
     const openTab = useCallback((tab) => {
@@ -18,7 +19,9 @@ export const TabsProvider = ({ children }) => {
             }
             // Limite de segurança: máx 8 abas
             if (prev.length >= 8) {
-                alert("Muitas abas abertas. Feche algumas antes de abrir mais.");
+                setLimitMessage("Limite de 8 abas atingido. Feche algumas abas para abrir novas.");
+                // Limpa a mensagem após 5 segundos
+                setTimeout(() => setLimitMessage(null), 5000);
                 return prev;
             }
             // Adiciona nova aba
@@ -110,9 +113,26 @@ export const TabsProvider = ({ children }) => {
             clearActiveTab,
             registerSaveHandler,
             unregisterSaveHandler,
-            getSaveHandler
+            getSaveHandler,
+            limitMessage
         }}>
             {children}
+
+            {/* Toast de Limite de Abas */}
+            {limitMessage && (
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slideDown">
+                    <div className="bg-amber-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
+                        <span className="material-symbols-outlined">warning</span>
+                        <span className="font-medium">{limitMessage}</span>
+                        <button
+                            onClick={() => setLimitMessage(null)}
+                            className="ml-2 hover:bg-white/20 rounded-full p-1"
+                        >
+                            <span className="material-symbols-outlined text-sm">close</span>
+                        </button>
+                    </div>
+                </div>
+            )}
         </TabsContext.Provider>
     );
 };

@@ -62,6 +62,15 @@ const ListaVeiculos = () => {
         });
     };
 
+    const handleNovoVeiculo = () => {
+        openTab({
+            id: 'veiculo-novo',
+            type: 'veiculo',
+            title: 'Novo Veículo',
+            data: {}
+        });
+    };
+
     const veiculosFiltrados = veiculos.filter((veiculo) => {
         if (!busca) return true;
         const termo = busca.toLowerCase();
@@ -101,10 +110,10 @@ const ListaVeiculos = () => {
                         visibleColumns={visibleColumns}
                         onToggle={toggleColumn}
                     />
-                    <Link to="/veiculos/novo" className="btn-primary py-2 px-4 text-sm">
+                    <button onClick={handleNovoVeiculo} className="btn-primary py-2 px-4 text-sm flex items-center gap-1">
                         <span className="material-symbols-outlined text-lg">add</span>
                         Novo Veículo
-                    </Link>
+                    </button>
                 </div>
             </div>
 

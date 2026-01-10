@@ -49,7 +49,7 @@ const UnsavedChangesModal = ({
                         onClick={onDiscardAndClose}
                         className="w-full btn-secondary text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 justify-start"
                     >
-                        <span className="material-symbols-outlined">delete</span>
+                        <span className="material-symbols-outlined">undo</span>
                         Descartar alterações
                     </button>
 

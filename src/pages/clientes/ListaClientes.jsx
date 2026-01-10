@@ -79,6 +79,15 @@ const ListaClientes = () => {
         });
     };
 
+    const handleNovoCliente = () => {
+        openTab({
+            id: 'cliente-novo',
+            type: 'cliente',
+            title: 'Novo Cliente',
+            data: {}
+        });
+    };
+
     // Filtrar clientes
     const clientesFiltrados = clientes.filter((cliente) => {
         if (filtro !== 'todos' && cliente.tipo !== filtro) return false;
@@ -134,10 +143,10 @@ const ListaClientes = () => {
                         <span className="material-symbols-outlined text-lg">upload_file</span>
                         Importar
                     </button>
-                    <Link to="/clientes/novo" className="btn-primary py-2 px-4 text-sm">
+                    <button onClick={handleNovoCliente} className="btn-primary py-2 px-4 text-sm flex items-center gap-1">
                         <span className="material-symbols-outlined text-lg">add</span>
                         Novo Cliente
-                    </Link>
+                    </button>
                 </div>
             </div>
 
@@ -194,10 +203,10 @@ const ListaClientes = () => {
                         {busca ? 'Tente ajustar sua busca.' : 'Comece cadastrando seu primeiro cliente.'}
                     </p>
                     {!busca && (
-                        <Link to="/clientes/novo" className="btn-primary py-2 px-4 text-sm">
+                        <button onClick={handleNovoCliente} className="btn-primary py-2 px-4 text-sm flex items-center gap-1">
                             <span className="material-symbols-outlined text-lg">person_add</span>
                             Novo Cliente
-                        </Link>
+                        </button>
                     )}
                 </div>
             ) : (
@@ -308,9 +317,18 @@ const ListaClientes = () => {
                                             </td>
                                         )}
                                         <td className="py-3 px-4">
-                                            <span className="material-symbols-outlined text-gray-400 text-lg">
-                                                chevron_right
-                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); navigate(`/clientes/${cliente.id}`); }}
+                                                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
+                                                    title="Ver painel do cliente"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">visibility</span>
+                                                </button>
+                                                <span className="material-symbols-outlined text-gray-400 text-lg">
+                                                    chevron_right
+                                                </span>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
