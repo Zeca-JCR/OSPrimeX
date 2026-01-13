@@ -55,6 +55,10 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
         acrescimoNosItens: false,
         descontoNoTotal: true,
         acrescimoNoTotal: false,
+        // Configurações de Prismas
+        usarPrismas: false,
+        prismaCor: 'Vermelho',
+        prismaQuantidade: 20,
     });
 
     useEffect(() => {
@@ -100,6 +104,10 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                 acrescimoNosItens: empresa.acrescimoNosItens ?? false,
                 descontoNoTotal: empresa.descontoNoTotal ?? true,
                 acrescimoNoTotal: empresa.acrescimoNoTotal ?? false,
+                // Prismas
+                usarPrismas: empresa.usarPrismas ?? false,
+                prismaCor: empresa.prismaCor || 'Vermelho',
+                prismaQuantidade: empresa.prismaQuantidade || 20,
             });
             setLoading(false);
         }
@@ -645,6 +653,75 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                                 Validade padrão sugerida ao criar orçamento (Padrão: 10 dias)
                             </p>
                         </div>
+                    </div>
+                </div>
+
+                {/* Controle de Prismas */}
+                <div className="card p-4 lg:p-6">
+                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-lg text-primary">filter_9_plus</span>
+                        Controle de Prismas
+                    </h2>
+                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
+                        Prismas são acessórios de identificação visual colocados sobre veículos para vincular rapidamente o carro à sua OS
+                    </p>
+
+                    <div className="space-y-4">
+                        {/* Toggle Usar Prismas */}
+                        <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                            <input
+                                type="checkbox"
+                                id="usarPrismas"
+                                name="usarPrismas"
+                                checked={form.usarPrismas}
+                                onChange={handleChange}
+                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="usarPrismas" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
+                                Usar controle de prismas nas OS
+                            </label>
+                        </div>
+
+                        {/* Configurações (só aparece se ativado) */}
+                        {form.usarPrismas && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-primary/30">
+                                <div>
+                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                        Cor dos Prismas
+                                    </label>
+                                    <select
+                                        name="prismaCor"
+                                        value={form.prismaCor}
+                                        onChange={handleChange}
+                                        className="input w-full"
+                                    >
+                                        <option value="Vermelho">🔴 Vermelho</option>
+                                        <option value="Azul">🔵 Azul</option>
+                                        <option value="Verde">🟢 Verde</option>
+                                        <option value="Amarelo">🟡 Amarelo</option>
+                                        <option value="Preto">⚫ Preto</option>
+                                        <option value="Laranja">🟠 Laranja</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                        Quantidade Total
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="prismaQuantidade"
+                                        value={form.prismaQuantidade}
+                                        onChange={handleChange}
+                                        className="input w-full"
+                                        min="1"
+                                        max="999"
+                                    />
+                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                        Números de 1 até {form.prismaQuantidade}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

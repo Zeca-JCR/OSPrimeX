@@ -7,6 +7,19 @@ import { formatCurrency, formatDate, toISODate } from '../../lib/utils';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
 
+// Helper para emoji de cor
+const getEmojiCor = (cor) => {
+    switch (cor) {
+        case 'Vermelho': return '🔴';
+        case 'Azul': return '🔵';
+        case 'Verde': return '🟢';
+        case 'Amarelo': return '🟡';
+        case 'Preto': return '⚫';
+        case 'Laranja': return '🟠';
+        default: return '⚪';
+    }
+}
+
 const KanbanOS = () => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
@@ -665,17 +678,34 @@ const KanbanOS = () => {
                                                                         )}
                                                                     </span>
                                                                     {/* Tag de Tipo de OS */}
-                                                                    {os.tipo && os.tipo !== 'os' && os.tipo !== 'orcamento' && (
-                                                                        <span className={`
-                                                                            text-[10px] uppercase font-bold px-1.5 py-0.5 rounded w-fit
-                                                                            ${os.tipo === 'garantia' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''}
-                                                                            ${os.tipo === 'cortesia' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' : ''}
-                                                                            ${os.tipo === 'retorno' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''}
-                                                                            ${os.tipo === 'interna' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}
-                                                                        `}>
-                                                                            {os.tipo}
-                                                                        </span>
-                                                                    )}
+                                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                                        {os.tipo && os.tipo !== 'os' && os.tipo !== 'orcamento' && (
+                                                                            <span className={`
+                                                                                text-[10px] uppercase font-bold px-1.5 py-0.5 rounded w-fit
+                                                                                ${os.tipo === 'garantia' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''}
+                                                                                ${os.tipo === 'cortesia' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' : ''}
+                                                                                ${os.tipo === 'retorno' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''}
+                                                                                ${os.tipo === 'interna' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}
+                                                                            `}>
+                                                                                {os.tipo}
+                                                                            </span>
+                                                                        )}
+
+                                                                        {/* Badge de Prisma (Kanban) */}
+                                                                        {empresa?.usarPrismas && (
+                                                                            os.prisma ? (
+                                                                                <span className="text-[10px] bg-gray-50 dark:bg-gray-700/50 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 flex items-center gap-1 font-medium text-text-secondary-light dark:text-text-secondary-dark" title="Prisma">
+                                                                                    {getEmojiCor(empresa.prismaCor)} #{os.prisma}
+                                                                                </span>
+                                                                            ) : (
+                                                                                os.status === 'execucao' && (
+                                                                                    <span className="text-[10px] bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-200 dark:border-yellow-800 font-bold flex items-center gap-1" title="Sem Prisma!">
+                                                                                        ⚠️ Sem Prisma
+                                                                                    </span>
+                                                                                )
+                                                                            )
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                                 <div className="flex items-center gap-1">
                                                                     {/* Indicador de dias em aberto */}
@@ -799,6 +829,14 @@ const KanbanOS = () => {
                                                             </span>
                                                         )}
                                                     </div>
+                                                    {/* Badge de Prisma (Lista) */}
+                                                    {empresa?.usarPrismas && os.prisma && (
+                                                        <div className="mt-1">
+                                                            <span className="text-[10px] bg-gray-50 dark:bg-gray-700/50 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 inline-flex items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark" title="Prisma">
+                                                                {getEmojiCor(empresa.prismaCor)} Prisma #{os.prisma}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <p className="font-medium text-text-light dark:text-text-dark">{getClienteNome(os.clienteId)}</p>

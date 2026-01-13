@@ -115,6 +115,14 @@ const MainLayoutContent = () => {
     const menuItems = useMemo(() => [
         { path: '/', icon: 'dashboard', label: 'Dashboard', exact: true, tour: 'dashboard' },
         { path: '/agenda', icon: 'calendar_month', label: 'Agenda' },
+
+        // Item Prismas (Se ativado na empresa)
+        ...(empresa?.usarPrismas ? [{
+            path: '/prismas',
+            icon: 'filter_9_plus',
+            label: 'Prismas'
+        }] : []),
+
         { path: '/os', icon: 'assignment', label: 'Ordens de Serviço', tour: 'os' },
         { path: '/clientes', icon: 'people', label: 'Clientes', tour: 'clientes' },
         { path: '/veiculos', icon: 'directions_car', label: 'Veículos' },

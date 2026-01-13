@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOS } from '../../contexts/OSContext';
@@ -145,6 +145,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const [showAtribuirTecnico, setShowAtribuirTecnico] = useState(false);
     const [atribuirParaIniciarExecucao, setAtribuirParaIniciarExecucao] = useState(false); // Flag: veio do "Iniciar Execução"
     const [showFotoModal, setShowFotoModal] = useState(null); // foto selecionada para visualizar
+    const [descricaoSalva, setDescricaoSalva] = useState(false); // feedback de salvamento da descrição
     const [showPagamento, setShowPagamento] = useState(false);
 
     const [showAssinatura, setShowAssinatura] = useState(false);
@@ -167,6 +168,34 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
 
     const [linkRastreavel, setLinkRastreavel] = useState(null);
     const [linkCopied, setLinkCopied] = useState(false);
+
+    // Memorizar opções de prisma para evitar re-cálculo constante (Movido para topo para evitar erro de hooks)
+    const opcoesPrisma = useMemo(() => {
+        if (!empresa?.usarPrismas) return [];
+
+        const osAtivas = JSON.parse(localStorage.getItem('ordens_servico') || '[]');
+        return Array.from({ length: empresa.prismaQuantidade || 20 }, (_, i) => i + 1).map(num => {
+            const osComPrisma = osAtivas.find(o =>
+                Number(o.prisma) === num && // Garantir tipagem numérica
+                String(o.id) !== String(os?.id) &&
+                !['finalizada', 'cancelada'].includes(o.status)
+            );
+
+            const emUso = !!osComPrisma;
+            const labelCor = empresa.prismaCor === 'Vermelho' ? '🔴' :
+                empresa.prismaCor === 'Azul' ? '🔵' :
+                    empresa.prismaCor === 'Verde' ? '🟢' :
+                        empresa.prismaCor === 'Amarelo' ? '🟡' :
+                            empresa.prismaCor === 'Preto' ? '⚫' :
+                                empresa.prismaCor === 'Laranja' ? '🟠' : '⚪';
+
+            return {
+                value: num,
+                label: `${labelCor} #${num}${emUso ? ` (Uso)` : ''}`,
+                disabled: emUso
+            };
+        });
+    }, [empresa?.usarPrismas, empresa?.prismaQuantidade, empresa?.prismaCor, os?.id, os?.prisma]);
 
     // Atualizar título e estado da aba/janela
     useEffect(() => {
@@ -326,8 +355,16 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                 return; // Bloqueia o salvamento
             }
 
-            await storage.update('ordens_servico', id, payload);
-            clearDraft(); // Limpa o rascunho após salvar com sucesso
+            // CORREÇÃO CRÍTICA DE PERSISTÊNCIA:
+            // Usar os.id se disponível para garantir o tipo correto (number/string) compatível com o banco
+            // O id do useParams é sempre string e pode falhar na comparação estrita do storage
+            const targetId = os?.id || id;
+
+            await storage.update('ordens_servico', targetId, payload);
+
+            // Se for form manual, limpa rascunho
+            if (!dados) clearDraft();
+
             await carregarDados(true); // Isso vai resetar o form e isDirty
         } catch (error) {
             console.error('Erro ao salvar:', error);
@@ -1523,6 +1560,118 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                                 {veiculo?.placa || 'SEM PLACA'}
                                             </span>
                                             <span className="text-xs text-gray-500">{os.kmAtual ? `${os.kmAtual} km` : 'KM N/A'}</span>
+
+                                            {/* Prisma inline - mesma linha */}
+                                            {empresa.usarPrismas && (
+                                                os.status !== 'finalizada' && os.status !== 'cancelada' ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <select
+                                                            className="h-6 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-1 min-w-[90px] max-w-[120px] focus:outline-none focus:border-primary"
+                                                            value={os.prisma || ''}
+                                                            onChange={async (e) => {
+                                                                const novoValor = e.target.value;
+                                                                const numeroPrisma = novoValor ? parseInt(novoValor) : null;
+                                                                const valorAnterior = os.prisma;
+
+                                                                // 1. Validação de Unicidade (Síncrona - Leitura de Storage com PREFIXO CORRETO)
+                                                                if (numeroPrisma) {
+                                                                    const dadosStorage = localStorage.getItem('osprimex_ordens_servico');
+                                                                    const todasOS = dadosStorage ? JSON.parse(dadosStorage) : [];
+
+                                                                    const conflito = todasOS.find(o =>
+                                                                        o.ativo !== false &&
+                                                                        Number(o.prisma) === numeroPrisma &&
+                                                                        String(o.id) !== String(os.id) &&
+                                                                        !['finalizada', 'cancelada'].includes(o.status)
+                                                                    );
+
+                                                                    if (conflito) {
+                                                                        alert(`🚫 AÇÃO BLOQUEADA\n\nO Prisma #${numeroPrisma} já está em uso na OS #${conflito.numero} (${conflito.clienteNome || 'Cliente'}).\nStatus: ${conflito.status}`);
+                                                                        e.target.value = valorAnterior || "";
+                                                                        return;
+                                                                    }
+                                                                }
+
+                                                                // 2. Update Otimista (State Local)
+                                                                setOs(prev => ({ ...prev, prisma: numeroPrisma }));
+
+                                                                // 3. Persistência MANUAL DIRETA (Nuclear Option)
+                                                                try {
+                                                                    // Ler novamente para garantir dados frescos
+                                                                    const dadosRaw = localStorage.getItem('osprimex_ordens_servico');
+                                                                    const todasOS = dadosRaw ? JSON.parse(dadosRaw) : [];
+
+                                                                    // Encontrar índice usando coerção
+                                                                    const index = todasOS.findIndex(o => String(o.id) === String(os.id));
+
+                                                                    if (index !== -1) {
+                                                                        todasOS[index] = {
+                                                                            ...todasOS[index],
+                                                                            prisma: numeroPrisma,
+                                                                            atualizadoEm: new Date().toISOString()
+                                                                        };
+
+                                                                        // Gravar com prefixo correto
+                                                                        localStorage.setItem('osprimex_ordens_servico', JSON.stringify(todasOS));
+
+                                                                        // Disparar evento
+                                                                        window.dispatchEvent(new CustomEvent('osprimex-storage', { detail: { key: 'ordens_servico' } }));
+
+                                                                        // Reload para garantir sincronia
+                                                                        await carregarDados(true);
+
+                                                                        // Feedback visual
+                                                                        const el = document.getElementById('prisma-saved-feedback');
+                                                                        if (el) {
+                                                                            el.style.opacity = '1';
+                                                                            setTimeout(() => el.style.opacity = '0', 2000);
+                                                                        }
+                                                                    } else {
+                                                                        throw new Error(`ID ${os.id} não encontrado no storage.`);
+                                                                    }
+                                                                } catch (error) {
+                                                                    console.error("Erro fatal ao salvar prisma:", error);
+                                                                    setOs(prev => ({ ...prev, prisma: valorAnterior }));
+                                                                    alert(`Erro ao persistir: ${error.message}`);
+                                                                }
+                                                            }}
+                                                            disabled={loading || salvando}
+                                                            title="Prisma do veículo"
+                                                        >
+                                                            <option value="">Prisma</option>
+                                                            {opcoesPrisma.map(op => (
+                                                                <option key={op.value} value={op.value}>
+                                                                    {op.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        <span id="prisma-saved-feedback" className="text-xs text-green-600 font-bold opacity-0 transition-opacity duration-300">
+                                                            Salvo!
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    os.prisma && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs whitespace-nowrap">
+                                                            {(() => {
+                                                                const labelCor = empresa.prismaCor === 'Vermelho' ? '🔴' :
+                                                                    empresa.prismaCor === 'Azul' ? '🔵' :
+                                                                        empresa.prismaCor === 'Verde' ? '🟢' :
+                                                                            empresa.prismaCor === 'Amarelo' ? '🟡' :
+                                                                                empresa.prismaCor === 'Preto' ? '⚫' :
+                                                                                    empresa.prismaCor === 'Laranja' ? '🟠' : '⚪';
+                                                                return labelCor;
+                                                            })()} #{os.prisma}
+                                                        </span>
+                                                    )
+                                                )
+                                            )}
+
+                                            {/* Alerta inline */}
+                                            {empresa.usarPrismas && !os.prisma && os.status === 'execucao' && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs whitespace-nowrap">
+                                                    ⚠️ Sem prisma
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -2093,21 +2242,32 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-3 gap-3">
-                                    {os.fotos.map((foto) => (
-                                        <div
-                                            key={foto.id}
-                                            onClick={() => setShowFotoModal(foto)}
-                                            className="group aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer shadow-sm hover:shadow-lg transition-all duration-200 relative"
-                                        >
-                                            <img
-                                                src={foto.data}
-                                                alt={foto.nome}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                            />
-                                            {/* Overlay com ícone de expandir */}
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-2xl drop-shadow-lg">zoom_in</span>
+                                    {os.fotos.map((foto, index) => (
+                                        <div key={foto.id} className="flex flex-col gap-1">
+                                            <div
+                                                onClick={() => setShowFotoModal(foto)}
+                                                className="group aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer shadow-sm hover:shadow-lg transition-all duration-200 relative"
+                                            >
+                                                <img
+                                                    src={foto.data}
+                                                    alt={foto.nome}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                />
+                                                {/* Overlay com ícone de expandir */}
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 transition-opacity text-2xl drop-shadow-lg">zoom_in</span>
+                                                </div>
                                             </div>
+                                            {/* Descrição da foto */}
+                                            {foto.descricao ? (
+                                                <p className="text-xs text-gray-700 dark:text-gray-300 font-medium truncate px-1" title={foto.descricao}>
+                                                    {foto.descricao}
+                                                </p>
+                                            ) : (
+                                                <p className="text-xs text-gray-400 dark:text-gray-500 px-1">
+                                                    Foto {index + 1}
+                                                </p>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -2224,77 +2384,79 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
             <div className="h-0"></div>
 
             {/* Modal Confirmar Saída (quando há alterações não salvas) */}
-            {showConfirmarSaida && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-                    <div className="card p-6 w-full max-w-md animate-slideUp">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-2xl text-amber-600">warning</span>
+            {
+                showConfirmarSaida && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+                        <div className="card p-6 w-full max-w-md animate-slideUp">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-2xl text-amber-600">warning</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-text-light dark:text-text-dark">
+                                        Alterações não salvas
+                                    </h2>
+                                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                        O que deseja fazer?
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-text-light dark:text-text-dark">
-                                    Alterações não salvas
-                                </h2>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    O que deseja fazer?
-                                </p>
-                            </div>
-                        </div>
 
-                        <div className="space-y-3">
-                            {/* Salvar e Sair */}
-                            <button
-                                onClick={async () => {
-                                    await salvarOS();
-                                    setShowConfirmarSaida(false);
-                                    (isTabMode || isWindowMode) ? onClose?.() : navigate('/os');
-                                }}
-                                className="w-full btn-primary bg-green-600 hover:bg-green-700 justify-start"
-                                disabled={salvando}
-                            >
-                                <span className="material-symbols-outlined">save</span>
-                                Salvar e sair
-                            </button>
-
-                            {/* Minimizar (só em Window Mode) */}
-                            {isWindowMode && onMinimize && (
+                            <div className="space-y-3">
+                                {/* Salvar e Sair */}
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
+                                        await salvarOS();
                                         setShowConfirmarSaida(false);
-                                        onMinimize();
+                                        (isTabMode || isWindowMode) ? onClose?.() : navigate('/os');
                                     }}
-                                    className="w-full btn-secondary justify-start"
+                                    className="w-full btn-primary bg-green-600 hover:bg-green-700 justify-start"
+                                    disabled={salvando}
                                 >
-                                    <span className="material-symbols-outlined">remove</span>
-                                    Minimizar (manter no Dock)
+                                    <span className="material-symbols-outlined">save</span>
+                                    Salvar e sair
                                 </button>
-                            )}
 
-                            {/* Descartar */}
-                            <button
-                                onClick={async () => {
-                                    await carregarDados(true); // Recarrega dados originais
-                                    setIsDirty(false);
-                                    setShowConfirmarSaida(false);
-                                    (isTabMode || isWindowMode) ? onClose?.() : navigate('/os');
-                                }}
-                                className="w-full btn-secondary text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 justify-start"
-                            >
-                                <span className="material-symbols-outlined">undo</span>
-                                Descartar alterações
-                            </button>
+                                {/* Minimizar (só em Window Mode) */}
+                                {isWindowMode && onMinimize && (
+                                    <button
+                                        onClick={() => {
+                                            setShowConfirmarSaida(false);
+                                            onMinimize();
+                                        }}
+                                        className="w-full btn-secondary justify-start"
+                                    >
+                                        <span className="material-symbols-outlined">remove</span>
+                                        Minimizar (manter no Dock)
+                                    </button>
+                                )}
 
-                            {/* Cancelar */}
-                            <button
-                                onClick={() => setShowConfirmarSaida(false)}
-                                className="w-full text-center text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark py-2"
-                            >
-                                Cancelar
-                            </button>
+                                {/* Descartar */}
+                                <button
+                                    onClick={async () => {
+                                        await carregarDados(true); // Recarrega dados originais
+                                        setIsDirty(false);
+                                        setShowConfirmarSaida(false);
+                                        (isTabMode || isWindowMode) ? onClose?.() : navigate('/os');
+                                    }}
+                                    className="w-full btn-secondary text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 justify-start"
+                                >
+                                    <span className="material-symbols-outlined">undo</span>
+                                    Descartar alterações
+                                </button>
+
+                                {/* Cancelar */}
+                                <button
+                                    onClick={() => setShowConfirmarSaida(false)}
+                                    className="w-full text-center text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark py-2"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Modal Adicionar Item */}
             {
@@ -2612,7 +2774,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
             {
                 showFotoModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
-                        <div className="relative max-w-4xl max-h-[90vh] w-full">
+                        <div className="relative max-w-4xl max-h-[90vh] w-full flex flex-col bg-gray-900 rounded-xl overflow-hidden">
                             <button
                                 onClick={() => setShowFotoModal(null)}
                                 className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 z-10"
@@ -2628,11 +2790,65 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                     <span className="material-symbols-outlined">delete</span>
                                 </button>
                             )}
-                            <img
-                                src={showFotoModal.data}
-                                alt={showFotoModal.nome}
-                                className="w-full h-full object-contain rounded-xl"
-                            />
+
+                            {/* Container com Scroll */}
+                            <div className="flex-1 overflow-y-auto flex flex-col">
+                                {/* Imagem */}
+                                <div className="flex-shrink-0 p-4">
+                                    <img
+                                        src={showFotoModal.data}
+                                        alt={showFotoModal.nome}
+                                        className="w-full max-h-[60vh] object-contain rounded-lg"
+                                    />
+                                </div>
+
+                                {/* Campo de Descrição */}
+                                <div className="flex-shrink-0 bg-white dark:bg-gray-800 p-4">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Descrição da Foto (opcional):
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="Ex: porta dianteira, vazamento motor, painel..."
+                                            value={showFotoModal.descricao || ''}
+                                            onChange={async (e) => {
+                                                const novaDescricao = e.target.value;
+
+                                                // Atualiza o estado local do modal
+                                                setShowFotoModal(prev => ({ ...prev, descricao: novaDescricao }));
+
+                                                // Remove o ícone de confirmação anterior
+                                                setDescricaoSalva(false);
+
+                                                // Atualiza a foto na lista
+                                                const novasFotos = (os.fotos || []).map(f =>
+                                                    f.id === showFotoModal.id
+                                                        ? { ...f, descricao: novaDescricao }
+                                                        : f
+                                                );
+
+                                                // Salva automaticamente
+                                                await salvarOS({ fotos: novasFotos });
+
+                                                // Mostra feedback de salvamento
+                                                setDescricaoSalva(true);
+
+                                                // Remove feedback após 2 segundos
+                                                setTimeout(() => setDescricaoSalva(false), 2000);
+                                            }}
+                                            className="input-field w-full pr-10"
+                                            disabled={os.status === 'finalizada' || os.status === 'cancelada'}
+                                        />
+                                        {/* Ícone de confirmação */}
+                                        {descricaoSalva && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-green-600 dark:text-green-400">
+                                                <span className="material-symbols-outlined text-lg">check_circle</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )

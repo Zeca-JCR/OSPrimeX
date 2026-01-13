@@ -49,10 +49,26 @@ const handlePrint = async (docInstance) => {
 
 export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, className = '' }) => {
     const [loading, setLoading] = useState(false);
+    const [showPhotoConfirm, setShowPhotoConfirm] = useState(false);
 
     const handleClick = async () => {
         if (loading) return;
+
+        // Verifica se há fotos na OS
+        const hasFotos = os?.fotos && os.fotos.length > 0;
+
+        if (hasFotos) {
+            // Mostra modal de confirmação
+            setShowPhotoConfirm(true);
+        } else {
+            // Imprime direto sem fotos
+            await executarImpressao(false);
+        }
+    };
+
+    const executarImpressao = async (incluirFotos) => {
         setLoading(true);
+        setShowPhotoConfirm(false);
 
         const doc = (
             <OSDocument
@@ -61,6 +77,7 @@ export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, classNam
                 veiculo={veiculo}
                 empresa={empresa}
                 tecnico={tecnico}
+                incluirFotos={incluirFotos}
             />
         );
 
@@ -69,22 +86,72 @@ export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, classNam
     };
 
     return (
-        <button
-            type="button"
-            onClick={handleClick}
-            className={className}
-            disabled={loading}
-            title="Imprimir OS Direto"
-        >
-            <div className="flex items-center gap-1">
-                {loading ? (
-                    <span className="material-symbols-outlined animate-spin text-lg">sync</span>
-                ) : (
-                    <span className="material-symbols-outlined text-lg">print</span>
-                )}
-                <span>Imprimir OS</span>
-            </div>
-        </button>
+        <>
+            <button
+                type="button"
+                onClick={handleClick}
+                className={className}
+                disabled={loading}
+                title="Imprimir OS Direto"
+            >
+                <div className="flex items-center gap-1">
+                    {loading ? (
+                        <span className="material-symbols-outlined animate-spin text-lg">sync</span>
+                    ) : (
+                        <span className="material-symbols-outlined text-lg">print</span>
+                    )}
+                    <span>Imprimir OS</span>
+                </div>
+            </button>
+
+            {/* Modal de Confirmação de Fotos */}
+            {showPhotoConfirm && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-2xl text-blue-600 dark:text-blue-400">photo_library</span>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                    Incluir Fotos na Impressão?
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Esta OS possui {os.fotos.length} foto(s)
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                            Deseja incluir as fotos da OS na impressão? Isso pode aumentar o tamanho do documento.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => executarImpressao(false)}
+                                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all"
+                            >
+                                Sem Fotos
+                            </button>
+                            <button
+                                onClick={() => executarImpressao(true)}
+                                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-lg">photo_camera</span>
+                                Com Fotos
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setShowPhotoConfirm(false)}
+                            className="w-full mt-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 py-2"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 

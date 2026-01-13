@@ -45,6 +45,7 @@ import LandingPage from './pages/public/LandingPage';
 import PainelAdmin from './pages/admin/PainelAdmin';
 import CRMRetencao from './pages/crm/CRMRetencao';
 import ConfiguracoesEmpresa from './pages/configuracoes/ConfiguracoesEmpresa';
+import Prismas from './pages/os/Prismas';
 
 // Componente de rota protegida
 const PrivateRoute = ({ children }) => {
@@ -145,6 +146,7 @@ function AppRoutes() {
                 <Route path="relatorios" element={<Relatorios />} />
                 <Route path="admin" element={<PainelAdmin />} />
                 <Route path="crm" element={<CRMRetencao />} />
+                <Route path="prismas" element={<Prismas />} />
                 <Route path="configuracoes" element={<ConfiguracoesEmpresa />} />
             </Route>
 

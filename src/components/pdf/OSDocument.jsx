@@ -1,4 +1,5 @@
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image } from '@react-pdf/renderer';
+import React, { useState } from 'react';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image, pdf } from '@react-pdf/renderer';
 import { gerarPayloadPix } from '../../lib/pix';
 import { calcularResumoFinanceiro } from '../../lib/utils';
 
@@ -178,6 +179,42 @@ const styles = StyleSheet.create({
         fontSize: 8,
         color: '#666',
     },
+    // Seção de Fotos
+    fotosSection: {
+        marginTop: 15,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#e5e5e5',
+    },
+    fotosGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginTop: 10,
+    },
+    fotoItem: {
+        width: '47%',
+        marginRight: '3%',
+        marginBottom: 10,
+    },
+    fotoItemLast: {
+        width: '47%',
+        marginRight: 0,
+        marginBottom: 10,
+    },
+    fotoImage: {
+        width: '100%',
+        height: 150,
+        objectFit: 'cover',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e5e5e5',
+    },
+    fotoCaption: {
+        fontSize: 7,
+        color: '#666',
+        marginTop: 3,
+        textAlign: 'center',
+    },
     // Aprovação de orçamento
     aprovacaoBox: {
         marginTop: 15,
@@ -351,7 +388,7 @@ const isOrcamento = (os) => {
 // DOCUMENTO PDF A4 (COMPLETO)
 // =====================================================
 
-export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico }) => {
+export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFotos = false }) => {
     const ehOrcamento = isOrcamento(os);
     const tipoDocumento = ehOrcamento ? 'ORÇAMENTO' : 'ORDEM DE SERVIÇO';
     const chavePix = empresa?.chavePix || empresa?.cnpj || empresa?.telefone;
@@ -624,6 +661,32 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico }) => {
                     </View>
                 ) : null}
 
+                {/* Fotos (se incluirFotos estiver habilitado) */}
+                {incluirFotos && os?.fotos && os.fotos.length > 0 ? (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>FOTOS</Text>
+                        <View style={styles.fotosGrid}>
+                            {os.fotos.map((foto, index) => (
+                                <View
+                                    key={foto.id || index}
+                                    style={index % 2 === 0 ? styles.fotoItem : styles.fotoItemLast}
+                                >
+                                    <Image
+                                        src={foto.data}
+                                        style={styles.fotoImage}
+                                    />
+                                    <Text style={styles.fotoCaption}>
+                                        {foto.descricao
+                                            ? `Foto ${index + 1} - ${foto.descricao}`
+                                            : `Foto ${index + 1}${foto.criadoEm ? ` - ${formatDate(foto.criadoEm)}` : ''}`
+                                        }
+                                    </Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                ) : null}
+
                 {/* Assinatura (apenas para OS, não orçamento) */}
                 {!ehOrcamento ? (
                     <View style={styles.assinatura}>
@@ -810,32 +873,128 @@ export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
 export const DownloadOSButton = ({ os, cliente, veiculo, empresa, tecnico, className = '' }) => {
     const ehOrcamento = isOrcamento(os);
     const nomeArquivo = ehOrcamento ? `Orcamento_${os?.numero}` : `OS_${os?.numero}`;
+    const [loading, setLoading] = useState(false);
+    const [showPhotoConfirm, setShowPhotoConfirm] = useState(false);
 
-    return (
-        <PDFDownloadLink
-            document={
+    const handleClick = () => {
+        if (loading) return;
+
+        // Verifica se há fotos na OS
+        const hasFotos = os?.fotos && os.fotos.length > 0;
+
+        if (hasFotos) {
+            // Mostra modal de confirmação
+            setShowPhotoConfirm(true);
+        } else {
+            // Baixa direto sem fotos
+            executarDownload(false);
+        }
+    };
+
+    const executarDownload = async (incluirFotos) => {
+        setLoading(true);
+        setShowPhotoConfirm(false);
+
+        try {
+            const doc = (
                 <OSDocument
                     os={os}
                     cliente={cliente}
                     veiculo={veiculo}
                     empresa={empresa}
                     tecnico={tecnico}
+                    incluirFotos={incluirFotos}
                 />
-            }
-            fileName={`${nomeArquivo || 'documento'}.pdf`}
-            className={className}
-        >
-            {({ loading }) => (
-                <>
+            );
+
+            // Gera o blob do PDF
+            const blob = await pdf(doc).toBlob();
+
+            // Cria um link temporário para download
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${nomeArquivo || 'documento'}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Libera a URL
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Erro ao gerar download:', error);
+            alert('Erro ao processar download do PDF.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <>
+            <button
+                type="button"
+                onClick={handleClick}
+                className={className}
+                disabled={loading}
+            >
+                <div className="flex items-center gap-1">
                     {loading ? (
                         <span className="material-symbols-outlined animate-spin text-lg">sync</span>
                     ) : (
                         <span className="material-symbols-outlined text-lg">download</span>
                     )}
                     <span>{ehOrcamento ? 'Baixar Orçamento' : 'Baixar OS'}</span>
-                </>
+                </div>
+            </button>
+
+            {/* Modal de Confirmação de Fotos */}
+            {showPhotoConfirm && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-2xl text-blue-600 dark:text-blue-400">photo_library</span>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                    Incluir Fotos no Download?
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Esta OS possui {os.fotos.length} foto(s)
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                            Deseja incluir as fotos da OS no PDF? Isso pode aumentar o tamanho do arquivo.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => executarDownload(false)}
+                                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-all"
+                            >
+                                Sem Fotos
+                            </button>
+                            <button
+                                onClick={() => executarDownload(true)}
+                                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-lg">photo_camera</span>
+                                Com Fotos
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setShowPhotoConfirm(false)}
+                            className="w-full mt-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 py-2"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
             )}
-        </PDFDownloadLink>
+        </>
     );
 };
 
