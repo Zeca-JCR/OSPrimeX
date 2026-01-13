@@ -9,8 +9,7 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
         marca: '',
         modelo: '',
         ano: '',
-        cor: '',
-        km: ''
+        cor: ''
     });
     const [salvando, setSalvando] = useState(false);
 
@@ -21,8 +20,7 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
                 marca: veiculo.marca || '',
                 modelo: veiculo.modelo || '',
                 ano: veiculo.ano || '',
-                cor: veiculo.cor || '',
-                km: veiculo.km || ''
+                cor: veiculo.cor || ''
             });
         }
     }, [veiculo]);
@@ -38,11 +36,8 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
         e.preventDefault();
         setSalvando(true);
         try {
-            await storage.update('veiculos', veiculo.id, {
-                ...form,
-                km: Number(form.km) || 0
-            }, empresaId);
-            onSave({ ...veiculo, ...form, km: Number(form.km) || 0 });
+            await storage.update('veiculos', veiculo.id, form, empresaId);
+            onSave({ ...veiculo, ...form });
             onClose();
         } catch (error) {
             console.error('Erro ao atualizar veículo:', error);
@@ -120,11 +115,11 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
                             />
                         </div>
                         <div>
-                            <label className="label">KM</label>
+                            <label className="label">Cor</label>
                             <input
-                                type="number"
-                                name="km"
-                                value={form.km}
+                                type="text"
+                                name="cor"
+                                value={form.cor}
                                 onChange={handleChange}
                                 className="input w-full"
                             />
@@ -186,7 +181,7 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
                         </div>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

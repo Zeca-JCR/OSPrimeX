@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
+import PlacaBadge from '../../components/common/PlacaBadge';
 
 const RastreadorOS = () => {
     const [busca, setBusca] = useState({ numero: '', placa: '' });
@@ -339,8 +340,8 @@ const RastreadorOS = () => {
                                     </p>
                                 </div>
                                 <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Placa</p>
-                                    <p className="font-bold text-text-light dark:text-text-dark">{veiculo?.placa}</p>
+                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-1">Placa</p>
+                                    <PlacaBadge placa={veiculo?.placa} size="md" />
                                 </div>
                                 <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
                                     <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Data de Entrada</p>

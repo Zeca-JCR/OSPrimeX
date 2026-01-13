@@ -117,6 +117,14 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
     const [isDirty, setIsDirty] = useState(false);
     const initialFormRef = useRef(null);
 
+    // Ref para callback que pode mudar - evita loops infinitos
+    const onDirtyChangeRef = useRef(onDirtyChange);
+
+    // Manter ref atualizada
+    useEffect(() => {
+        onDirtyChangeRef.current = onDirtyChange;
+    });
+
     // Salvar forma inicial para comparação
     useEffect(() => {
         if (!loading && !initialFormRef.current) {
@@ -127,9 +135,9 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
     // Comunicar dirty state para aba
     useEffect(() => {
         if (isTabMode) {
-            onDirtyChange?.(isDirty);
+            onDirtyChangeRef.current?.(isDirty);
         }
-    }, [isDirty, isTabMode, onDirtyChange]);
+    }, [isDirty, isTabMode]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;

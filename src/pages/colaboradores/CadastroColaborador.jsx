@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
@@ -17,6 +17,16 @@ const CadastroColaborador = ({ colaboradorId, isTabMode, onClose, onDirtyChange,
     const [error, setError] = useState('');
     const [isDirty, setIsDirty] = useState(false);
 
+    // Refs para callbacks que podem mudar - evita loops infinitos
+    const onDirtyChangeRef = useRef(onDirtyChange);
+    const onTitleChangeRef = useRef(onTitleChange);
+
+    // Manter refs atualizadas
+    useEffect(() => {
+        onDirtyChangeRef.current = onDirtyChange;
+        onTitleChangeRef.current = onTitleChange;
+    });
+
     const [form, setForm] = useState({
         nome: '',
         cargo: 'tecnico',
@@ -33,15 +43,15 @@ const CadastroColaborador = ({ colaboradorId, isTabMode, onClose, onDirtyChange,
 
     // Comunicar dirty state para aba
     useEffect(() => {
-        if (isTabMode) onDirtyChange?.(isDirty);
-    }, [isDirty, isTabMode, onDirtyChange]);
+        if (isTabMode) onDirtyChangeRef.current?.(isDirty);
+    }, [isDirty, isTabMode]);
 
     // Comunicar título para aba
     useEffect(() => {
         if (isTabMode) {
-            onTitleChange?.(form?.nome || 'Novo Colaborador');
+            onTitleChangeRef.current?.(form?.nome || 'Novo Colaborador');
         }
-    }, [form?.nome, isTabMode, onTitleChange]);
+    }, [form?.nome, isTabMode]);
 
     // Função de salvar para saveHandler
     const salvarColaborador = useCallback(async () => {

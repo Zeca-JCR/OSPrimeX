@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import storage from '../../lib/storage';
 import { gerarPayloadPix } from '../../lib/pix';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import PlacaBadge from '../../components/common/PlacaBadge';
 
 const RastreamentoPublico = () => {
     const { codigo } = useParams();
@@ -319,7 +320,9 @@ const RastreamentoPublico = () => {
                             </div>
                             <div>
                                 <span className="text-text-secondary-light">Placa</span>
-                                <p className="font-medium">{veiculo.placa}</p>
+                                <div className="mt-1">
+                                    <PlacaBadge placa={veiculo.placa} size="md" />
+                                </div>
                             </div>
                             {veiculo.ano && (
                                 <div>
@@ -327,10 +330,10 @@ const RastreamentoPublico = () => {
                                     <p className="font-medium">{veiculo.ano}</p>
                                 </div>
                             )}
-                            {veiculo.km && (
+                            {os?.kmAtual && (
                                 <div>
                                     <span className="text-text-secondary-light">KM</span>
-                                    <p className="font-medium">{veiculo.km.toLocaleString('pt-BR')}</p>
+                                    <p className="font-medium">{Number(os.kmAtual).toLocaleString('pt-BR')}</p>
                                 </div>
                             )}
                         </div>

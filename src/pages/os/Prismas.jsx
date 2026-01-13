@@ -26,8 +26,10 @@ const Prismas = () => {
         try {
             const todas = await storage.getAll('ordens_servico');
             // Filtro generalizado: Pega qualquer OS que tenha prisma E não esteja finalizada/cancelada
+            // Filtro: Somente status que fazem sentido usar prisma (veículo na oficina)
+            const statusPermitidos = ['aberta', 'execucao', 'aguardando_peca'];
             const ativas = todas.filter(os =>
-                !['finalizada', 'cancelada'].includes(os.status) &&
+                statusPermitidos.includes(os.status) &&
                 os.prisma !== null && os.prisma !== undefined
             );
             setOsAtivas(ativas);
@@ -57,31 +59,28 @@ const Prismas = () => {
     // Contar disponíveis
     const disponiveis = totalPrismas - prismasMap.size;
 
-    // Função para determinar cor do status
+    // Função para determinar cor do status (alinhado com Kanban)
     const getCorStatus = (status) => {
         switch (status) {
-            case 'execucao':
-                return 'bg-yellow-500';
-            case 'aguardando_peca':
-                return 'bg-red-500';
-            case 'orcamento':
             case 'aberta':
-                return 'bg-gray-400';
+                return 'bg-slate-500';      // Aprovada (Não Iniciada)
+            case 'execucao':
+                return 'bg-primary';        // Em Execução
+            case 'aguardando_peca':
+                return 'bg-orange-500';     // Aguardando Peça
             default:
-                return 'bg-gray-300';
+                return 'bg-green-500';      // Disponível (sem OS)
         }
     };
 
     const getLabelStatus = (status) => {
         switch (status) {
+            case 'aberta':
+                return 'Aprovada (Não Iniciada)';
             case 'execucao':
                 return 'Em Execução';
             case 'aguardando_peca':
                 return 'Aguardando Peça';
-            case 'orcamento':
-                return 'Orçamento';
-            case 'aberta':
-                return 'Aberta';
             default:
                 return status;
         }
@@ -169,7 +168,7 @@ const Prismas = () => {
                 </div>
             </div>
 
-            {/* Legenda */}
+            {/* Legenda (cores alinhadas com o Kanban) */}
             <div className="card p-4 mb-6">
                 <div className="flex flex-wrap items-center gap-4">
                     <span className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Legenda:</span>
@@ -178,16 +177,16 @@ const Prismas = () => {
                         <span className="text-sm">Disponível</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-slate-500"></div>
+                        <span className="text-sm">Aprovada (Não Iniciada)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-primary"></div>
                         <span className="text-sm">Em Execução</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
                         <span className="text-sm">Aguardando Peça</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-                        <span className="text-sm">Aberta/Orçamento</span>
                     </div>
                 </div>
             </div>

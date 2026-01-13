@@ -464,10 +464,10 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                             <Text style={styles.label}>Ano:</Text>
                             <Text style={styles.value}>{String(veiculo.ano || '-')}</Text>
                         </View>
-                        {veiculo.km ? (
+                        {os?.kmAtual ? (
                             <View style={styles.row}>
                                 <Text style={styles.label}>KM:</Text>
-                                <Text style={styles.value}>{String(veiculo.km.toLocaleString('pt-BR'))}</Text>
+                                <Text style={styles.value}>{String(Number(os.kmAtual).toLocaleString('pt-BR'))}</Text>
                             </View>
                         ) : null}
                     </View>

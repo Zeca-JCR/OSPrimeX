@@ -6,6 +6,8 @@ import storage from '../../lib/storage';
 import { formatCurrency, formatDate, toISODate } from '../../lib/utils';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
+import { AtribuirPrismaModal } from '../../components/os/AtribuirPrismaModal';
+import PlacaBadge from '../../components/common/PlacaBadge';
 
 // Helper para emoji de cor
 const getEmojiCor = (cor) => {
@@ -44,7 +46,9 @@ const KanbanOS = () => {
     const [loading, setLoading] = useState(true);
     const [showNovaOS, setShowNovaOS] = useState(false);
     const [showAtribuirTecnico, setShowAtribuirTecnico] = useState(false);
+    const [showAtribuirPrisma, setShowAtribuirPrisma] = useState(false);
     const [osParaAtribuir, setOsParaAtribuir] = useState(null); // { id: string, novoStatus: string }
+    const [osParaAtribuirPrisma, setOsParaAtribuirPrisma] = useState(null); // OS para atribuir prisma
     const [dragging, setDragging] = useState(null);
 
     // Estados para modal de cancelamento com estorno
@@ -55,6 +59,7 @@ const KanbanOS = () => {
 
     // Visualização e filtros
     const [visualizacao, setVisualizacao] = useState('kanban'); // 'kanban' ou 'lista'
+    const [showPrismas, setShowPrismas] = useState(false); // Widget de prismas no header (recolhido por padrão)
     // Estados de Filtros Separados
     const [filtrosLista, setFiltrosLista] = useState({
         busca: '',
@@ -228,7 +233,12 @@ const KanbanOS = () => {
 
     const getVeiculoInfo = (veiculoId) => {
         const veiculo = veiculos.find((v) => v.id === veiculoId);
-        return veiculo ? `${veiculo.marca} ${veiculo.modelo} - ${veiculo.placa}` : 'Veículo';
+        return veiculo ? `${veiculo.marca} ${veiculo.modelo}` : 'Veículo';
+    };
+
+    const getVeiculoPlaca = (veiculoId) => {
+        const veiculo = veiculos.find((v) => v.id === veiculoId);
+        return veiculo?.placa || null;
     };
 
 
@@ -383,6 +393,31 @@ const KanbanOS = () => {
             console.error('Erro ao atribuir técnico:', error);
             alert('Erro ao atribuir técnico');
         }
+    };
+
+    // Handler para atribuir prisma
+    const handleAtribuirPrisma = async (numeroPrisma) => {
+        if (!osParaAtribuirPrisma) return;
+
+        try {
+            await storage.update('ordens_servico', osParaAtribuirPrisma.id, {
+                prisma: numeroPrisma
+            });
+            carregarDados();
+            setShowAtribuirPrisma(false);
+            setOsParaAtribuirPrisma(null);
+        } catch (error) {
+            console.error('Erro ao atribuir prisma:', error);
+            alert('Erro ao atribuir prisma');
+        }
+    };
+
+    // Obter prismas ocupados para o modal
+    const getPrismasOcupados = () => {
+        const statusPermitidos = ['aberta', 'execucao', 'aguardando_peca'];
+        return ordens
+            .filter(o => statusPermitidos.includes(o.status) && o.prisma && o.id !== osParaAtribuirPrisma?.id)
+            .map(o => ({ prisma: o.prisma, osId: o.id, osNumero: o.numero }));
     };
 
     const getOrdensPorStatus = (status) => {
@@ -612,6 +647,103 @@ const KanbanOS = () => {
                 </div>
             </header>
 
+            {/* Widget de Prismas (Integrado) */}
+            {empresa?.usarPrismas && (
+                <div className="shrink-0 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] px-4">
+                    <button
+                        onClick={() => setShowPrismas(!showPrismas)}
+                        className="w-full py-2 flex items-center justify-between text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded transition-colors"
+                        title={!showPrismas ? 'Clique para visualizar os detalhes dos prismas' : ''}
+                    >
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg">{getEmojiCor(empresa?.prismaCor)}</span>
+                            <span className="font-medium text-text-light dark:text-text-dark">Prismas</span>
+                            {(() => {
+                                const statusPermitidos = ['aberta', 'execucao', 'aguardando_peca'];
+                                const emUso = ordens.filter(o => statusPermitidos.includes(o.status) && o.prisma).length;
+                                const total = empresa?.prismaQuantidade || 20;
+                                return (
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${emUso === 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                        emUso >= total ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                            'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                                        }`}>
+                                        {emUso}/{total} em uso
+                                    </span>
+                                );
+                            })()}
+                        </div>
+                        <span className={`material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark transition-transform ${showPrismas ? 'rotate-180' : ''}`}>
+                            expand_more
+                        </span>
+                    </button>
+
+                    {showPrismas && (
+                        <div className="pb-3 animate-fadeIn">
+                            <div className="flex flex-wrap gap-2">
+                                {Array.from({ length: empresa?.prismaQuantidade || 20 }, (_, i) => i + 1).map(num => {
+                                    const statusPermitidos = ['aberta', 'execucao', 'aguardando_peca'];
+                                    const os = ordens.find(o =>
+                                        statusPermitidos.includes(o.status) &&
+                                        Number(o.prisma) === num
+                                    );
+
+                                    // Cores alinhadas com o Kanban
+                                    const getCorPrisma = (status) => {
+                                        switch (status) {
+                                            case 'aberta': return 'bg-slate-500';
+                                            case 'execucao': return 'bg-primary';
+                                            case 'aguardando_peca': return 'bg-orange-500';
+                                            default: return 'bg-green-500';
+                                        }
+                                    };
+
+                                    const cor = os ? getCorPrisma(os.status) : 'bg-green-500';
+                                    const titulo = os
+                                        ? `#${num} → OS #${os.numero} (${os.status === 'aberta' ? 'Aprovada' : os.status === 'execucao' ? 'Em Execução' : 'Aguardando Peça'})`
+                                        : `#${num} - Disponível`;
+
+                                    return (
+                                        <button
+                                            key={num}
+                                            onClick={() => os && openOS(os.id)}
+                                            disabled={!os}
+                                            className={`w-10 h-10 rounded-lg border-2 flex flex-col items-center justify-center transition-all ${os
+                                                ? 'border-gray-300 dark:border-gray-600 hover:scale-110 hover:shadow-md cursor-pointer'
+                                                : 'border-gray-200 dark:border-gray-700 cursor-default opacity-60'
+                                                }`}
+                                            title={titulo}
+                                        >
+                                            <span className="text-xs font-bold text-text-light dark:text-text-dark">{num}</span>
+                                            <div className={`w-2.5 h-2.5 rounded-full ${cor}`}></div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Legenda compacta */}
+                            <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                    <span className="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Disponível</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-slate-500"></div>
+                                    <span className="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Aprovada</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <span className="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Em Execução</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                                    <span className="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Aguardando Peça</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Kanban Board */}
             {visualizacao === 'kanban' && (
                 <div className="flex-1 overflow-x-auto p-4">
@@ -698,10 +830,18 @@ const KanbanOS = () => {
                                                                                     {getEmojiCor(empresa.prismaCor)} #{os.prisma}
                                                                                 </span>
                                                                             ) : (
-                                                                                os.status === 'execucao' && (
-                                                                                    <span className="text-[10px] bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-200 dark:border-yellow-800 font-bold flex items-center gap-1" title="Sem Prisma!">
+                                                                                ['aberta', 'execucao', 'aguardando_peca'].includes(os.status) && (
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            setOsParaAtribuirPrisma(os);
+                                                                                            setShowAtribuirPrisma(true);
+                                                                                        }}
+                                                                                        className="text-[10px] bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-200 dark:border-yellow-800 font-bold flex items-center gap-1 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors"
+                                                                                        title="Clique para atribuir um prisma"
+                                                                                    >
                                                                                         ⚠️ Sem Prisma
-                                                                                    </span>
+                                                                                    </button>
                                                                                 )
                                                                             )
                                                                         )}
@@ -730,9 +870,12 @@ const KanbanOS = () => {
                                                             <p className="text-sm font-medium text-text-light dark:text-text-dark truncate">
                                                                 {getClienteNome(os.clienteId)}
                                                             </p>
-                                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark truncate mb-2">
-                                                                {getVeiculoInfo(os.veiculoId)}
-                                                            </p>
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <PlacaBadge placa={getVeiculoPlaca(os.veiculoId)} size="sm" />
+                                                                <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark truncate">
+                                                                    {getVeiculoInfo(os.veiculoId)}
+                                                                </span>
+                                                            </div>
 
 
 
@@ -828,21 +971,22 @@ const KanbanOS = () => {
                                                                 share_location
                                                             </span>
                                                         )}
-                                                    </div>
-                                                    {/* Badge de Prisma (Lista) */}
-                                                    {empresa?.usarPrismas && os.prisma && (
-                                                        <div className="mt-1">
+                                                        {/* Prisma inline na mesma linha */}
+                                                        {empresa?.usarPrismas && os.prisma && (
                                                             <span className="text-[10px] bg-gray-50 dark:bg-gray-700/50 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 inline-flex items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark" title="Prisma">
-                                                                {getEmojiCor(empresa.prismaCor)} Prisma #{os.prisma}
+                                                                {getEmojiCor(empresa.prismaCor)} #{os.prisma}
                                                             </span>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <p className="font-medium text-text-light dark:text-text-dark">{getClienteNome(os.clienteId)}</p>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                                    {getVeiculoInfo(os.veiculoId)}
+                                                    <div className="flex items-center gap-2">
+                                                        <PlacaBadge placa={getVeiculoPlaca(os.veiculoId)} size="sm" />
+                                                        <span>{getVeiculoInfo(os.veiculoId)}</span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-text-secondary-light dark:text-text-secondary-dark">
                                                     {getTecnicoNome(os.tecnicoId)}
@@ -898,6 +1042,20 @@ const KanbanOS = () => {
                         setOsParaAtribuir(null);
                     }}
                     onSelect={handleAtribuirTecnico}
+                />
+            )}
+
+            {/* Modal Atribuir Prisma (Kanban) */}
+            {showAtribuirPrisma && osParaAtribuirPrisma && (
+                <AtribuirPrismaModal
+                    empresa={empresa}
+                    prismaAtual={osParaAtribuirPrisma.prisma}
+                    prismasOcupados={getPrismasOcupados()}
+                    onClose={() => {
+                        setShowAtribuirPrisma(false);
+                        setOsParaAtribuirPrisma(null);
+                    }}
+                    onSelect={handleAtribuirPrisma}
                 />
             )}
 

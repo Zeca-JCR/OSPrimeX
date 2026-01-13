@@ -12,6 +12,7 @@ import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
 import { EditVeiculoModal } from '../../components/os/EditVeiculoModal';
 import { TimeTrackingSection } from '../../components/os/TimeTrackingSection';
 import CurrencyInput from '../../components/common/CurrencyInput';
+import PlacaBadge from '../../components/common/PlacaBadge';
 
 import { gerarPayloadPix } from '../../lib/pix';
 import { useAutoSave } from '../../hooks/useAutoSave';
@@ -408,7 +409,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
 
         // Modal de confirmação para finalizar
         if (novoStatus === 'finalizada') {
-            setKmAtualizado(veiculo?.km || '');
+            setKmAtualizado(os.kmAtual || '');
             setShowFinalizarModal(true);
             return;
         }
@@ -447,10 +448,12 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const confirmarFinalizacao = async () => {
         setSalvando(true);
         try {
-            // Atualizar KM do veículo se informado
-            if (veiculo && kmAtualizado && Number(kmAtualizado) > 0) {
-                await storage.update('veiculos', veiculo.id, { km: Number(kmAtualizado) });
-            }
+            // Atualizar KM do veículo se informado (modal ou OS)
+            // REMOVIDO: O KM não é mais salvo no veículo, apenas na OS
+            // const kmFinal = kmAtualizado ? Number(kmAtualizado) : (os.kmAtual ? Number(os.kmAtual) : 0);
+            // if (veiculo && kmFinal > 0) {
+            //     await storage.update('veiculos', veiculo.id, { km: kmFinal });
+            // }
 
             // Baixa automática de estoque para todos os produtos da OS
             const itens = os.itens || [];
@@ -1553,13 +1556,31 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <PlacaBadge placa={veiculo?.placa} size="md" />
+                                            {os.status !== 'finalizada' && os.status !== 'cancelada' ? (
+                                                <div className="flex items-center gap-1">
+                                                    <input
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        value={form.kmAtual || ''}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value.replace(/\D/g, ''); // Apenas números
+                                                            setForm(prev => ({ ...prev, kmAtual: value }));
+                                                            setIsDirty(true);
+                                                        }}
+                                                        className="w-20 h-6 text-xs bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-primary focus:outline-none text-center font-medium"
+                                                        placeholder="KM"
+                                                    />
+                                                    <span className="text-xs text-gray-400">km</span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-gray-500">{os.kmAtual ? `${Number(os.kmAtual).toLocaleString('pt-BR')} km` : 'KM N/A'}</span>
+                                            )}
+                                        </div>
                                         <p className="font-medium text-gray-900 dark:text-white">{veiculo?.modelo || 'Modelo não inf.'}</p>
-                                        <p className="text-xs text-gray-500 mb-1">{veiculo?.marca} • {veiculo?.cor}</p>
+                                        <p className="text-xs text-gray-500">{veiculo?.marca} • {veiculo?.cor}</p>
                                         <div className="flex items-center gap-2 mt-2">
-                                            <span className="px-2 py-0.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono font-bold tracking-wider">
-                                                {veiculo?.placa || 'SEM PLACA'}
-                                            </span>
-                                            <span className="text-xs text-gray-500">{os.kmAtual ? `${os.kmAtual} km` : 'KM N/A'}</span>
 
                                             {/* Prisma inline - mesma linha */}
                                             {empresa.usarPrismas && (

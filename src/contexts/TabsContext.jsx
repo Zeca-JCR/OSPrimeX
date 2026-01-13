@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const TabsContext = createContext({});
 
@@ -7,6 +7,21 @@ export const TabsProvider = ({ children }) => {
     const [activeTabId, setActiveTabId] = useState(null);
     const [saveHandlers, setSaveHandlers] = useState({}); // tabId -> saveFunction
     const [limitMessage, setLimitMessage] = useState(null); // Mensagem de limite de abas
+
+    // Proteção: Alerta ao fechar aba do navegador se houver alterações não salvas
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            const hasDirtyTabs = tabs.some(t => t.isDirty);
+            if (hasDirtyTabs) {
+                e.preventDefault();
+                e.returnValue = ''; // Necessário para Chrome/Edge
+                return ''; // Necessário para alguns navegadores antigos
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [tabs]);
 
     // Abrir ou focar uma aba
     const openTab = useCallback((tab) => {

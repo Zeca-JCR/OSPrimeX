@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'; // Navigation hooks
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
@@ -21,6 +21,16 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
     const [error, setError] = useState('');
     const [isDirty, setIsDirty] = useState(false);
     const [estoqueOriginal, setEstoqueOriginal] = useState(0); // To track stock changes
+
+    // Refs para callbacks que podem mudar - evita loops infinitos
+    const onDirtyChangeRef = useRef(onDirtyChange);
+    const onTitleChangeRef = useRef(onTitleChange);
+
+    // Manter refs atualizadas
+    useEffect(() => {
+        onDirtyChangeRef.current = onDirtyChange;
+        onTitleChangeRef.current = onTitleChange;
+    });
 
     // Initial Form State
     const [form, setForm] = useState({
@@ -52,15 +62,15 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
 
     // Comunicar dirty state para aba
     useEffect(() => {
-        if (isTabMode) onDirtyChange?.(isDirty);
-    }, [isDirty, isTabMode, onDirtyChange]);
+        if (isTabMode) onDirtyChangeRef.current?.(isDirty);
+    }, [isDirty, isTabMode]);
 
     // Comunicar título para aba
     useEffect(() => {
         if (isTabMode) {
-            onTitleChange?.(form?.nome || 'Novo Item');
+            onTitleChangeRef.current?.(form?.nome || 'Novo Item');
         }
-    }, [form?.nome, isTabMode, onTitleChange]);
+    }, [form?.nome, isTabMode]);
 
     // Função de salvar para saveHandler
     const salvarProduto = useCallback(async () => {

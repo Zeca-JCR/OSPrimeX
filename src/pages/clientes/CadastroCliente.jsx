@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
@@ -18,6 +18,16 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
     const [isDirty, setIsDirty] = useState(false);
+
+    // Refs para callbacks que podem mudar - evita loops infinitos
+    const onDirtyChangeRef = useRef(onDirtyChange);
+    const onTitleChangeRef = useRef(onTitleChange);
+
+    // Manter refs atualizadas
+    useEffect(() => {
+        onDirtyChangeRef.current = onDirtyChange;
+        onTitleChangeRef.current = onTitleChange;
+    });
 
     const [form, setForm] = useState({
         tipo: 'pf',
@@ -66,15 +76,15 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
 
     // Comunicar dirty state para aba
     useEffect(() => {
-        if (isTabMode) onDirtyChange?.(isDirty);
-    }, [isDirty, isTabMode, onDirtyChange]);
+        if (isTabMode) onDirtyChangeRef.current?.(isDirty);
+    }, [isDirty, isTabMode]);
 
     // Comunicar título para aba
     useEffect(() => {
         if (isTabMode && form?.nome) {
-            onTitleChange?.(form.nome || 'Novo Cliente');
+            onTitleChangeRef.current?.(form.nome || 'Novo Cliente');
         }
-    }, [form?.nome, isTabMode, onTitleChange]);
+    }, [form?.nome, isTabMode]);
 
     // Função de salvar que pode ser chamada externamente (pelo TabBar)
     const salvarCliente = useCallback(async () => {
@@ -97,13 +107,6 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
         }
         setIsDirty(false);
     }, [form, id, isEdicao, empresa?.id]);
-
-    // Comunicar dirty state para a aba
-    useEffect(() => {
-        if (isTabMode) {
-            onDirtyChange?.(isDirty);
-        }
-    }, [isDirty, isTabMode, onDirtyChange]);
 
     // Registrar saveHandler para o TabBar poder chamar "Salvar e sair"
     useEffect(() => {

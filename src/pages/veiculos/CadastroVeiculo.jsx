@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
@@ -23,6 +23,16 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
     const [clientes, setClientes] = useState([]);
     const [ordensVeiculo, setOrdensVeiculo] = useState([]);
 
+    // Refs para callbacks que podem mudar - evita loops infinitos
+    const onDirtyChangeRef = useRef(onDirtyChange);
+    const onTitleChangeRef = useRef(onTitleChange);
+
+    // Manter refs atualizadas
+    useEffect(() => {
+        onDirtyChangeRef.current = onDirtyChange;
+        onTitleChangeRef.current = onTitleChange;
+    });
+
     const [form, setForm] = useState({
         clienteId: clienteIdFromUrl || '',
         marca: '',
@@ -31,7 +41,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
         ano: '',
         cor: '',
         combustivel: 'flex',
-        km: '',
+        // km removido
         renavam: '',
         observacoes: '',
         // CRM - Próxima revisão
@@ -50,16 +60,16 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
 
     // Comunicar dirty state para aba
     useEffect(() => {
-        if (isTabMode) onDirtyChange?.(isDirty);
-    }, [isDirty, isTabMode, onDirtyChange]);
+        if (isTabMode) onDirtyChangeRef.current?.(isDirty);
+    }, [isDirty, isTabMode]);
 
     // Comunicar título para aba (placa + modelo)
     useEffect(() => {
         if (isTabMode) {
             const titulo = form?.placa ? `${form.placa}` : 'Novo Veículo';
-            onTitleChange?.(titulo);
+            onTitleChangeRef.current?.(titulo);
         }
-    }, [form?.placa, isTabMode, onTitleChange]);
+    }, [form?.placa, isTabMode]);
 
     // Função de salvar para saveHandler
     const salvarVeiculo = useCallback(async () => {
@@ -72,7 +82,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
             ...form,
             placa: form.placa,
             ano: form.ano ? parseInt(form.ano) : null,
-            km: form.km ? parseInt(form.km) : null,
+            // km removido do payload
             proximaRevisaoKm: form.proximaRevisaoKm ? parseInt(form.proximaRevisaoKm) : null,
         };
 
@@ -120,7 +130,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                     ano: veiculo.ano || '',
                     cor: veiculo.cor || '',
                     combustivel: veiculo.combustivel || 'flex',
-                    km: veiculo.km || '',
+                    // km removido
                     renavam: veiculo.renavam || '',
                     observacoes: veiculo.observacoes || '',
                     proximaRevisaoData: veiculo.proximaRevisaoData || '',
@@ -230,7 +240,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                 ...form,
                 placa: form.placa,
                 ano: form.ano ? parseInt(form.ano) : null,
-                km: form.km ? parseInt(form.km) : null,
+                // km removido
                 proximaRevisaoKm: form.proximaRevisaoKm ? parseInt(form.proximaRevisaoKm) : null,
             };
 
@@ -501,34 +511,21 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Quilometragem
+                                Renavam
                             </label>
                             <input
-                                type="number"
-                                name="km"
-                                value={form.km}
+                                type="text"
+                                name="renavam"
+                                value={form.renavam}
                                 onChange={handleChange}
                                 className="input"
-                                placeholder="50000"
-                                min={0}
+                                placeholder="00000000000"
+                                maxLength={11}
                             />
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                            Renavam
-                        </label>
-                        <input
-                            type="text"
-                            name="renavam"
-                            value={form.renavam}
-                            onChange={handleChange}
-                            className="input"
-                            placeholder="00000000000"
-                            maxLength={11}
-                        />
-                    </div>
+                    {/* KM removido daqui */}
                 </div>
 
                 {/* CRM - Próxima Revisão */}
@@ -563,10 +560,10 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                 {/* Gráfico de Evolução da KM */}
                 {isEdicao && (() => {
                     const dadosGrafico = ordensVeiculo
-                        .filter(o => o.status === 'finalizada' && o.km)
+                        .filter(o => o.status === 'finalizada' && (o.kmAtual || o.km))
                         .map(o => ({
                             data: o.criadoEm, // Idealmente usar data de finalização se houver, mas criadoEm serve
-                            km: o.km,
+                            km: o.kmAtual || o.km,
                             osNumero: o.numero
                         }))
                         .sort((a, b) => new Date(a.data) - new Date(b.data));
@@ -613,15 +610,22 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                                                 <span className="material-symbols-outlined">assignment</span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-text-light dark:text-text-dark">
-                                                    OS #{os.numero}
-                                                </p>
-                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                                <div className="flex justify-between items-start">
+                                                    <p className="text-sm font-medium text-text-light dark:text-text-dark">
+                                                        OS #{os.numero}
+                                                    </p>
+                                                    {(os.kmAtual || os.km) && (
+                                                        <span className="text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">
+                                                            {Number(os.kmAtual || os.km).toLocaleString('pt-BR')} km
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
                                                     {formatDate(os.criadoEm)} • {formatCurrency(os.valorTotal || 0)}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-xs px-2 py-0.5 rounded-full text-white ${statusConfig[os.status]?.color || 'bg-gray-500'}`}>
+                                                <span className={`text-[10px] px-2 py-0.5 rounded-full text-white ${statusConfig[os.status]?.color || 'bg-gray-500'}`}>
                                                     {statusConfig[os.status]?.label || os.status}
                                                 </span>
                                                 <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
