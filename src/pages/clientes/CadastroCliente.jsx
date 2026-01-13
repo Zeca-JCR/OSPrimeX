@@ -25,7 +25,6 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
         documento: '',
         telefone: '',
         whatsapp: '',
-        whatsapp: '',
         dataNascimento: '',
         email: '',
         endereco: {
@@ -127,7 +126,6 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
                     documento: cliente.documento || '',
                     telefone: cliente.telefone || '',
                     whatsapp: cliente.whatsapp || '',
-                    whatsapp: cliente.whatsapp || '',
                     dataNascimento: cliente.dataNascimento || '',
                     email: cliente.email || '',
                     endereco: cliente.endereco || {
@@ -150,6 +148,52 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
         } finally {
             setLoading(false);
         }
+    };
+
+    // Tratamento de Telefone (Fixo vs Celular)
+    const handlePhoneChange = (e) => {
+        const { name, value } = e.target;
+
+        // Remove tudo que não é número
+        let nums = value.replace(/\D/g, '');
+
+        // Limites: Telefone (10 dígitos: 2 DDD + 8 número), Celular (11 dígitos: 2 DDD + 9 número)
+        const isCelular = name === 'whatsapp';
+        const limit = isCelular ? 11 : 10;
+
+        if (nums.length > limit) {
+            nums = nums.slice(0, limit);
+        }
+
+        // Aplicar máscara
+        let formatted = nums;
+        if (nums.length > 0) {
+            // (11...
+            if (nums.length <= 2) {
+                formatted = `(${nums}`;
+            } else {
+                formatted = `(${nums.slice(0, 2)}) `;
+
+                if (isCelular) {
+                    // Celular: (11) 99999-9999
+                    if (nums.length > 7) {
+                        formatted += `${nums.slice(2, 7)}-${nums.slice(7)}`;
+                    } else {
+                        formatted += nums.slice(2);
+                    }
+                } else {
+                    // Fixo: (11) 9999-9999
+                    if (nums.length > 6) {
+                        formatted += `${nums.slice(2, 6)}-${nums.slice(6)}`;
+                    } else {
+                        formatted += nums.slice(2);
+                    }
+                }
+            }
+        }
+
+        setForm(prev => ({ ...prev, [name]: formatted }));
+        setIsDirty(true);
     };
 
     const handleChange = (e) => {
@@ -498,9 +542,9 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
                                 type="tel"
                                 name="telefone"
                                 value={form.telefone}
-                                onChange={handleChange}
+                                onChange={handlePhoneChange}
                                 className="input"
-                                placeholder="(11) 99999-9999"
+                                placeholder="(99) 9999-9999"
                                 required
                             />
                         </div>
@@ -512,9 +556,9 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
                                 type="tel"
                                 name="whatsapp"
                                 value={form.whatsapp}
-                                onChange={handleChange}
+                                onChange={handlePhoneChange}
                                 className="input"
-                                placeholder="(11) 99999-9999"
+                                placeholder="(99) 99999-9999"
                             />
                         </div>
                     </div>

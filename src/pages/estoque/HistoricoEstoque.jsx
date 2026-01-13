@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDateTime, toTitleCase } from '../../lib/utils';
 
-const HistoricoEstoque = () => {
+const HistoricoEstoque = ({ isTabMode, onClose }) => {
     const { empresa } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams(); // Add this hook
     const filtroProdutoId = searchParams.get('produtoId');
@@ -99,6 +99,15 @@ const HistoricoEstoque = () => {
                             <span className="material-symbols-outlined text-lg">remove</span>
                             Saída
                         </button>
+                        {isTabMode && (
+                            <button
+                                onClick={onClose}
+                                className="btn-ghost p-2"
+                                title="Fechar aba"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </header>

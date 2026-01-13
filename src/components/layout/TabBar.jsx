@@ -104,7 +104,7 @@ const TabBar = ({ onRequestClose }) => {
 
                                 {/* Título */}
                                 <span className="truncate">
-                                    {toTitleCase(tab.title)}
+                                    {tab.title}
                                 </span>
 
                                 {/* Indicador de alterações não salvas */}

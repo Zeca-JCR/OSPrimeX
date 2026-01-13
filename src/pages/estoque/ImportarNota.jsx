@@ -7,7 +7,7 @@ import { parseNFe } from '../../lib/nfeParser';
 import { formatCurrency, formatDate, toISODate } from '../../lib/utils';
 import { useTenant } from '../../contexts/TenantContext';
 
-const ImportarNota = () => {
+const ImportarNota = ({ isTabMode, onClose }) => {
     const { empresa } = useAuth();
     const { hasAddon } = useTenant();
     const { showSaveToast } = useToast();
@@ -24,9 +24,13 @@ const ImportarNota = () => {
     // Proteção de rota
     useEffect(() => {
         if (!hasAddon('addon_xml_importer')) {
-            navigate('/estoque');
+            if (isTabMode && onClose) {
+                onClose();
+            } else {
+                navigate('/estoque');
+            }
         }
-    }, [hasAddon, navigate]);
+    }, [hasAddon, navigate, isTabMode, onClose]);
 
     useEffect(() => {
         if (empresa?.id) {
@@ -255,12 +259,24 @@ const ImportarNota = () => {
                         Importe notas fiscais eletrônicas para atualizar estoque e financeiro
                     </p>
                 </div>
-                <button
-                    onClick={() => navigate('/estoque')}
-                    className="btn-secondary"
-                >
-                    Voltar
-                </button>
+                <div className="flex gap-2">
+                    {isTabMode ? (
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-text-secondary-light dark:text-text-secondary-dark transition-colors"
+                            title="Fechar aba"
+                        >
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => navigate('/estoque')}
+                            className="btn-secondary"
+                        >
+                            Voltar
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Content */}

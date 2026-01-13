@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDate, toISODate, calculateWorkingTime } from '../../lib/utils';
+import { formatCurrency, formatDate, toISODate } from '../../lib/utils';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
 
@@ -231,31 +231,7 @@ const KanbanOS = () => {
         return tecnicos.some(t => t.id === os.tecnicoId);
     };
 
-    // Helper para calcular tempo de execução para exibição no card
-    const getTempoExecucao = (os) => {
-        if (os.status !== 'execucao' || !os.execucaoIniciadaEm) return null;
 
-        const inicio = new Date(os.execucaoIniciadaEm);
-        const agora = new Date();
-        let tempoMs = calculateWorkingTime(inicio, agora, empresa);
-
-        // Descontar pausas
-        const pausas = os.execucaoPausadasEm || [];
-        const retomadas = os.execucaoRetomadasEm || [];
-        for (let i = 0; i < pausas.length; i++) {
-            const pausaInicio = new Date(pausas[i]);
-            const pausaFim = retomadas[i + 1] ? new Date(retomadas[i + 1]) : agora;
-
-            const tempoPausaValido = calculateWorkingTime(pausaInicio, pausaFim, empresa);
-            tempoMs -= tempoPausaValido;
-        }
-
-        const ms = Math.max(0, tempoMs);
-        const horas = Math.floor(ms / 3600000);
-        const minutos = Math.floor((ms % 3600000) / 60000);
-
-        return `${horas}h ${minutos}m`;
-    };
 
     const handleDragStart = (e, os) => {
         setDragging(os.id);
@@ -296,22 +272,6 @@ const KanbanOS = () => {
         }
 
         const dadosUpdate = { status: novoStatus };
-
-        // Timer de execução: registrar início quando entra em execução
-        if (novoStatus === 'execucao' && os.status !== 'execucao') {
-            // Se não tinha começado ainda, ou está voltando de aguardando peça
-            if (!os.execucaoIniciadaEm) {
-                dadosUpdate.execucaoIniciadaEm = new Date().toISOString();
-            }
-            // Registrar retomada (para pausas ao aguardar peça)
-            dadosUpdate.execucaoRetomadasEm = [...(os.execucaoRetomadasEm || []), new Date().toISOString()];
-        }
-
-        // Se está saindo de execução para qualquer status que não seja finalizada/cancelada, pausar timer
-        const statusPausa = ['aguardando_peca', 'aberta', 'orcamento'];
-        if (os.status === 'execucao' && statusPausa.includes(novoStatus)) {
-            dadosUpdate.execucaoPausadasEm = [...(os.execucaoPausadasEm || []), new Date().toISOString()];
-        }
 
         try {
             await storage.update('ordens_servico', os.id, dadosUpdate);
@@ -400,14 +360,6 @@ const KanbanOS = () => {
             status: novoStatus,
             tecnicoId: tecnicoId
         };
-
-        // Timer de execução
-        if (novoStatus === 'execucao') {
-            if (!os.execucaoIniciadaEm) {
-                dadosUpdate.execucaoIniciadaEm = new Date().toISOString();
-            }
-            dadosUpdate.execucaoRetomadasEm = [...(os.execucaoRetomadasEm || []), new Date().toISOString()];
-        }
 
         try {
             await storage.update('ordens_servico', id, dadosUpdate);
@@ -752,13 +704,7 @@ const KanbanOS = () => {
                                                                 {getVeiculoInfo(os.veiculoId)}
                                                             </p>
 
-                                                            {/* Timer em execução */}
-                                                            {os.status === 'execucao' && (
-                                                                <div className="flex items-center gap-1.5 mb-2 text-xs font-medium text-primary bg-primary/10 w-fit px-2 py-1 rounded-full">
-                                                                    <span className="material-symbols-outlined text-sm animate-pulse">timer</span>
-                                                                    {getTempoExecucao(os)}
-                                                                </div>
-                                                            )}
+
 
                                                             {/* Footer compacto */}
                                                             <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">

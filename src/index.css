@@ -194,7 +194,7 @@ html.dark body {
 
   /* Input padrão */
   .input {
-    @apply block w-full p-3 text-sm rounded-xl;
+    @apply block w-full h-11 px-3 text-sm rounded-xl;
     @apply bg-surface-light dark:bg-surface-dark;
     @apply border-none ring-1 ring-[var(--color-border-light)] dark:ring-[var(--color-border-dark)];
     @apply focus:ring-2 focus:ring-primary;

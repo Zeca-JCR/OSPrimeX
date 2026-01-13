@@ -2,31 +2,48 @@ import React, { useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { OSDocument, ThermalDocument } from './OSDocument';
 
-// Helper function to handle print
-const handlePrint = async (docInstance, fileName) => {
+// Helper function to handle print using hidden iframe
+const handlePrint = async (docInstance) => {
     try {
         // 1. Generate blob
         const blob = await pdf(docInstance).toBlob();
-
-        // 2. Create URL
         const url = URL.createObjectURL(blob);
 
-        // 3. Open in new window (Print Preview)
-        const printWindow = window.open(url);
+        // 2. Create hidden iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.width = '0px';
+        iframe.style.height = '0px';
+        iframe.style.border = 'none';
+        iframe.style.visibility = 'hidden';
 
-        if (printWindow) {
-            // Optional: Auto-trigger print dialog (might be blocked by some browsers)
-            // printWindow.onload = () => printWindow.print();
-        } else {
-            alert('Por favor, permita popups para imprimir.');
-        }
+        // 3. Append to body
+        document.body.appendChild(iframe);
 
-        // Cleanup after a delay (to ensure load)
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        // 4. Print when loaded
+        iframe.onload = () => {
+            // Pequeno delay para garantir renderização
+            setTimeout(() => {
+                try {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                } catch (e) {
+                    console.error('Print error:', e);
+                } finally {
+                    // Cleanup
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        URL.revokeObjectURL(url);
+                    }, 5000); // Dar tempo para o diálogo abrir
+                }
+            }, 500);
+        };
+
+        iframe.src = url;
 
     } catch (error) {
         console.error('Erro ao gerar impressão:', error);
-        alert('Erro ao gerar documento para impressão.');
+        alert('Erro ao processar impressão. Verifique se os popups estão permitidos.');
     }
 };
 
@@ -47,7 +64,7 @@ export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, classNam
             />
         );
 
-        await handlePrint(doc, `OS_${os?.numero}`);
+        await handlePrint(doc);
         setLoading(false);
     };
 
@@ -57,16 +74,16 @@ export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, classNam
             onClick={handleClick}
             className={className}
             disabled={loading}
-            title="Imprimir OS (A4)"
+            title="Imprimir OS Direto"
         >
-            {loading ? (
-                <span className="material-symbols-outlined animate-spin text-lg">sync</span>
-            ) : (
-                <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1">
+                {loading ? (
+                    <span className="material-symbols-outlined animate-spin text-lg">sync</span>
+                ) : (
                     <span className="material-symbols-outlined text-lg">print</span>
-                    <span>Imprimir OS</span>
-                </div>
-            )}
+                )}
+                <span>Imprimir OS</span>
+            </div>
         </button>
     );
 };
@@ -87,7 +104,7 @@ export const PrintThermalButton = ({ os, cliente, veiculo, empresa, className = 
             />
         );
 
-        await handlePrint(doc, `Cupom_${os?.numero}`);
+        await handlePrint(doc);
         setLoading(false);
     };
 
@@ -97,16 +114,16 @@ export const PrintThermalButton = ({ os, cliente, veiculo, empresa, className = 
             onClick={handleClick}
             className={className}
             disabled={loading}
-            title="Imprimir Cupom (80mm)"
+            title="Imprimir Térmica Direto"
         >
-            {loading ? (
-                <span className="material-symbols-outlined animate-spin text-lg">sync</span>
-            ) : (
-                <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1">
+                {loading ? (
+                    <span className="material-symbols-outlined animate-spin text-lg">sync</span>
+                ) : (
                     <span className="material-symbols-outlined text-lg">receipt_long</span>
-                    <span>Cupom 80mm</span>
-                </div>
-            )}
+                )}
+                <span>Impressão Térmica</span>
+            </div>
         </button>
     );
 };

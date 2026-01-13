@@ -5,7 +5,7 @@ import storage from '../../lib/storage';
 import { formatCurrency, formatDate, parseDateLocal } from '../../lib/utils';
 import WhatsAppIcon from '../../components/common/WhatsAppIcon';
 
-const CRMRetencao = () => {
+const CRMRetencao = ({ isTabMode, onClose }) => {
     const { empresa } = useAuth();
     const [searchParams] = useSearchParams();
     const tabParam = searchParams.get('tab');
@@ -47,9 +47,52 @@ const CRMRetencao = () => {
 
     // Abrir WhatsApp e mostrar modal pós-contato
     const abrirWhatsApp = (cliente) => {
-        const telefone = cliente.telefone?.replace(/\D/g, '');
+        const numRaw = cliente.whatsapp || cliente.telefone;
+        const telefone = numRaw?.replace(/\D/g, '');
+
         if (telefone) {
-            window.open(`https://wa.me/55${telefone}`, '_blank');
+            let msg = '';
+
+            // Determina a mensagem baseada no status do cliente
+            if (cliente.precisaRevisao && empresa?.templateLembreteRevisao) {
+                // Template de Revisão
+                const veiculoNome = cliente.veiculoParaRevisao
+                    ? `${cliente.veiculoParaRevisao.marca || ''} ${cliente.veiculoParaRevisao.modelo || ''}`.trim() || 'seu veículo'
+                    : 'seu veículo';
+
+                // Helper de limpeza inline para evitar issues de escopo
+                const sanitize = (s) => s ? s.replace(/\uFFFD/g, '') : '';
+
+                msg = sanitize(empresa.templateLembreteRevisao)
+                    .replace(/{nome}/g, cliente.nome.split(' ')[0])
+                    .replace(/{veiculo}/g, veiculoNome);
+
+            } else if (cliente.aniversarioProximo !== null && empresa?.templateAniversario) { // Fallback se existir config futura
+                msg = empresa.templateAniversario
+                    .replace(/{nome}/g, cliente.nome.split(' ')[0]);
+
+            } else if ((cliente.risco === 'alto' || cliente.risco === 'medio') && empresa?.templateFollowUp) {
+                // Template de Follow-up (Inativos)
+                msg = empresa.templateFollowUp
+                    .replace(/{nome}/g, cliente.nome.split(' ')[0]);
+            }
+
+            // Se ainda vazio, usa defaults hardcoded (fallback)
+            if (!msg) {
+                if (cliente.precisaRevisao) {
+                    const veiculoNome = cliente.veiculoParaRevisao
+                        ? `${cliente.veiculoParaRevisao.marca || ''} ${cliente.veiculoParaRevisao.modelo || ''}`.trim() || 'seu veículo'
+                        : 'seu veículo';
+                    msg = `Olá ${cliente.nome.split(' ')[0]}! O ${veiculoNome} está precisando de uma revisão. Vamos agendar para garantir sua segurança? \uD83D\uDD27`;
+                } else if (cliente.aniversarioProximo !== null) {
+                    msg = `Parabéns ${cliente.nome.split(' ')[0]}! \uD83C\uDF82 Feliz aniversário! Venha nos visitar. \uD83C\uDF89`;
+                } else if (cliente.risco === 'alto' || cliente.risco === 'medio') {
+                    msg = `Olá ${cliente.nome.split(' ')[0]}! Faz um tempo que não nos vemos. Que tal agendar um check-up? \uD83D\uDE97`;
+                }
+            }
+
+            const url = `https://wa.me/55${telefone}${msg ? `?text=${encodeURIComponent(msg)}` : ''}`;
+            window.open(url, '_blank');
             setClienteContato(cliente);
             setShowContatoModal(true);
         }
@@ -173,6 +216,7 @@ const CRMRetencao = () => {
                 totalOS: osFinalizadas.length,
                 veiculos: veiculosCliente,
                 precisaRevisao: !!veiculoPrecisaRevisao,
+                veiculoParaRevisao: veiculoPrecisaRevisao,
                 aniversarioProximo,
                 risco,
             };
@@ -225,19 +269,32 @@ const CRMRetencao = () => {
     }
 
     return (
-        <div className="animate-fadeIn">
+        <div className="p-4 lg:p-6 space-y-6 animate-fadeIn">
             {/* Header section... */}
-            <div className="mb-8">
-                <Link to="/clientes" className="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-primary mb-2">
-                    <span className="material-symbols-outlined text-lg">arrow_back</span>
-                    Voltar para Clientes
-                </Link>
-                <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
-                    Retenção de Clientes & CRM
-                </h1>
-                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                    Acompanhe clientes inativos e oportunidades de follow-up
-                </p>
+            <div className={`mb-8 ${isTabMode ? 'flex justify-between items-start' : ''}`}>
+                <div>
+                    {!isTabMode && (
+                        <Link to="/clientes" className="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-primary mb-2">
+                            <span className="material-symbols-outlined text-lg">arrow_back</span>
+                            Voltar para Clientes
+                        </Link>
+                    )}
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
+                        Retenção de Clientes & CRM
+                    </h1>
+                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                        Acompanhe clientes inativos e oportunidades de follow-up
+                    </p>
+                </div>
+                {isTabMode && (
+                    <button
+                        onClick={onClose}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
+                        title="Fechar aba"
+                    >
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                )}
             </div>
 
             {/* Stats Cards */}
@@ -370,10 +427,23 @@ const CRMRetencao = () => {
                                             </div>
 
                                             <div className="flex items-center gap-4 mt-2 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                                <span className="flex items-center gap-1" title="Telefone">
-                                                    <span className="material-symbols-outlined text-sm">phone</span>
-                                                    {cliente.telefone || '-'}
-                                                </span>
+                                                <div className="flex flex-col">
+                                                    {cliente.telefone && (
+                                                        <span className="flex items-center gap-1" title="Telefone Fixo">
+                                                            <span className="material-symbols-outlined text-sm">call</span>
+                                                            {cliente.telefone}
+                                                        </span>
+                                                    )}
+                                                    {cliente.whatsapp && (
+                                                        <span className="flex items-center gap-1" title="WhatsApp/Celular">
+                                                            <span className="material-symbols-outlined text-sm">smartphone</span>
+                                                            {cliente.whatsapp}
+                                                        </span>
+                                                    )}
+                                                    {!cliente.telefone && !cliente.whatsapp && (
+                                                        <span className="text-gray-400">-</span>
+                                                    )}
+                                                </div>
                                                 <span className="flex items-center gap-1" title="Total de Ordens de Serviço">
                                                     <span className="material-symbols-outlined text-sm">assignment</span>
                                                     {cliente.totalOS} OS
@@ -403,7 +473,7 @@ const CRMRetencao = () => {
 
                                         {/* Ações rápidas */}
                                         <div className="flex gap-1 shrink-0 self-center">
-                                            {cliente.telefone && (
+                                            {(cliente.whatsapp || cliente.telefone) && (
                                                 <button
                                                     onClick={() => abrirWhatsApp(cliente)}
                                                     className="p-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600"
@@ -444,6 +514,7 @@ const CRMRetencao = () => {
                 <CampanhaModal
                     clientes={clientesFiltrados}
                     tipo={filtro}
+                    configuracoes={empresa}
                     onClose={() => setShowCampanhaModal(false)}
                     onRegistrarContato={(clienteId, desfecho) => {
                         registrarDesfecho(desfecho, 7, clienteId);
@@ -556,28 +627,40 @@ const ContatoModal = ({ cliente, onClose, onDesfecho }) => {
 export default CRMRetencao;
 
 // Modal de Campanha em Massa
-const CampanhaModal = ({ clientes, tipo, onClose, onRegistrarContato }) => {
+const CampanhaModal = ({ clientes, tipo, configuracoes, onClose, onRegistrarContato }) => {
     const [mensagem, setMensagem] = useState('');
     const [progresso, setProgresso] = useState({}); // { id: 'pendente' | 'enviado' | 'registrado' }
 
     useEffect(() => {
-        // Definir mensagem padrão baseada no tipo
+        // Definir mensagem padrão baseada no tipo e configurações
         let msg = '';
         if (tipo === 'inativos') {
-            msg = "Olá! Percebemos que faz um tempo que você não nos visita. Que tal agendar um check-up gratuito do seu veículo? 🚗✨";
+            msg = configuracoes?.templateFollowUp || "Olá {nome}! Percebemos que faz um tempo que você não nos visita. Que tal agendar um check-up gratuito do seu veículo? \uD83D\uDE97\u2728";
         } else if (tipo === 'revisao') {
-            msg = "Olá! Está chegando a hora da revisão do seu veículo. Vamos agendar para garantir sua segurança? 🔧📅";
+            msg = configuracoes?.templateLembreteRevisao || "Olá {nome}! Está chegando a hora da revisão do {veiculo}. Vamos agendar para garantir sua segurança? \uD83D\uDD27\uD83D\uDCC5";
         } else if (tipo === 'aniversario') {
-            msg = "Parabéns! 🎂 Como presente de aniversário, temos um desconto especial de 10% na sua próxima troca de óleo. Venha aproveitar! 🎉";
+            msg = "Parabéns {nome}! \uD83C\uDF82 Como presente de aniversário, temos um desconto especial na sua próxima troca de óleo. Venha aproveitar! \uD83C\uDF89";
         }
         setMensagem(msg);
-    }, [tipo]);
+    }, [tipo, configuracoes]);
 
     const enviarWhatsApp = (cliente) => {
-        const telefone = cliente.telefone?.replace(/\D/g, '');
+        const numRaw = cliente.whatsapp || cliente.telefone;
+        const telefone = numRaw?.replace(/\D/g, '');
         if (!telefone) return;
 
-        const textoEncoded = encodeURIComponent(mensagem);
+        let msgFinal = mensagem;
+        if (msgFinal) {
+            const veiculoNome = cliente.veiculoParaRevisao
+                ? `${cliente.veiculoParaRevisao.marca || ''} ${cliente.veiculoParaRevisao.modelo || ''}`.trim() || 'seu veículo'
+                : 'seu veículo';
+
+            msgFinal = msgFinal
+                .replace(/{nome}/g, cliente.nome.split(' ')[0])
+                .replace(/{veiculo}/g, veiculoNome);
+        }
+
+        const textoEncoded = encodeURIComponent(msgFinal);
         window.open(`https://wa.me/55${telefone}?text=${textoEncoded}`, '_blank');
 
         setProgresso(prev => ({ ...prev, [cliente.id]: 'enviado' }));
@@ -640,7 +723,8 @@ const CampanhaModal = ({ clientes, tipo, onClose, onRegistrarContato }) => {
                         <div className="border border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] rounded-xl divide-y divide-[var(--color-border-light)] dark:divide-[var(--color-border-dark)]">
                             {clientes.map(cliente => {
                                 const status = progresso[cliente.id] || 'pendente';
-                                const telefoneValido = cliente.telefone && cliente.telefone.replace(/\D/g, '').length >= 10;
+                                const numUtil = cliente.whatsapp || cliente.telefone;
+                                const telefoneValido = numUtil && numUtil.replace(/\D/g, '').length >= 10;
 
                                 return (
                                     <div key={cliente.id} className="p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50">

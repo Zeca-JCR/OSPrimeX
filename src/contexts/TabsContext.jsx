@@ -13,9 +13,13 @@ export const TabsProvider = ({ children }) => {
         setTabs(prev => {
             const exists = prev.find(t => t.id === tab.id);
             if (exists) {
-                // Se já existe, apenas foca nela
+                // Se já existe, atualiza os dados e foca nela
                 setActiveTabId(tab.id);
-                return prev;
+                return prev.map(t =>
+                    t.id === tab.id
+                        ? { ...t, ...tab, data: { ...t.data, ...tab.data } }
+                        : t
+                );
             }
             // Limite de segurança: máx 8 abas
             if (prev.length >= 8) {

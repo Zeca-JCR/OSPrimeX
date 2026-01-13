@@ -7,7 +7,7 @@ import AgendaCalendar from '../../components/agenda/AgendaCalendar';
 import PatioSidebar from '../../components/agenda/PatioSidebar';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 
-const Agenda = ({ isTabMode, onClose }) => {
+const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp }) => {
     const { empresa } = useAuth();
     const location = useLocation();
     const [agendamentos, setAgendamentos] = useState([]);
@@ -35,20 +35,26 @@ const Agenda = ({ isTabMode, onClose }) => {
         carregarDados();
     }, [empresa]);
 
-    // Efeito para abrir agendamento vindo de notificação
+    // Efeito para abrir agendamento vindo de notificação (via Prop ou Location State)
     useEffect(() => {
-        console.log("Agenda Effect:", { loading, locationState: location.state, totalAgendamentos: agendamentos.length });
-        if (!loading && location.state?.openAgendamentoId && agendamentos.length > 0) {
-            const ag = agendamentos.find(a => a.id === location.state.openAgendamentoId);
+        const targetId = openAgendamentoId || location.state?.openAgendamentoId;
+
+        console.log("Agenda Effect:", { loading, targetId, totalAgendamentos: agendamentos.length, timestamp });
+
+        if (!loading && targetId && agendamentos.length > 0) {
+            // Loose equality to handle string/number mismatch (e.g. "123" vs 123)
+            const ag = agendamentos.find(a => String(a.id) === String(targetId));
             console.log("Encontrado agendamento:", ag);
             if (ag) {
                 setAgendamentoEdit(ag);
                 setShowModal(true);
-                // Limpar state para não reabrir ao navegar
-                window.history.replaceState({}, document.title);
+                // Limpar state para não reabrir ao navegar (apenas se veio via state)
+                if (location.state?.openAgendamentoId) {
+                    window.history.replaceState({}, document.title);
+                }
             }
         }
-    }, [loading, location.state, agendamentos]);
+    }, [loading, location.state, agendamentos, openAgendamentoId, timestamp]);
 
     const carregarDados = async () => {
         if (!empresa) return;
@@ -474,7 +480,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
         const [ano, mes, dia] = form.data.split('-');
         const dataFormatada = `${dia}/${mes}`;
 
-        let msg = empresa?.agendaMensagemConfirmacao || 'Olá {nome}, confirmamos seu agendamento para {data} às {hora}?';
+        let msg = empresa?.agendaMensagemConfirmacao || 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} às {hora}? \uD83D\uDE97';
 
         msg = msg.replace(/{nome}/g, cliente.nome.split(' ')[0])
             .replace(/{veiculo}/g, nomeVeiculo)

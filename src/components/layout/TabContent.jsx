@@ -12,6 +12,10 @@ const CadastroUsuario = lazy(() => import('../../pages/usuarios/CadastroUsuario'
 const ConfiguracoesEmpresa = lazy(() => import('../../pages/configuracoes/ConfiguracoesEmpresa'));
 const Relatorios = lazy(() => import('../../pages/relatorios/Relatorios'));
 const Agenda = lazy(() => import('../../pages/agenda/Agenda'));
+const CRMRetencao = lazy(() => import('../../pages/crm/CRMRetencao'));
+const ImportarNota = lazy(() => import('../../pages/estoque/ImportarNota'));
+const HistoricoEstoque = lazy(() => import('../../pages/estoque/HistoricoEstoque'));
+const PedidoReposicao = lazy(() => import('../../pages/estoque/PedidoReposicao'));
 
 const TabContent = () => {
     const { tabs, activeTabId, closeTab, updateTab } = useTabs();
@@ -119,6 +123,32 @@ const TabContent = () => {
                         )}
                         {tab.type === 'agenda' && (
                             <Agenda
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                                openAgendamentoId={tab.data?.openAgendamentoId}
+                                timestamp={tab.data?.timestamp}
+                            />
+                        )}
+                        {tab.type === 'crm' && (
+                            <CRMRetencao
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'importar_xml' && (
+                            <ImportarNota
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'estoque_movimentacoes' && (
+                            <HistoricoEstoque
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'estoque_reposicao' && (
+                            <PedidoReposicao
                                 isTabMode={true}
                                 onClose={() => closeTab(tab.id)}
                             />

@@ -111,9 +111,9 @@ const CurrencyInput = ({
 
     // Classes baseadas no tamanho
     const sizeClasses = {
-        sm: 'text-sm py-1.5 px-2',
-        md: 'text-base py-2 px-3',
-        lg: 'text-lg py-2.5 px-4 font-bold',
+        sm: 'text-xs',
+        md: 'text-sm',
+        lg: 'text-base',
     };
 
     return (
@@ -121,7 +121,7 @@ const CurrencyInput = ({
             {label && (
                 <label
                     htmlFor={id || name}
-                    className={`block text-sm font-medium text-text-light dark:text-text-dark mb-1 ${labelClassName}`}
+                    className={`block text-sm font-medium text-text-light dark:text-text-dark mb-2 ${labelClassName}`}
                 >
                     {label}{required && ' *'}
                 </label>

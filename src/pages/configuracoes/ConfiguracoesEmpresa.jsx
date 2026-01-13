@@ -50,15 +50,6 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
         // Agenda
         agendaDiasAntecedencia: 1,
         agendaMensagemConfirmacao: 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} às {hora}? 🚗',
-        // Horário de Trabalho
-        horarioTrabalhoInicio: '08:00',
-        horarioTrabalhoFim: '18:00',
-        horarioAlmocoInicio: '12:00',
-        horarioAlmocoFim: '13:00',
-        // Sábado
-        trabalhaSabado: false,
-        horarioSabadoInicio: '08:00',
-        horarioSabadoFim: '12:00',
         // Configurações de Preço
         descontoNosItens: true,
         acrescimoNosItens: false,
@@ -91,7 +82,6 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                 mensagemPadrao: empresa.mensagemPadrao || '',
                 metaMensalOS: empresa.metaMensalOS || 30,
                 perfil: empresa.perfil || 'adm',
-                metaMensalOS: empresa.metaMensalOS || 30,
                 diasValidadeOrcamento: empresa.diasValidadeOrcamento || 10,
                 diasInatividade: empresa.diasInatividade || 90,
                 imprimirApontamentos: empresa.imprimirApontamentos ?? true,
@@ -110,13 +100,6 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                 acrescimoNosItens: empresa.acrescimoNosItens ?? false,
                 descontoNoTotal: empresa.descontoNoTotal ?? true,
                 acrescimoNoTotal: empresa.acrescimoNoTotal ?? false,
-                horarioTrabalhoInicio: empresa.horarioTrabalhoInicio || '08:00',
-                horarioTrabalhoFim: empresa.horarioTrabalhoFim || '18:00',
-                horarioAlmocoInicio: empresa.horarioAlmocoInicio || '12:00',
-                horarioAlmocoFim: empresa.horarioAlmocoFim || '13:00',
-                trabalhaSabado: empresa.trabalhaSabado || false,
-                horarioSabadoInicio: empresa.horarioSabadoInicio || '08:00',
-                horarioSabadoFim: empresa.horarioSabadoFim || '12:00',
             });
             setLoading(false);
         }
@@ -347,76 +330,6 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                                 placeholder="https://..."
                             />
                         </div>
-                    </div>
-
-                    {/* Horários de Funcionamento */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t dark:border-gray-700">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Horário de Funcionamento
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
-                                    <input type="time" name="horarioTrabalhoInicio" value={form.horarioTrabalhoInicio} onChange={handleChange} className="input w-full" />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
-                                    <input type="time" name="horarioTrabalhoFim" value={form.horarioTrabalhoFim} onChange={handleChange} className="input w-full" />
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Intervalo de Almoço (Seg-Sex)
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
-                                    <input type="time" name="horarioAlmocoInicio" value={form.horarioAlmocoInicio} onChange={handleChange} className="input w-full" />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
-                                    <input type="time" name="horarioAlmocoFim" value={form.horarioAlmocoFim} onChange={handleChange} className="input w-full" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="md:col-span-2 border-t dark:border-gray-700 pt-4 mt-2">
-                        <div className="flex items-center gap-2 mb-4">
-                            <input
-                                type="checkbox"
-                                id="trabalhaSabado"
-                                name="trabalhaSabado"
-                                checked={form.trabalhaSabado}
-                                onChange={handleChange}
-                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <label htmlFor="trabalhaSabado" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
-                                Trabalha aos Sábados
-                            </label>
-                        </div>
-
-                        {form.trabalhaSabado && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slideDown">
-                                <div>
-                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                        Horário de Sábado
-                                    </label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Início</label>
-                                            <input type="time" name="horarioSabadoInicio" value={form.horarioSabadoInicio} onChange={handleChange} className="input w-full" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">Fim</label>
-                                            <input type="time" name="horarioSabadoFim" value={form.horarioSabadoFim} onChange={handleChange} className="input w-full" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
 

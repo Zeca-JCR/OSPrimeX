@@ -825,14 +825,23 @@ export const DownloadOSButton = ({ os, cliente, veiculo, empresa, tecnico, class
             fileName={`${nomeArquivo || 'documento'}.pdf`}
             className={className}
         >
-            {({ loading }) => (loading ? 'Gerando PDF...' : ehOrcamento ? 'Baixar Orçamento' : 'Baixar OS')}
+            {({ loading }) => (
+                <>
+                    {loading ? (
+                        <span className="material-symbols-outlined animate-spin text-lg">sync</span>
+                    ) : (
+                        <span className="material-symbols-outlined text-lg">download</span>
+                    )}
+                    <span>{ehOrcamento ? 'Baixar Orçamento' : 'Baixar OS'}</span>
+                </>
+            )}
         </PDFDownloadLink>
     );
 };
 
 export const DownloadThermalButton = ({ os, cliente, veiculo, empresa, className = '' }) => {
     const ehOrcamento = isOrcamento(os);
-    const nomeArquivo = ehOrcamento ? `Cupom_Orc_${os?.numero}` : `Cupom_OS_${os?.numero}`;
+    const nomeArquivo = ehOrcamento ? `Termica_Orc_${os?.numero}` : `Termica_OS_${os?.numero}`;
 
     return (
         <PDFDownloadLink
@@ -844,10 +853,19 @@ export const DownloadThermalButton = ({ os, cliente, veiculo, empresa, className
                     empresa={empresa}
                 />
             }
-            fileName={`${nomeArquivo || 'cupom'}.pdf`}
+            fileName={`${nomeArquivo || 'termica'}.pdf`}
             className={className}
         >
-            {({ loading }) => (loading ? 'Gerando...' : 'Cupom 80mm')}
+            {({ loading }) => (
+                <>
+                    {loading ? (
+                        <span className="material-symbols-outlined animate-spin text-lg">sync</span>
+                    ) : (
+                        <span className="material-symbols-outlined text-lg">receipt_long</span>
+                    )}
+                    <span>Térmica 80mm</span>
+                </>
+            )}
         </PDFDownloadLink>
     );
 };

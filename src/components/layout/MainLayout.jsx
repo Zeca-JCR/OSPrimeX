@@ -302,6 +302,16 @@ const MainLayoutContent = () => {
                 {/* Navigation - estilo Stitch */}
                 <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
                     {menuItems.filter(item => !item.hidden).map((item, index) => {
+                        const tabRoutes = {
+                            '/configuracoes': { type: 'configuracoes', title: 'Configurações' },
+                            '/relatorios': { type: 'relatorios', title: 'Relatórios' },
+                            '/agenda': { type: 'agenda', title: 'Agenda' },
+                            '/crm': { type: 'crm', title: 'CRM' },
+                            '/estoque/importar': { type: 'importar_xml', title: 'Importar XML' },
+                            '/estoque/movimentacoes': { type: 'estoque_movimentacoes', title: 'Movimentações' },
+                            '/estoque/reposicao': { type: 'estoque_reposicao', title: 'Reposição' }
+                        };
+
                         // Renderização de Divisor
                         if (item.type === 'divider') {
                             return (
@@ -315,8 +325,6 @@ const MainLayoutContent = () => {
 
                         // Renderização para itens bloqueados/disabled (mantém lógica anterior, simplificada)
                         if (item.disabled || item.locked) {
-                            // ... [Lógica existente para disabled/locked seria repetida aqui se necessária, mas para simplificar vou omitir pois o foco é submenu. 
-                            // Mas como estou substituindo o bloco todo, preciso manter ou readaptar. Vou manter a lógica simple de antes para esses casos]
                             return (
                                 <div
                                     key={item.path}
@@ -385,6 +393,34 @@ const MainLayoutContent = () => {
                                                     ? location.pathname === sub.path
                                                     : location.pathname.startsWith(sub.path);
 
+                                                const isSubTabRoute = tabRoutes[sub.path];
+
+                                                if (isSubTabRoute) {
+                                                    return (
+                                                        <button
+                                                            key={sub.path}
+                                                            onClick={() => {
+                                                                setSidebarOpen(false);
+                                                                openTab({
+                                                                    id: isSubTabRoute.type,
+                                                                    type: isSubTabRoute.type,
+                                                                    title: isSubTabRoute.title,
+                                                                    data: {}
+                                                                });
+                                                            }}
+                                                            className={`
+                                                                w-full text-left block px-3 py-1.5 rounded-lg text-sm transition-colors
+                                                                ${subActive
+                                                                    ? 'text-primary font-medium bg-primary/10'
+                                                                    : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                                                                }
+                                                            `}
+                                                        >
+                                                            {sub.label}
+                                                        </button>
+                                                    );
+                                                }
+
                                                 return (
                                                     <NavLink
                                                         key={sub.path}
@@ -411,14 +447,6 @@ const MainLayoutContent = () => {
                                 </div>
                             );
                         }
-
-                        // Item normal (Link direto)
-                        // Definir quais rotas abrem como aba
-                        const tabRoutes = {
-                            '/configuracoes': { type: 'configuracoes', title: 'Configurações' },
-                            '/relatorios': { type: 'relatorios', title: 'Relatórios' },
-                            '/agenda': { type: 'agenda', title: 'Agenda' }
-                        };
 
                         const isTabRoute = tabRoutes[item.path];
 
@@ -577,9 +605,13 @@ const MainLayoutContent = () => {
                                                             setShowNotificacoes(false);
 
                                                             if (notif.tipo === 'agenda') {
-                                                                navigate('/agenda', {
-                                                                    state: {
-                                                                        openAgendamentoId: notif.metadata?.agendamentoId
+                                                                openTab({
+                                                                    id: 'agenda',
+                                                                    type: 'agenda',
+                                                                    title: 'Agenda',
+                                                                    data: {
+                                                                        openAgendamentoId: notif.metadata?.agendamentoId,
+                                                                        timestamp: Date.now()
                                                                     }
                                                                 });
                                                             } else if (notif.link) {
