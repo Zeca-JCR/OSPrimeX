@@ -270,9 +270,9 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp }) => {
     }
 
     return (
-        <div className="h-full flex bg-background-light dark:bg-background-dark overflow-hidden">
+        <div className="h-full flex flex-col lg:flex-row bg-background-light dark:bg-background-dark overflow-hidden">
             {/* Main Calendar Area */}
-            <div className="flex-1 flex flex-col p-4 h-full overflow-hidden">
+            <div className="flex-1 w-full flex flex-col p-4 h-full overflow-hidden">
                 <header className="flex justify-between items-center mb-4 flex-shrink-0">
 
                     <h1 className="text-xl font-bold text-text-light dark:text-text-dark">

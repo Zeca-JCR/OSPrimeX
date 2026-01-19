@@ -194,7 +194,7 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="card p-6 w-full max-w-md animate-slideUp">
+            <div className="card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto animate-slideUp">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-text-light dark:text-text-dark">
                         Nova Ordem de Serviço

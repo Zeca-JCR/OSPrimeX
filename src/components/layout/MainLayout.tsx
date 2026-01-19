@@ -236,8 +236,8 @@ const MainLayoutContent = () => {
             {/* Sidebar - Estilo Stitch */}
             <aside
                 className={`
-                    fixed lg:static inset-y-0 left-0
-                ${tabs?.length > 0 ? 'z-[2010] relative' : 'z-50'}
+                    fixed inset-y-0 left-0 lg:static
+                    ${tabs?.length > 0 ? 'z-[2010]' : 'z-50'}
                     ${sidebarCollapsed ? 'w-[72px]' : 'w-56'}
                     bg-surface-light dark:bg-surface-dark
                     border-r border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]

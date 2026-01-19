@@ -79,7 +79,7 @@ const TabBar = () => {
 
     return (
         <>
-            <div className="flex-none bg-primary/5 dark:bg-primary/10 border-b border-primary/20 dark:border-primary/30 px-2">
+            <div className="flex-none bg-primary/20 dark:bg-primary/25 border-t-2 border-t-primary border-b border-primary/30 dark:border-primary/40 shadow-md px-2">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1.5">
                     {/* Contador de abas */}
                     <div className="flex items-center gap-1.5 px-2 py-1 mr-1 rounded bg-primary/10 dark:bg-primary/20 text-primary text-xs font-semibold shrink-0">

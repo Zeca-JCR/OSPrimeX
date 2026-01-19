@@ -24,7 +24,7 @@ const PatioSidebar = ({ activeOS, loading }) => {
     }
 
     return (
-        <div className="w-80 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-4 flex flex-col overflow-hidden">
+        <div className="hidden lg:flex w-80 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-4 flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-lg text-text-light dark:text-text-dark flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">garage_home</span>

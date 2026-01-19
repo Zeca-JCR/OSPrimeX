@@ -399,7 +399,7 @@ const Dashboard = () => {
 
                     {/* Barra de Distribuição */}
                     <div className="flex-1 flex flex-col justify-center min-w-[200px]">
-                        <div className="flex justify-between text-xs mb-2 font-medium">
+                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1 text-xs mb-2 font-medium">
                             <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
                                 <span className="w-2 h-2 rounded-full bg-blue-500"></span> Em Execução ({stats.patio.execucao})
                             </span>
@@ -684,7 +684,7 @@ const Dashboard = () => {
                             </Link>
                         </div>
                     ) : (
-                        <div className="card overflow-hidden">
+                        <div className="card overflow-hidden overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
