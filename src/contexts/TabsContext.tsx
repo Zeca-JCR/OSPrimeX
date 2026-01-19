@@ -96,9 +96,9 @@ export const TabsProvider = ({ children }: TabsProviderProps) => {
                         : t
                 );
             }
-            // Limite de segurança: máx 8 abas
-            if (prev.length >= 8) {
-                setLimitMessage("Limite de 8 abas atingido. Feche algumas abas para abrir novas.");
+            // Limite de segurança: máx 10 abas
+            if (prev.length >= 10) {
+                setLimitMessage("Limite de 10 abas atingido. Feche algumas abas para abrir novas.");
                 setTimeout(() => setLimitMessage(null), 5000);
                 return prev;
             }

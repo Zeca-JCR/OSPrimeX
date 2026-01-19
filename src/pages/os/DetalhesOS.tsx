@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useOS } from '../../contexts/OSContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDate, formatDateTime, formatPlaca, toISODate, normalizeString, toTitleCase, parseCurrency, formatCurrencyInput } from '../../lib/utils';
@@ -16,7 +15,6 @@ import CurrencyInput from '../../components/common/CurrencyInput';
 import PlacaBadge from '../../components/common/PlacaBadge';
 
 import { gerarPayloadPix } from '../../lib/pix';
-import { useAutoSave } from '../../hooks/useAutoSave';
 
 // Função auxiliar para calcular totais (Global)
 const calcularResumoFinanceiro = (itens, dTipo, dValor, aTipo, aValor) => {
@@ -98,13 +96,8 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const isDirtyRef = useRef(isDirty);
     const salvarOSRef = useRef(null);
 
-    // Auto-Save desabilitado - alterações ficam em memória até salvar manualmente
-    // const { draftFound, loadDraft, clearDraft, isSaving: isAutoSaving, lastSaved } = useAutoSave(
-    //     id ? `draft_os_${id}` : null,
-    //     form,
-    //     2000,
-    //     isDirty && ['orcamento', 'aberta', 'execucao', 'aguardando_peca'].includes(os?.status)
-    // );
+
+    // Stubs para compatibilidade (auto-save desabilitado)
     const draftFound = false;
     const loadDraft = () => null;
     const clearDraft = () => { };
@@ -175,7 +168,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const opcoesPrisma = useMemo(() => {
         if (!empresa?.usarPrismas) return [];
 
-        const osAtivas = JSON.parse(localStorage.getItem('ordens_servico') || '[]');
+        const osAtivas = JSON.parse(localStorage.getItem('osprimex_ordens_servico') || '[]');
         return Array.from({ length: empresa.prismaQuantidade || 20 }, (_, i) => i + 1).map(num => {
             const osComPrisma = osAtivas.find(o =>
                 Number(o.prisma) === num && // Garantir tipagem numérica
@@ -1596,26 +1589,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                                                 const numeroPrisma = novoValor ? parseInt(novoValor) : null;
                                                                 const valorAnterior = os.prisma;
 
-                                                                // 1. Validação de Unicidade (Síncrona - Leitura de Storage com PREFIXO CORRETO)
-                                                                if (numeroPrisma) {
-                                                                    const dadosStorage = localStorage.getItem('osprimex_ordens_servico');
-                                                                    const todasOS = dadosStorage ? JSON.parse(dadosStorage) : [];
-
-                                                                    const conflito = todasOS.find(o =>
-                                                                        o.ativo !== false &&
-                                                                        Number(o.prisma) === numeroPrisma &&
-                                                                        String(o.id) !== String(os.id) &&
-                                                                        !['finalizada', 'cancelada'].includes(o.status)
-                                                                    );
-
-                                                                    if (conflito) {
-                                                                        alert(`🚫 AÇÃO BLOQUEADA\n\nO Prisma #${numeroPrisma} já está em uso na OS #${conflito.numero} (${conflito.clienteNome || 'Cliente'}).\nStatus: ${conflito.status}`);
-                                                                        e.target.value = valorAnterior || "";
-                                                                        return;
-                                                                    }
-                                                                }
-
-                                                                // 2. Update Otimista (State Local)
+                                                                // Update Otimista (State Local)
                                                                 setOs(prev => ({ ...prev, prisma: numeroPrisma }));
 
                                                                 // 3. Persistência MANUAL DIRETA (Nuclear Option)
@@ -1663,7 +1637,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                                         >
                                                             <option value="">Prisma</option>
                                                             {opcoesPrisma.map(op => (
-                                                                <option key={op.value} value={op.value}>
+                                                                <option key={op.value} value={op.value} disabled={op.disabled}>
                                                                     {op.label}
                                                                 </option>
                                                             ))}

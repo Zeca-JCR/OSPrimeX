@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -700,7 +700,7 @@ const KanbanOS = () => {
 
                                     const cor = os ? getCorPrisma(os.status) : 'bg-green-500';
                                     const titulo = os
-                                        ? `#${num} â†’ OS #${os.numero} (${os.status === 'aberta' ? 'Aprovada' : os.status === 'execucao' ? 'Em Execução' : 'Aguardando Peça'})`
+                                        ? `#${num} → OS #${os.numero} (${os.status === 'aberta' ? 'Aprovada' : os.status === 'execucao' ? 'Em Execução' : 'Aguardando Peça'})`
                                         : `#${num} - Disponível`;
 
                                     return (

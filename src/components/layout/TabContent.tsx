@@ -20,6 +20,15 @@ const HistoricoEstoque = lazy(() => import('../../pages/estoque/HistoricoEstoque
 const PedidoReposicao = lazy(() => import('../../pages/estoque/PedidoReposicao'));
 const DashboardFinanceiro = lazy(() => import('../../pages/financeiro/DashboardFinanceiro'));
 
+// Componentes de Lista (para abas de listagem)
+const KanbanOS = lazy(() => import('../../pages/os/KanbanOS'));
+const ListaClientes = lazy(() => import('../../pages/clientes/ListaClientes'));
+const ListaVeiculos = lazy(() => import('../../pages/veiculos/ListaVeiculos'));
+const ListaProdutos = lazy(() => import('../../pages/estoque/ListaProdutos'));
+const ListaColaboradores = lazy(() => import('../../pages/colaboradores/ListaColaboradores'));
+const ListaUsuarios = lazy(() => import('../../pages/usuarios/ListaUsuarios'));
+const Fornecedores = lazy(() => import('../../pages/estoque/Fornecedores'));
+
 const TabContent = () => {
     const { tabs, activeTabId, closeTab, updateTab } = useTabs();
 
@@ -154,6 +163,49 @@ const TabContent = () => {
                         )}
                         {tab.type === 'financeiro' && (
                             <DashboardFinanceiro
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {/* Abas de Listagem */}
+                        {tab.type === 'list-os' && (
+                            <KanbanOS
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'list-clientes' && (
+                            <ListaClientes
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'list-veiculos' && (
+                            <ListaVeiculos
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'list-produtos' && (
+                            <ListaProdutos
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'list-colaboradores' && (
+                            <ListaColaboradores
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'list-usuarios' && (
+                            <ListaUsuarios
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
+                            />
+                        )}
+                        {tab.type === 'list-fornecedores' && (
+                            <Fornecedores
                                 isTabMode={true}
                                 onClose={() => closeTab(tab.id)}
                             />

@@ -146,7 +146,7 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
             const osCliente = ordensServico.filter(os => os.clienteId === cliente.id);
             const osFinalizadas = osCliente.filter(os => os.status === 'finalizada');
 
-            // Ãšltima visita (data da última OS finalizada)
+            // Última visita (data da última OS finalizada)
             const ultimaOS = osFinalizadas.sort((a, b) =>
                 new Date(b.atualizadoEm || b.criadoEm) - new Date(a.atualizadoEm || a.criadoEm)
             )[0];
@@ -385,7 +385,7 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
                     <div className="text-center py-12">
                         <span className="material-symbols-outlined text-4xl text-gray-400 mb-2">sentiment_satisfied</span>
                         <p className="text-text-secondary-light dark:text-text-secondary-dark">
-                            {filtro === 'inativos' ? 'Nenhum cliente inativo. Ã“timo!' :
+                            {filtro === 'inativos' ? 'Nenhum cliente inativo. Ótimo!' :
                                 filtro === 'revisao' ? 'Nenhum veículo precisando de revisão.' :
                                     filtro === 'aniversario' ? 'Nenhum aniversário nos próximos 30 dias.' :
                                         'Nenhum cliente encontrado.'}
@@ -458,7 +458,7 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
                                             <div className="flex items-center gap-2 mt-2 flex-wrap">
                                                 {cliente.ultimaVisita && (
                                                     <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
-                                                        Ãšltima visita: {formatDate(cliente.ultimaVisita)}
+                                                        Última visita: {formatDate(cliente.ultimaVisita)}
                                                         {cliente.diasInativos > 0 && (
                                                             <span className="ml-1 text-red-500">({cliente.diasInativos} dias)</span>
                                                         )}

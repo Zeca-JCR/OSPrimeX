@@ -221,14 +221,32 @@ const MainLayoutContent = () => {
                     veiculos={novaOSData.veiculos}
                     empresaId={empresa?.id}
                     onClose={() => setShowNovaOS(false)}
-                    onSave={() => {
+                    onSave={(novaOS) => {
                         setShowNovaOS(false);
-                        // Idealmente, recarregar dados da página atual se for OS
-                        if (location.pathname === '/os') {
-                            window.location.reload();
+                        // Se retornou a OS criada, abre ela em uma nova aba
+                        if (novaOS && novaOS.id) {
+                            // setTimeout para evitar conflitos de renderização (update depth exceeded)
+                            // pois o modal está fechando e a navegação ocorrendo simultaneamente
+                            setTimeout(() => {
+                                openTab({
+                                    id: `os_${novaOS.id}`,
+                                    type: 'os_detalhes',
+                                    title: `OS #${novaOS.numero}`,
+                                    data: { id: novaOS.id }
+                                });
+
+                                // Se não estiver na lista de OS, navega para lá
+                                if (location.pathname !== '/os') {
+                                    navigate('/os');
+                                }
+                            }, 100);
                         } else {
-                            navigate('/os');
+                            // Se não retornou OS (fallback), apenas navega
+                            if (location.pathname !== '/os') {
+                                navigate('/os');
+                            }
                         }
+
                     }}
                 />
             )}
@@ -247,13 +265,13 @@ const MainLayoutContent = () => {
                 `}
             >
                 {/* Logo */}
-                <div className={`h-14 flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'justify-center px-3'} border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] relative`}>
-                    <div className="flex items-center gap-2 overflow-hidden">
+                <div className={`h-14 flex items-center ${sidebarCollapsed ? 'flex-col justify-center gap-1 py-2' : 'justify-center px-3'} border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] relative`}>
+                    <div className={`flex items-center gap-2 overflow-hidden ${sidebarCollapsed ? 'justify-center' : ''}`}>
                         {empresa?.logoUrl ? (
                             <img
                                 src={empresa.logoUrl}
                                 alt="Logo"
-                                className={`${sidebarCollapsed ? 'w-10 h-10' : 'h-8 w-auto max-w-[160px]'} object-contain transition-all`}
+                                className={`${sidebarCollapsed ? 'w-8 h-8' : 'h-8 w-auto max-w-[160px]'} object-contain transition-all`}
                             />
                         ) : (
                             <>
@@ -268,16 +286,16 @@ const MainLayoutContent = () => {
                     </div>
 
 
-                    {/* Botão Recolher (Desktop) - Posicionado Ã  direita */}
-                    <button
-                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className={`hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${sidebarCollapsed ? 'relative right-auto translate-y-0 mx-auto' : ''}`}
-                        title={sidebarCollapsed ? 'Expandir' : 'Recolher'}
-                    >
-                        <span className="material-symbols-outlined text-[20px]">
-                            {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
-                        </span>
-                    </button>
+                    {/* Botão Recolher (Desktop) - Posicionado à direita ou abaixo */}
+                    {!sidebarCollapsed && (
+                        <button
+                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                            className="hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            title="Recolher"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                        </button>
+                    )}
 
                     {!sidebarCollapsed && (
                         <button
@@ -288,6 +306,17 @@ const MainLayoutContent = () => {
                         </button>
                     )}
                 </div>
+
+                {/* Botão Expandir (quando recolhido) - Separado do header */}
+                {sidebarCollapsed && (
+                    <button
+                        onClick={() => setSidebarCollapsed(false)}
+                        className="hidden lg:flex w-full justify-center py-2 text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]"
+                        title="Expandir"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                    </button>
+                )}
 
                 {/* Empresa - compacto */}
                 {
@@ -304,6 +333,7 @@ const MainLayoutContent = () => {
                 <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
                     {menuItems.filter(item => !item.hidden).map((item, index) => {
                         const tabRoutes = {
+                            // Páginas que abrem como abas
                             '/configuracoes': { type: 'configuracoes', title: 'Configurações' },
                             '/relatorios': { type: 'relatorios', title: 'Relatórios' },
                             '/agenda': { type: 'agenda', title: 'Agenda' },
@@ -311,7 +341,15 @@ const MainLayoutContent = () => {
                             '/estoque/importar': { type: 'importar_xml', title: 'Importar XML' },
                             '/estoque/movimentacoes': { type: 'estoque_movimentacoes', title: 'Movimentações' },
                             '/estoque/reposicao': { type: 'estoque_reposicao', title: 'Reposição' },
-                            '/financeiro': { type: 'financeiro', title: 'Financeiro' }
+                            '/financeiro': { type: 'financeiro', title: 'Financeiro' },
+                            // Listas que abrem como abas
+                            '/os': { type: 'list-os', title: 'Ordens de Serviço' },
+                            '/clientes': { type: 'list-clientes', title: 'Clientes' },
+                            '/veiculos': { type: 'list-veiculos', title: 'Veículos' },
+                            '/estoque': { type: 'list-produtos', title: 'Produtos & Serviços' },
+                            '/colaboradores': { type: 'list-colaboradores', title: 'Colaboradores' },
+                            '/usuarios': { type: 'list-usuarios', title: 'Usuários' },
+                            '/fornecedores': { type: 'list-fornecedores', title: 'Fornecedores' },
                         };
 
                         // Renderização de Divisor

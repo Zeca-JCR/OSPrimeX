@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
@@ -45,12 +45,12 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
         banco: '',
         // Templates de mensagem WhatsApp
         templateLembreteRevisao: 'Olá {nome}! Notamos que seu veículo {veiculo} está precisando de revisão. Agende já seu horário! \ud83d\ude97\u2728',
-        templateFollowUp: 'Olá {nome}! Faz um tempo que não nos vemos. Tudo bem com seu {veiculo}? Estamos Ã  disposição!',
+        templateFollowUp: 'Olá {nome}! Faz um tempo que não nos vemos. Tudo bem com seu {veiculo}? Estamos à disposição!',
         templateAgradecimento: 'Olá {nome}! Obrigado pela preferência! Esperamos que o serviço no seu {veiculo} tenha ficado excelente. Conte sempre conosco! \u2b50',
         markupPadrao: 50, // Default 50%
         // Agenda
         agendaDiasAntecedencia: 1,
-        agendaMensagemConfirmacao: 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} Ã s {hora}? 🚗',
+        agendaMensagemConfirmacao: 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} às {hora}? 🚗',
         // Configurações de Preço
         descontoNosItens: true,
         acrescimoNosItens: false,
@@ -95,11 +95,11 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                 chavePix: empresa.chavePix || '',
                 banco: empresa.banco || '',
                 templateLembreteRevisao: empresa.templateLembreteRevisao || 'Olá {nome}! Notamos que seu veículo {veiculo} está precisando de revisão. Agende já seu horário! \ud83d\ude97\u2728',
-                templateFollowUp: empresa.templateFollowUp || 'Olá {nome}! Faz um tempo que não nos vemos. Tudo bem com seu {veiculo}? Estamos Ã  disposição!',
+                templateFollowUp: empresa.templateFollowUp || 'Olá {nome}! Faz um tempo que não nos vemos. Tudo bem com seu {veiculo}? Estamos à disposição!',
                 templateAgradecimento: empresa.templateAgradecimento || 'Olá {nome}! Obrigado pela preferência! Esperamos que o serviço no seu {veiculo} tenha ficado excelente. Conte sempre conosco! \u2b50',
                 markupPadrao: empresa.markupPadrao || 50,
                 agendaDiasAntecedencia: empresa.agendaDiasAntecedencia || 1,
-                agendaMensagemConfirmacao: empresa.agendaMensagemConfirmacao || 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} Ã s {hora}? 🚗',
+                agendaMensagemConfirmacao: empresa.agendaMensagemConfirmacao || 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} às {hora}? 🚗',
                 // Pricing
                 descontoNosItens: empresa.descontoNosItens ?? true,
                 acrescimoNosItens: empresa.acrescimoNosItens ?? false,
@@ -672,7 +672,7 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                         Controle de Prismas
                     </h2>
                     <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
-                        Prismas são acessórios de identificação visual colocados sobre veículos para vincular rapidamente o carro Ã  sua OS
+                        Prismas são acessórios de identificação visual colocados sobre veículos para vincular rapidamente o carro à sua OS
                     </p>
 
                     <div className="space-y-4">
@@ -1028,4 +1028,5 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
 };
 
 export default ConfiguracoesEmpresa;
+
 

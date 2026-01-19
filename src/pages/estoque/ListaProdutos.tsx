@@ -221,30 +221,7 @@ const ListaProdutos = () => {
 
             setShowMovimentacao(false);
             setProdutoMovimentar(null);
-            carregarProdutos(); // Assuming this function exists or using carregarDados? checking original code... ah it called carregarProdutos in previous but maybe it meant carregarDados. Let's check context. Original code lines 235 called carregarProdutos() but line 50 defined carregarDados. Wait.
-            // Looking at original file content:
-            // Line 47 calls carregarDados().
-            // Line 235 calls carregarProdutos().
-            // Wait, does carregarProdutos exist? I need to check line 50-66 provided.
-            // Line 50 is carregarDados.
-            // I suspect carregarProdutos was a mistake in the previous version or I missed it?
-            // Actually, in the provided view_file output:
-            // 50: const carregarDados = async () => {
-            // ...
-            // 235: carregarProdutos();
-            // If carregarProdutos is not defined, this would be a bug.
-            // Let me check if carregarProdutos is defined elsewhere.
-            // It is NOT defined in the visible lines 1-127 or 148-752.
-            // Ah, I see "carregarDados" at line 50.
-            // I should prob fix this to carregarDados() while I'm at it, or just use carregarDados if that's what was intended.
-            // Actually, looking at the full file content provided in Step 8:
-            // Line 235 is indeed carregarProdutos();
-            // Line 50 is carregarDados.
-            // This suggests existing code might be broken if carregarProdutos isn't an alias.
-            // However, I must stick to the user request.
-            // If I look closely, maybe carregarDados is the one.
-            // I will use carregarDados() in my replacement to be safe/correct, or check if I should fix it.
-            // Given I am replacing a block, I will replace it with carregarDados() to ensure it updates.
+            carregarDados(); // Atualiza lista de produtos
 
             // Toast de feedback
             const msg = tipoMovimentacao === 'entrada'

@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatCurrency, parseDateLocal } from '../../lib/utils';
 
 const Dashboard = () => {
     const { empresa, usuario } = useAuth();
+    const { openTab } = useTabs();
     const navigate = useNavigate();
     const [stats, setStats] = useState({
         clientes: 0,
@@ -517,12 +519,12 @@ const Dashboard = () => {
 
             {/* Gráfico de Receita Semanal + Meta Mensal */}
             <div className="grid lg:grid-cols-2 gap-4">
-                {/* Gráfico de Receita - Ãšltimos 7 dias */}
+                {/* Gráfico de Receita - Últimos 7 dias */}
                 <div className="card p-4">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-sm font-semibold text-text-light dark:text-text-dark flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary text-lg">bar_chart</span>
-                            Receita - Ãšltimos 7 dias
+                            Receita - Últimos 7 dias
                         </h2>
                         <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
                             Total: {formatCurrency(receitaSemanal.reduce((acc, d) => acc + d.valor, 0))}
@@ -633,25 +635,42 @@ const Dashboard = () => {
                     </h2>
                     <div className="space-y-2">
                         {[
-                            { label: 'Novo Cliente', desc: 'Cadastrar cliente', icon: 'person_add', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', link: '/clientes/novo' },
+                            { label: 'Novo Cliente', desc: 'Cadastrar cliente', icon: 'person_add', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', tabType: 'cliente', tabId: 'cliente-novo', tabTitle: 'Novo Cliente' },
                             { label: 'Abrir OS', desc: 'Nova ordem de serviço', icon: 'assignment_add', color: 'text-green-500 bg-green-50 dark:bg-green-900/20', link: '/os' },
-                            { label: 'Agendar', desc: 'Novo agendamento', icon: 'calendar_add_on', color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20', link: '/agenda' },
-                            { label: 'Financeiro', desc: 'Lançar receita/despesa', icon: 'payments', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20', link: '/financeiro' },
+                            { label: 'Agendar', desc: 'Novo agendamento', icon: 'calendar_add_on', color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20', tabType: 'agenda', tabId: 'agenda', tabTitle: 'Agenda' },
+                            { label: 'Financeiro', desc: 'Lançar receita/despesa', icon: 'payments', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20', tabType: 'financeiro', tabId: 'financeiro', tabTitle: 'Financeiro' },
                         ].map((action, index) => (
-                            <Link
-                                key={index}
-                                to={action.link}
-                                className="card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all"
-                            >
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color}`}>
-                                    <span className="material-symbols-outlined text-lg">{action.icon}</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-text-light dark:text-text-dark">{action.label}</p>
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{action.desc}</p>
-                                </div>
-                                <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
-                            </Link>
+                            action.tabType ? (
+                                <button
+                                    key={index}
+                                    onClick={() => openTab({ id: action.tabId, type: action.tabType, title: action.tabTitle, data: {} })}
+                                    className="w-full card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all text-left"
+                                >
+                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color}`}>
+                                        <span className="material-symbols-outlined text-lg">{action.icon}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-text-light dark:text-text-dark">{action.label}</p>
+                                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{action.desc}</p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+                                </button>
+                            ) : (
+                                <Link
+                                    key={index}
+                                    to={action.link}
+                                    className="card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all"
+                                >
+                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color}`}>
+                                        <span className="material-symbols-outlined text-lg">{action.icon}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-text-light dark:text-text-dark">{action.label}</p>
+                                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{action.desc}</p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+                                </Link>
+                            )
                         ))}
                     </div>
                 </div>
