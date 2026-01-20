@@ -180,15 +180,15 @@ const DetalhesCliente = ({ clienteId, isTabMode, onClose }) => {
                             <span className="text-sm font-medium text-text-light dark:text-text-dark">WhatsApp</span>
                         </a>
                     )}
-                    <Link
-                        to="/os"
+                    <button
+                        onClick={() => openNovaOS({ clienteId: idToUse })}
                         className="flex-1 card p-4 flex flex-col items-center gap-2 hover:shadow-md transition-all"
                     >
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                             <span className="material-symbols-outlined text-2xl">assignment_add</span>
                         </div>
                         <span className="text-sm font-medium text-text-light dark:text-text-dark">Nova OS</span>
-                    </Link>
+                    </button>
                 </div>
 
                 {/* Estatísticas do Cliente */}

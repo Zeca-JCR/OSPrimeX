@@ -102,7 +102,7 @@ const ListaUsuarios = () => {
                         Usuários
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                        {usuarios.length} de {limite} utilizados
+                        Gerencie os usuários do sistema
                     </p>
                 </div>
                 {isAdmin && (

@@ -66,46 +66,49 @@ const HistoricoEstoque = ({ isTabMode, onClose }) => {
     }
 
     return (
-        <div className="flex flex-col h-full">
-            {/* Header */}
-            <header className="sticky top-0 z-10 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                <div className="flex items-center justify-between px-4 py-3">
-                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark flex items-center gap-2">
+        <div className="flex flex-col h-full p-4 lg:p-6">
+            {/* Header - estilo Stitch */}
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
                         Movimentações
                         {filtroProdutoId && (
-                            <span className="text-sm font-normal text-text-secondary-light dark:text-text-secondary-dark bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">
+                            <span className="ml-2 text-sm font-normal text-text-secondary-light dark:text-text-secondary-dark bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">
                                 Filtrando por: {getProdutoNome(filtroProdutoId)}
                                 <button
                                     onClick={() => setSearchParams({})}
                                     className="ml-2 hover:text-red-500"
                                     title="Limpar filtro"
                                 >
-                                    Ã—
+                                    ×
                                 </button>
                             </span>
                         )}
                     </h1>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => handleNovaMovimentacao('entrada')}
-                            className="btn-primary py-2 px-3 text-sm"
-                        >
-                            <span className="material-symbols-outlined text-lg">add</span>
-                            Entrada
-                        </button>
-                        <button
-                            onClick={() => handleNovaMovimentacao('saida')}
-                            className="btn-secondary py-2 px-3 text-sm"
-                        >
-                            <span className="material-symbols-outlined text-lg">remove</span>
-                            Saída
-                        </button>
-                    </div>
+                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                        Acompanhe entradas e saídas do seu estoque
+                    </p>
                 </div>
-            </header>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => handleNovaMovimentacao('entrada')}
+                        className="btn-primary py-2 px-4 text-sm flex items-center gap-1"
+                    >
+                        <span className="material-symbols-outlined text-lg">add</span>
+                        Entrada
+                    </button>
+                    <button
+                        onClick={() => handleNovaMovimentacao('saida')}
+                        className="btn-secondary py-2 px-4 text-sm flex items-center gap-1"
+                    >
+                        <span className="material-symbols-outlined text-lg">remove</span>
+                        Saída
+                    </button>
+                </div>
+            </div>
 
             {/* Lista */}
-            <main className="flex-1 overflow-y-auto px-4 py-4">
+            <main className="flex-1 overflow-y-auto">
                 {movimentacoes.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto mb-4 flex items-center justify-center">

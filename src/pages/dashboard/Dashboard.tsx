@@ -514,7 +514,7 @@ const Dashboard = () => {
                         to={card.link}
                         className="card p-3 hover:shadow-sm transition-all text-center group"
                     >
-                        <span className={`material - symbols - outlined text - xl ${card.color} mb - 1`}>{card.icon}</span>
+                        <span className={`material-symbols-outlined text-xl ${card.color} mb-1`}>{card.icon}</span>
                         <p className="text-xl font-bold text-text-light dark:text-text-dark">
                             {card.value}
                         </p>
@@ -549,10 +549,10 @@ const Dashboard = () => {
                                     </span>
                                     <div
                                         className={`w - full rounded - t - lg transition - all ${isHoje
-                                                ? 'bg-gradient-to-t from-primary to-blue-400'
-                                                : dia.valor > 0
-                                                    ? 'bg-gradient-to-t from-emerald-500 to-emerald-400'
-                                                    : 'bg-gray-200 dark:bg-gray-700'
+                                            ? 'bg-gradient-to-t from-primary to-blue-400'
+                                            : dia.valor > 0
+                                                ? 'bg-gradient-to-t from-emerald-500 to-emerald-400'
+                                                : 'bg-gray-200 dark:bg-gray-700'
                                             } `}
                                         style={{ height: `${alturaPx} px`, minHeight: dia.valor > 0 ? '8px' : '4px' }}
                                         title={`${dia.dia} ${dia.data}: ${formatCurrency(dia.valor)} `}
@@ -589,8 +589,8 @@ const Dashboard = () => {
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
                                 className={`h - full rounded - full transition - all duration - 500 ${(stats.osFinalizadasMes || 0) >= META_OS_MES
-                                        ? 'bg-gradient-to-r from-green-500 to-emerald-400'
-                                        : 'bg-gradient-to-r from-primary to-blue-400'
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                                    : 'bg-gradient-to-r from-primary to-blue-400'
                                     } `}
                                 style={{ width: `${Math.min(((stats.osFinalizadasMes || 0) / META_OS_MES) * 100, 100)}% ` }}
                             />
@@ -599,8 +599,8 @@ const Dashboard = () => {
 
                     {/* Status da meta */}
                     <div className={`p - 3 rounded - xl ${(stats.osFinalizadasMes || 0) >= META_OS_MES
-                            ? 'bg-green-50 dark:bg-green-900/20'
-                            : 'bg-blue-50 dark:bg-blue-900/20'
+                        ? 'bg-green-50 dark:bg-green-900/20'
+                        : 'bg-blue-50 dark:bg-blue-900/20'
                         } `}>
                         {(stats.osFinalizadasMes || 0) >= META_OS_MES ? (
                             <div className="flex items-center gap-2">
@@ -760,18 +760,12 @@ cursor - pointer hover: bg - gray - 50 dark: hover: bg - gray - 800 / 50 transit
                                             </td>
                                             <td className="py-2.5 px-3 hidden sm:table-cell">
                                                 <div className="flex items-center gap-1.5">
-                                                    <div className={`w - 2 h - 2 rounded - full ${statusConfig[os.status]?.color} `} />
+                                                    <div className={`w-2 h-2 rounded-full ${statusConfig[os.status]?.color}`} />
                                                     <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
                                                         {statusConfig[os.status]?.label}
                                                     </span>
                                                     {os.tipo && os.tipo !== 'os' && os.tipo !== 'orcamento' && (
-                                                        <span className={`
-text - [10px] uppercase font - bold px - 1.5 py - 0.5 rounded ml - 1
-                                                            ${os.tipo === 'garantia' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''}
-                                                            ${os.tipo === 'cortesia' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' : ''}
-                                                            ${os.tipo === 'retorno' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''}
-                                                            ${os.tipo === 'interna' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}
-`}>
+                                                        <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ml-1 ${os.tipo === 'garantia' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''} ${os.tipo === 'cortesia' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' : ''} ${os.tipo === 'retorno' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''} ${os.tipo === 'interna' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}`}>
                                                             {os.tipo}
                                                         </span>
                                                     )}

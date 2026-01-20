@@ -65,6 +65,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
     const [filtrosLista, setFiltrosLista] = useState({
         busca: '',
         status: 'todos',
+        natureza: 'todos',
         ordenacao: 'recente',
         periodo: 'todos',
         dataInicio: '',
@@ -74,6 +75,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
     const [filtrosKanban, setFiltrosKanban] = useState({
         busca: '',
         status: 'todos', // Não usado no dropdown do kanban, mas mantido na estrutura
+        natureza: 'todos',
         ordenacao: 'recente',
         periodo: 'todos',
         dataInicio: '',
@@ -439,7 +441,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
 
     // Filtrar e ordenar ordens usando o filtroAtivo
     const ordensFiltradas = ordens.filter(o => {
-        const { busca, status, dataInicio, dataFim } = filtroAtivo;
+        const { busca, status, natureza, dataInicio, dataFim } = filtroAtivo;
 
         // Filtro de busca
         if (busca) {
@@ -461,6 +463,13 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
         // Filtro de status (apenas se não for kanban - ou se user de fato filtrar no modo lista)
         // No kanban, 'status' não é alterado pelo UI, então é 'todos', não afeta.
         if (status !== 'todos' && o.status !== status) return false;
+
+        // Filtro de natureza da OS
+        if (natureza !== 'todos') {
+            const tipoOS = o.tipo || 'os'; // 'os' é o padrão (Manutenção)
+            if (natureza === 'os' && tipoOS !== 'os' && tipoOS !== 'orcamento') return false;
+            if (natureza !== 'os' && tipoOS !== natureza) return false;
+        }
 
         // Filtro de Data (Intervalo)
         if (dataInicio || dataFim) {
@@ -503,15 +512,20 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
     }
 
     return (
-        <div className="h-full flex flex-col">
-            {/* Header */}
-            <header className="shrink-0 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] px-4 py-3">
-                <div className="flex items-center justify-between gap-4">
-                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark">
-                        Ordens de Serviço
-                    </h1>
+        <div className="h-full flex flex-col p-4 lg:p-6">
+            {/* Header - estilo Stitch */}
+            <div className="shrink-0">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                            Ordens de Serviço
+                        </h1>
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                            Acompanhe e gerencie todas as ordens de serviço
+                        </p>
+                    </div>
 
-                    <div className="flex items-center gap-3 flex-1 justify-end">
+                    <div className="flex items-center gap-3">
                         {/* Toggle Kanban/Lista */}
                         <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5" title="Ctrl+L para alternar">
                             <button
@@ -538,9 +552,9 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
 
                         <button
                             onClick={() => setShowNovaOS(true)}
-                            className="btn-primary"
+                            className="btn-primary py-2 px-4 text-sm flex items-center gap-1"
                         >
-                            <span className="material-symbols-outlined">add</span>
+                            <span className="material-symbols-outlined text-lg">add</span>
                             Nova OS
                         </button>
                     </div>
@@ -593,7 +607,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                                     updateFiltro('dataInicio', e.target.value);
                                     updateFiltro('periodo', 'custom');
                                 }}
-                                className="input py-1.5 px-2 text-xs w-32"
+                                className="input py-2 px-2 text-sm w-32"
                                 title="Data Início"
                                 placeholder="Início"
                             />
@@ -605,7 +619,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                                     updateFiltro('dataFim', e.target.value);
                                     updateFiltro('periodo', 'custom');
                                 }}
-                                className="input py-1.5 px-2 text-xs w-32"
+                                className="input py-2 px-2 text-sm w-32"
                                 title="Data Fim"
                                 placeholder="Fim"
                             />
@@ -637,6 +651,21 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                         </select>
                     )}
 
+                    {/* Filtro de Natureza da OS */}
+                    <select
+                        value={filtroAtivo.natureza}
+                        onChange={(e) => updateFiltro('natureza', e.target.value)}
+                        className="input py-2 text-sm w-36"
+                        title="Filtrar por natureza da OS"
+                    >
+                        <option value="todos">Todas naturezas</option>
+                        <option value="os">🔧 Manutenção</option>
+                        <option value="garantia">🛡️ Garantia</option>
+                        <option value="retorno">🔄 Retorno</option>
+                        <option value="cortesia">🎁 Cortesia</option>
+                        <option value="interna">🏢 Interna</option>
+                    </select>
+
                     {/* Ordenação */}
                     <select
                         value={filtroAtivo.ordenacao}
@@ -653,7 +682,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                         {ordensFiltradas.length} resultados
                     </span>
                 </div>
-            </header>
+            </div>
 
             {/* Widget de Prismas (Integrado) */}
             {empresa?.usarPrismas && (
@@ -952,7 +981,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-800/50">
                                     <tr className="text-left text-xs text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">
-                                        <th className="px-4 py-3 font-medium">NÂº</th>
+                                        <th className="px-4 py-3 font-medium">Nº</th>
                                         <th className="px-4 py-3 font-medium">Cliente</th>
                                         <th className="px-4 py-3 font-medium">Veículo</th>
                                         <th className="px-4 py-3 font-medium">Técnico</th>
@@ -996,14 +1025,31 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                                                         <span>{getVeiculoInfo(os.veiculoId)}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                                    {getTecnicoNome(os.tecnicoId)}
+                                                <td className="px-4 py-3 text-sm">
+                                                    {hasTecnicoValido(os) ? (
+                                                        <span className="text-text-secondary-light dark:text-text-secondary-dark">
+                                                            {getTecnicoNome(os.tecnicoId)}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-900/20 text-red-500 font-medium inline-flex items-center gap-1" title="Sem técnico atribuído">
+                                                            <span className="material-symbols-outlined text-[14px]">person_off</span>
+                                                            Sem técnico
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusInfo.badgeColor}`}>
-                                                        <span className="material-symbols-outlined text-sm">{statusInfo.icon}</span>
-                                                        {statusInfo.label}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <div className={`w-2 h-2 rounded-full ${statusInfo.color}`} />
+                                                        <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                                            {statusInfo.label}
+                                                        </span>
+                                                        {/* Badge de Natureza da OS - ao lado do status */}
+                                                        {os.tipo && os.tipo !== 'os' && os.tipo !== 'orcamento' && (
+                                                            <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ml-1 ${os.tipo === 'garantia' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''} ${os.tipo === 'cortesia' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' : ''} ${os.tipo === 'retorno' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''} ${os.tipo === 'interna' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}`}>
+                                                                {os.tipo}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-medium text-text-light dark:text-text-dark">
                                                     {formatCurrency(os.valorTotal)}

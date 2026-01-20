@@ -270,23 +270,25 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
     }
 
     return (
-        <div className="p-4 lg:p-6 space-y-6 animate-fadeIn">
-            {/* Header section... */}
-            <div className={`mb-8 ${isTabMode ? '' : ''}`}>
+        <div className="p-4 lg:p-6 space-y-4">
+            {/* Header - estilo Stitch */}
+            <div className="flex items-center justify-between mb-4">
                 <div>
-                    {!isTabMode && (
-                        <Link to="/clientes" className="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-primary mb-2">
-                            <span className="material-symbols-outlined text-lg">arrow_back</span>
-                            Voltar para Clientes
-                        </Link>
-                    )}
-                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
                         Retenção de Clientes & CRM
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
                         Acompanhe clientes inativos e oportunidades de follow-up
                     </p>
                 </div>
+                <button
+                    onClick={() => setShowCampanhaModal(true)}
+                    disabled={clientesFiltrados.length === 0}
+                    className="btn-primary py-2 px-4 text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span className="material-symbols-outlined text-lg">campaign</span>
+                    Criar Campanha
+                </button>
             </div>
 
             {/* Stats Cards */}
@@ -354,22 +356,13 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
 
             {/* Lista de Clientes */}
             <div className="card overflow-hidden">
-                <div className="p-4 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                <div className="p-4 border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] bg-gray-50 dark:bg-gray-800/50">
                     <h2 className="font-semibold text-text-light dark:text-text-dark">
                         {filtro === 'inativos' ? 'Clientes Inativos (últimos 90+ dias)' :
                             filtro === 'revisao' ? 'Clientes com Veículos para Revisão' :
                                 filtro === 'aniversario' ? 'Aniversários nos Próximos 30 Dias' :
                                     'Todos os Clientes'}
                     </h2>
-                    <button
-                        onClick={() => setShowCampanhaModal(true)}
-                        disabled={clientesFiltrados.length === 0}
-                        className="btn-primary py-1.5 px-3 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={clientesFiltrados.length === 0 ? "Nenhum cliente na lista" : "Criar campanha para estes clientes"}
-                    >
-                        <span className="material-symbols-outlined text-lg">campaign</span>
-                        Criar Campanha
-                    </button>
                 </div>
 
                 {clientesFiltrados.length === 0 ? (

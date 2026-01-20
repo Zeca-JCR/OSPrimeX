@@ -149,11 +149,10 @@ const PedidoReposicao = ({ isTabMode, onClose }) => {
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="p-4 lg:p-6 space-y-6">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary">shopping_cart_checkout</span>
+                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
                         Pedido de Reposição
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">

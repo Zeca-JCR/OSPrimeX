@@ -250,10 +250,10 @@ const ListaProdutos = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
-                        Estoque
+                        Produtos e Serviços
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                        {produtosLista.length} produtos • {servicosLista.length} serviços
+                        Gerencie seu catálogo de produtos e serviços
                     </p>
                 </div>
                 <div className="flex items-center gap-2">

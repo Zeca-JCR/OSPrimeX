@@ -1152,6 +1152,21 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                     <span className="material-symbols-outlined text-sm">{statusAtual.icon}</span>
                                     {statusAtual.label}
                                 </div>
+                                {/* Badge de Natureza da OS */}
+                                {os.tipo && os.tipo !== 'os' && os.tipo !== 'orcamento' && (
+                                    <span className={`
+                                        text-[10px] uppercase font-bold px-2 py-0.5 rounded
+                                        ${os.tipo === 'garantia' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''}
+                                        ${os.tipo === 'cortesia' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' : ''}
+                                        ${os.tipo === 'retorno' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''}
+                                        ${os.tipo === 'interna' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}
+                                    `}>
+                                        {os.tipo === 'garantia' && '🛡️ Garantia'}
+                                        {os.tipo === 'cortesia' && '🎁 Cortesia'}
+                                        {os.tipo === 'retorno' && '🔄 Retorno'}
+                                        {os.tipo === 'interna' && '🏢 Interna'}
+                                    </span>
+                                )}
                             </h1>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {cliente?.nome || 'Cliente não identificado'} • {veiculo?.placa || 'Sem placa'}

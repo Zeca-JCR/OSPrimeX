@@ -128,7 +128,7 @@ const ListaClientes = () => {
                         Clientes
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                        {clientesFiltrados.length} cliente(s)
+                        Gerencie sua base de clientes
                     </p>
                 </div>
                 <div className="flex gap-2">

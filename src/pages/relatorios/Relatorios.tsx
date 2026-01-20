@@ -314,15 +314,17 @@ const Relatorios = ({ isTabMode, onClose }) => {
     ];
 
     return (
-        <div className="p-4 lg:p-6 space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
-                    Relatórios
-                </h1>
-                <p className="text-text-secondary-light dark:text-text-secondary-dark">
-                    Análise de dados e indicadores
-                </p>
+        <div className="p-4 lg:p-6 space-y-4">
+            {/* Header - estilo Stitch */}
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                        Relatórios
+                    </h1>
+                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                        Análise de dados e indicadores
+                    </p>
+                </div>
             </div>
 
             {/* Filtros */}

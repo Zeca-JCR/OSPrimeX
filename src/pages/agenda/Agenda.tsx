@@ -279,20 +279,24 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
     return (
         <div className="h-full flex flex-col lg:flex-row bg-background-light dark:bg-background-dark overflow-hidden">
             {/* Main Calendar Area */}
-            <div className="flex-1 w-full flex flex-col p-4 h-full overflow-hidden">
-                <header className="flex justify-between items-center mb-4 flex-shrink-0">
-
-                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark">
-                        Agenda
-                    </h1>
+            <div className="flex-1 w-full flex flex-col p-4 lg:p-6 h-full overflow-hidden">
+                <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                    <div>
+                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                            Agenda
+                        </h1>
+                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                            Organize seus agendamentos e compromissos
+                        </p>
+                    </div>
                     <button
                         onClick={() => handleNovoAgendamento({ start: new Date() })}
-                        className="btn-primary"
+                        className="btn-primary py-2 px-4 text-sm flex items-center gap-1"
                     >
-                        <span className="material-symbols-outlined">add</span>
+                        <span className="material-symbols-outlined text-lg">add</span>
                         Novo Agendamento
                     </button>
-                </header>
+                </div>
 
                 <AgendaCalendar
                     events={events}

@@ -193,7 +193,7 @@ const TabBar = () => {
                                 <span
                                     onClick={(e) => handleCloseTab(e, tab.id)}
                                     className={`
-                                        material-symbols-outlined text-base p-0.5 rounded
+                                        material-symbols-outlined text-base p-0.5 rounded cursor-default
                                         opacity-0 group-hover:opacity-100 transition-opacity
                                         hover:bg-gray-200 dark:hover:bg-gray-700
                                         ${isActive ? 'opacity-100' : ''}

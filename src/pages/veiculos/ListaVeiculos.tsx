@@ -102,7 +102,7 @@ const ListaVeiculos = () => {
                         Veículos
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                        {veiculosFiltrados.length} veículo(s)
+                        Cadastre e acompanhe veículos de seus clientes
                     </p>
                 </div>
                 <div className="flex gap-2">

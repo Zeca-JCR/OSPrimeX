@@ -252,11 +252,10 @@ const ImportarNota = ({ isTabMode, onClose }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary">description</span>
+                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
                         Importar XML (NFe)
                     </h1>
-                    <p className="text-text-secondary-light dark:text-text-secondary-dark">
+                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
                         Importe notas fiscais eletrônicas para atualizar estoque e financeiro
                     </p>
                 </div>
