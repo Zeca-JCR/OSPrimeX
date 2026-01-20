@@ -6,7 +6,7 @@ import { useTenant } from '../../contexts/TenantContext';
 import storage from '../../lib/storage';
 import { formatPlaca, validarPlaca, toISODate } from '../../lib/utils';
 
-export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, initialClienteId = '', initialVeiculoId = '' }) => {
+export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '', initialVeiculoId = '' }) => {
     const { empresa } = useAuth();
     const { podeCriarOS, getLimiteOS } = useTenant();
     const [form, setForm] = useState({
@@ -18,19 +18,29 @@ export const NovaOSModal = ({ clientes, veiculos, empresaId, onClose, onSave, in
     });
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
+
+    // States de dados
+    const [clientes, setClientes] = useState([]);
+    const [veiculos, setVeiculos] = useState([]);
     const [templates, setTemplates] = useState([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
     useEffect(() => {
-        const carregarTemplates = async () => {
+        const carregarDados = async () => {
             try {
-                const data = await storage.getAll('osprimex_templates', empresaId) || [];
-                setTemplates(data);
+                const [c, v, t] = await Promise.all([
+                    storage.getAll('clientes', empresaId),
+                    storage.getAll('veiculos', empresaId),
+                    storage.getAll('osprimex_templates', empresaId)
+                ]);
+                setClientes(c || []);
+                setVeiculos(v || []);
+                setTemplates(t || []);
             } catch (err) {
-                console.error('Erro ao carregar templates', err);
+                console.error('Erro ao carregar dados Nova OS', err);
             }
         };
-        carregarTemplates();
+        if (empresaId) carregarDados();
     }, [empresaId]);
 
     // Estados para Cadastro Rápido

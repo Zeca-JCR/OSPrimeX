@@ -10,9 +10,11 @@ import { useNotification } from '../../contexts/NotificationContext';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 import { RestartTourButton } from '../../components/onboarding/OnboardingTour';
 import { TabsProvider, useTabs } from '../../contexts/TabsContext';
+import { ModalProvider, useModal } from '../../contexts/ModalContext';
 import TabBar from '../../components/layout/TabBar';
 import TabContent from '../../components/layout/TabContent';
 import UserProfileModal from '../../components/users/UserProfileModal';
+
 
 const MainLayoutContent = () => {
     const { usuario, empresa, logout, isAdmin } = useAuth();
@@ -29,10 +31,9 @@ const MainLayoutContent = () => {
 
     const [showNotificacoes, setShowNotificacoes] = useState(false);
 
-    // Estado para Nova OS Global
-    const [showNovaOS, setShowNovaOS] = useState(false);
-    const [novaOSData, setNovaOSData] = useState({ clientes: [], veiculos: [] });
-    const [loadingNovaOS, setLoadingNovaOS] = useState(false);
+    // Contexto Global de Nova OS
+    const { openNovaOS, closeNovaOS, novaOSOpen, novaOSData, loadingNovaOS, setLoadingNovaOS } = useModal();
+
 
     // Estado para Modal de Perfil
     const [showProfileModal, setShowProfileModal] = useState(false);
@@ -94,21 +95,9 @@ const MainLayoutContent = () => {
 
 
 
-    const abrirNovaOS = async () => {
+    const abrirNovaOS = () => {
         if (!empresa) return;
-        setShowNovaOS(true);
-        setLoadingNovaOS(true);
-        try {
-            const [clientes, veiculos] = await Promise.all([
-                storage.getAll('clientes', empresa.id),
-                storage.getAll('veiculos', empresa.id)
-            ]);
-            setNovaOSData({ clientes, veiculos });
-        } catch (error) {
-            console.error("Erro ao carregar dados para Nova OS:", error);
-        } finally {
-            setLoadingNovaOS(false);
-        }
+        openNovaOS();
     };
 
     const notificacoesNaoLidas = notificacoes.filter(n => !n.lida).length;
@@ -214,42 +203,6 @@ const MainLayoutContent = () => {
                 />
             )}
 
-            {/* Modal Global Nova OS */}
-            {showNovaOS && (
-                <NovaOSModal
-                    clientes={novaOSData.clientes}
-                    veiculos={novaOSData.veiculos}
-                    empresaId={empresa?.id}
-                    onClose={() => setShowNovaOS(false)}
-                    onSave={(novaOS) => {
-                        setShowNovaOS(false);
-                        // Se retornou a OS criada, abre ela em uma nova aba
-                        if (novaOS && novaOS.id) {
-                            // setTimeout para evitar conflitos de renderização (update depth exceeded)
-                            // pois o modal está fechando e a navegação ocorrendo simultaneamente
-                            setTimeout(() => {
-                                openTab({
-                                    id: `os_${novaOS.id}`,
-                                    type: 'os_detalhes',
-                                    title: `OS #${novaOS.numero}`,
-                                    data: { id: novaOS.id }
-                                });
-
-                                // Se não estiver na lista de OS, navega para lá
-                                if (location.pathname !== '/os') {
-                                    navigate('/os');
-                                }
-                            }, 100);
-                        } else {
-                            // Se não retornou OS (fallback), apenas navega
-                            if (location.pathname !== '/os') {
-                                navigate('/os');
-                            }
-                        }
-
-                    }}
-                />
-            )}
 
             {/* Sidebar - Estilo Stitch */}
             <aside
@@ -752,7 +705,7 @@ const MainLayoutContent = () => {
                 {/* TabBar - Sistema de Abas (sempre visível se há abas) */}
                 {tabs?.length > 0 && <TabBar />}
 
-                {/* 
+                {/*
                     Page Content - Renderiza AMBOS para manter estado:
                     - TabContent: sempre renderizado (hidden via CSS quando não ativo)
                     - Outlet: visível quando não há aba ativa
@@ -766,11 +719,11 @@ const MainLayoutContent = () => {
                     )
                 }
             </div >
-            {showNovaOS && (
+            {novaOSOpen && (
                 <NovaOSModal
-                    onClose={() => setShowNovaOS(false)}
+                    onClose={closeNovaOS}
                     onSave={(novaOS) => {
-                        setShowNovaOS(false);
+                        closeNovaOS();
                         if (novaOS?.id) {
                             openTab({
                                 id: `os-${novaOS.id}`,
@@ -780,8 +733,9 @@ const MainLayoutContent = () => {
                             });
                         }
                     }}
-                    dados={novaOSData}
-                    loading={loadingNovaOS}
+                    empresaId={empresa?.id}
+                    initialClienteId={novaOSData.clienteId}
+                    initialVeiculoId={novaOSData.veiculoId}
                 />
             )}
 
@@ -800,7 +754,9 @@ const MainLayoutContent = () => {
 const MainLayout = () => {
     return (
         <TabsProvider>
-            <MainLayoutContent />
+            <ModalProvider>
+                <MainLayoutContent />
+            </ModalProvider>
         </TabsProvider>
     );
 };

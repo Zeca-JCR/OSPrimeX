@@ -8,7 +8,7 @@ import AgendaCalendar from '../../components/agenda/AgendaCalendar';
 import PatioSidebar from '../../components/agenda/PatioSidebar';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 
-const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp }) => {
+const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgendamento, autoOpenTimestamp }) => {
     const { empresa } = useAuth();
     const location = useLocation();
     const [agendamentos, setAgendamentos] = useState([]);
@@ -35,6 +35,13 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp }) => {
     useEffect(() => {
         carregarDados();
     }, [empresa]);
+
+    // Efeito para abrir modal de novo agendamento automaticamente (via Ação Rápida)
+    useEffect(() => {
+        if (!loading && autoOpenAgendamento && autoOpenTimestamp) {
+            handleNovoAgendamento({ start: new Date() });
+        }
+    }, [loading, autoOpenTimestamp]);
 
     // Efeito para abrir agendamento vindo de notificação (via Prop ou Location State)
     useEffect(() => {

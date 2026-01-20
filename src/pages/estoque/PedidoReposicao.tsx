@@ -169,15 +169,6 @@ const PedidoReposicao = ({ isTabMode, onClose }) => {
                         <span className="material-symbols-outlined">send</span>
                         Gerar Pedido
                     </button>
-                    {isTabMode && (
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-text-secondary-light dark:text-text-secondary-dark transition-colors"
-                            title="Fechar aba"
-                        >
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-                    )}
                 </div>
             </div>
 

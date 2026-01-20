@@ -260,24 +260,16 @@ const ImportarNota = ({ isTabMode, onClose }) => {
                         Importe notas fiscais eletrônicas para atualizar estoque e financeiro
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    {isTabMode ? (
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-text-secondary-light dark:text-text-secondary-dark transition-colors"
-                            title="Fechar aba"
-                        >
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-                    ) : (
+                {!isTabMode && (
+                    <div className="flex gap-2">
                         <button
                             onClick={() => navigate('/estoque')}
                             className="btn-secondary"
                         >
                             Voltar
                         </button>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
 
             {/* Content */}

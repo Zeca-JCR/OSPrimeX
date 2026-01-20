@@ -5,6 +5,7 @@ import { useTabs } from '../../contexts/TabsContext';
 
 // Lazy load dos componentes de conteúdo (JSX ainda não migrados)
 const DetalhesOS = lazy(() => import('../../pages/os/DetalhesOS'));
+const DetalhesCliente = lazy(() => import('../../pages/clientes/DetalhesCliente'));
 const CadastroCliente = lazy(() => import('../../pages/clientes/CadastroCliente'));
 const CadastroVeiculo = lazy(() => import('../../pages/veiculos/CadastroVeiculo'));
 const CadastroProduto = lazy(() => import('../../pages/estoque/CadastroProduto'));
@@ -60,6 +61,13 @@ const TabContent = () => {
                                 onClose={() => closeTab(tab.id)}
                                 onDirtyChange={(isDirty: boolean) => updateTab(tab.id, { isDirty })}
                                 onTitleChange={(title: string) => updateTab(tab.id, { title })}
+                            />
+                        )}
+                        {tab.type === 'cliente-detalhes' && (
+                            <DetalhesCliente
+                                clienteId={tab.data?.clienteId as string}
+                                isTabMode={true}
+                                onClose={() => closeTab(tab.id)}
                             />
                         )}
                         {tab.type === 'cliente' && (
@@ -135,6 +143,8 @@ const TabContent = () => {
                                 onClose={() => closeTab(tab.id)}
                                 openAgendamentoId={tab.data?.openAgendamentoId as string}
                                 timestamp={tab.data?.timestamp as number}
+                                autoOpenAgendamento={tab.data?.autoOpenAgendamento as boolean}
+                                autoOpenTimestamp={tab.data?.autoOpenTimestamp as number}
                             />
                         )}
                         {tab.type === 'crm' && (
@@ -165,6 +175,8 @@ const TabContent = () => {
                             <DashboardFinanceiro
                                 isTabMode={true}
                                 onClose={() => closeTab(tab.id)}
+                                autoOpenLancamento={tab.data?.autoOpenLancamento as boolean}
+                                autoOpenTimestamp={tab.data?.autoOpenTimestamp as number}
                             />
                         )}
                         {/* Abas de Listagem */}
@@ -172,6 +184,8 @@ const TabContent = () => {
                             <KanbanOS
                                 isTabMode={true}
                                 onClose={() => closeTab(tab.id)}
+                                autoOpenNovaOS={tab.data?.autoOpenNovaOS as boolean}
+                                autoOpenTimestamp={tab.data?.autoOpenTimestamp as number}
                             />
                         )}
                         {tab.type === 'list-clientes' && (

@@ -272,7 +272,7 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
     return (
         <div className="p-4 lg:p-6 space-y-6 animate-fadeIn">
             {/* Header section... */}
-            <div className={`mb-8 ${isTabMode ? 'flex justify-between items-start' : ''}`}>
+            <div className={`mb-8 ${isTabMode ? '' : ''}`}>
                 <div>
                     {!isTabMode && (
                         <Link to="/clientes" className="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-primary mb-2">
@@ -287,15 +287,6 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
                         Acompanhe clientes inativos e oportunidades de follow-up
                     </p>
                 </div>
-                {isTabMode && (
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
-                        title="Fechar aba"
-                    >
-                        <span className="material-symbols-outlined">close</span>
-                    </button>
-                )}
             </div>
 
             {/* Stats Cards */}

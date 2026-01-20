@@ -23,7 +23,7 @@ const getEmojiCor = (cor) => {
     }
 }
 
-const KanbanOS = () => {
+const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -156,6 +156,13 @@ const KanbanOS = () => {
             window.history.replaceState({}, document.title);
         }
     }, [loading, location.state, ordens, openOS]);
+
+    // Efeito para abrir modal de Nova OS automaticamente (via Ação Rápida)
+    useEffect(() => {
+        if (!loading && autoOpenNovaOS && autoOpenTimestamp) {
+            setShowNovaOS(true);
+        }
+    }, [loading, autoOpenTimestamp]);
 
     useEffect(() => {
         carregarDados();
@@ -1027,9 +1034,18 @@ const KanbanOS = () => {
                     veiculos={veiculos}
                     empresaId={empresa?.id}
                     onClose={() => setShowNovaOS(false)}
-                    onSave={() => {
+                    onSave={(novaOS) => {
                         setShowNovaOS(false);
                         carregarDados();
+                        // Abrir a aba de edição da OS recém-criada
+                        if (novaOS?.id) {
+                            openTab({
+                                id: `os-${novaOS.id}`,
+                                type: 'os',
+                                title: `OS #${novaOS.numero}`,
+                                data: { osId: novaOS.id }
+                            });
+                        }
                     }}
                 />
             )}

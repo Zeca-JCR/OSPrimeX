@@ -100,15 +100,6 @@ const HistoricoEstoque = ({ isTabMode, onClose }) => {
                             <span className="material-symbols-outlined text-lg">remove</span>
                             Saída
                         </button>
-                        {isTabMode && (
-                            <button
-                                onClick={onClose}
-                                className="btn-ghost p-2"
-                                title="Fechar aba"
-                            >
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
-                        )}
                     </div>
                 </div>
             </header>

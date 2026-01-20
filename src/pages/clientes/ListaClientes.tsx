@@ -320,7 +320,15 @@ const ListaClientes = () => {
                                         <td className="py-3 px-4">
                                             <div className="flex items-center gap-1">
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); navigate(`/clientes/${cliente.id}`); }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openTab({
+                                                            id: `cliente-detalhes-${cliente.id}`,
+                                                            type: 'cliente-detalhes',
+                                                            title: cliente.nome || 'Cliente',
+                                                            data: { clienteId: cliente.id }
+                                                        });
+                                                    }}
                                                     className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
                                                     title="Ver painel do cliente"
                                                 >

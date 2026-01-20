@@ -6,7 +6,7 @@ import storage from '../../lib/storage';
 import { formatCurrency, formatDate, parseDateLocal } from '../../lib/utils';
 import LancamentoModal from '../../components/financeiro/LancamentoModal';
 
-const DashboardFinanceiro = () => {
+const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenTimestamp }) => {
     const { empresa } = useAuth();
     const [lancamentos, setLancamentos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,6 +19,13 @@ const DashboardFinanceiro = () => {
     useEffect(() => {
         carregarDados();
     }, [empresa]);
+
+    // Efeito para abrir modal de lançamento automaticamente (via Ação Rápida)
+    useEffect(() => {
+        if (!loading && autoOpenLancamento && autoOpenTimestamp) {
+            handleNovoLancamento('receita');
+        }
+    }, [loading, autoOpenTimestamp]);
 
     const carregarDados = async () => {
         if (!empresa) return;

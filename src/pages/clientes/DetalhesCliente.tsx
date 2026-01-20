@@ -2,14 +2,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useModal } from '../../contexts/ModalContext';
 import storage from '../../lib/storage';
 import { formatTelefone, formatDocumento, getIniciais, formatDate, formatCurrency } from '../../lib/utils';
 import WhatsAppIcon from '../../components/common/WhatsAppIcon';
 
-const DetalhesCliente = () => {
+const DetalhesCliente = ({ clienteId, isTabMode, onClose }) => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
     const { id } = useParams();
+    const { openNovaOS } = useModal();
+
+    // Prioriza ID da prop (aba) sobre URL
+    const idToUse = clienteId || id;
 
     const [cliente, setCliente] = useState(null);
     const [veiculos, setVeiculos] = useState([]);
@@ -28,24 +33,26 @@ const DetalhesCliente = () => {
 
 
     useEffect(() => {
-        carregarDados();
-    }, [id]);
+        if (idToUse) {
+            carregarDados();
+        }
+    }, [idToUse]);
 
     const carregarDados = async () => {
         try {
             const [clienteData, veiculosData, ordensData] = await Promise.all([
-                storage.getById('clientes', id),
+                storage.getById('clientes', idToUse),
                 storage.getAll('veiculos', empresa?.id),
                 storage.getAll('ordens_servico', empresa?.id),
             ]);
 
             if (clienteData) {
                 setCliente(clienteData);
-                setVeiculos(veiculosData.filter((v) => v.clienteId === id && v.ativo));
+                setVeiculos(veiculosData.filter((v) => v.clienteId === idToUse && v.ativo));
                 // Filtrar OS do cliente e ordenar por data (mais recentes primeiro)
                 setOrdens(
                     ordensData
-                        .filter(o => o.clienteId === id && o.ativo)
+                        .filter(o => o.clienteId === idToUse && o.ativo)
                         .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm))
                 );
             }
@@ -75,7 +82,7 @@ const DetalhesCliente = () => {
                 <p className="text-lg font-medium text-text-light dark:text-text-dark mb-2">
                     Cliente não encontrado
                 </p>
-                <button onClick={() => navigate('/clientes')} className="btn-primary">
+                <button onClick={() => isTabMode ? onClose() : navigate('/clientes')} className="btn-primary">
                     Voltar para lista
                 </button>
             </div>
@@ -91,10 +98,11 @@ const DetalhesCliente = () => {
             <header className="bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="relative flex items-center justify-between px-4 py-3">
                     <button
-                        onClick={() => navigate('/clientes')}
+                        onClick={() => isTabMode ? onClose() : navigate('/clientes')}
                         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark relative z-10"
+                        title={isTabMode ? "Fechar aba" : "Voltar"}
                     >
-                        <span className="material-symbols-outlined">arrow_back</span>
+                        <span className="material-symbols-outlined">{isTabMode ? 'close' : 'arrow_back'}</span>
                     </button>
 
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
@@ -220,7 +228,7 @@ const DetalhesCliente = () => {
                                     <span className={`material-symbols-outlined text-lg ${diasDesdeUltimo > 90 ? 'text-orange-500' : 'text-blue-500'}`}>
                                         {diasDesdeUltimo > 90 ? 'warning' : 'schedule'}
                                     </span>
-                                    <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Ãšltimo Atendimento</span>
+                                    <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Último Atendimento</span>
                                 </div>
                                 <p className={`text-lg font-bold ${diasDesdeUltimo > 90 ? 'text-orange-500' : 'text-blue-500'}`}>
                                     {diasDesdeUltimo === 0 ? 'Hoje' : diasDesdeUltimo === 1 ? 'Ontem' : `Há ${diasDesdeUltimo} dias`}
@@ -393,13 +401,13 @@ const DetalhesCliente = () => {
                         <h2 className="font-semibold text-text-light dark:text-text-dark">
                             Histórico de OS ({ordens.length})
                         </h2>
-                        <Link
-                            to="/os"
+                        <button
+                            onClick={() => openNovaOS({ clienteId: idToUse })}
                             className="text-sm text-primary hover:underline flex items-center gap-1"
                         >
                             <span className="material-symbols-outlined text-lg">add</span>
                             Nova OS
-                        </Link>
+                        </button>
                     </div>
 
                     {ordens.length === 0 ? (

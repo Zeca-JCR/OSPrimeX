@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
+import { useModal } from '../../contexts/ModalContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatCurrency, parseDateLocal } from '../../lib/utils';
@@ -22,6 +24,8 @@ const Dashboard = () => {
         patio: { total: 0, execucao: 0, aguardando: 0, aberta: 0, proximasEntregas: [] }
     });
     const [loading, setLoading] = useState(true);
+    const { notificacoes, unreadCount, markAsRead, clearAll } = useNotification();
+    const { openNovaOS } = useModal();
     const [osRecentes, setOsRecentes] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [alertas, setAlertas] = useState([]);
@@ -43,7 +47,7 @@ const Dashboard = () => {
         const data = new Date();
         const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
         const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        return `${dias[data.getDay()]}, ${data.getDate()} de ${meses[data.getMonth()]}`;
+        return `${dias[data.getDay()]}, ${data.getDate()} de ${meses[data.getMonth()]} `;
     };
 
     useEffect(() => {
@@ -191,7 +195,7 @@ const Dashboard = () => {
                     novosAlertas.push({
                         tipo: 'warning',
                         icon: 'receipt_long',
-                        titulo: `${orcamentos.length} orçamento${orcamentos.length > 1 ? 's' : ''} pendente${orcamentos.length > 1 ? 's' : ''}`,
+                        titulo: `${orcamentos.length} orçamento${orcamentos.length > 1 ? 's' : ''} pendente${orcamentos.length > 1 ? 's' : ''} `,
                         descricao: 'Aguardando aprovação do cliente',
                         link: '/os',
                         cor: 'bg-yellow-500',
@@ -312,6 +316,8 @@ const Dashboard = () => {
         orcamento: { label: 'Orçamento', color: 'bg-yellow-500' },
         aberta: { label: 'Aprovada (Não Iniciada)', color: 'bg-slate-500' },
         execucao: { label: 'Execução', color: 'bg-primary' },
+        aguardando_peca: { label: 'Aguardando Peça', color: 'bg-orange-500' },
+        aguardando_aprovacao: { label: 'Aguardando Aprovação', color: 'bg-yellow-600' },
         finalizada: { label: 'Finalizada', color: 'bg-green-500' },
         cancelada: { label: 'Cancelada', color: 'bg-red-500' },
     };
@@ -339,10 +345,10 @@ const Dashboard = () => {
                         {getDataAtual()}
                     </p>
                 </div>
-                <Link to="/os" className="btn-primary py-2 px-4 text-sm">
+                <button onClick={() => openNovaOS()} className="btn-primary py-2 px-4 text-sm flex items-center gap-1">
                     <span className="material-symbols-outlined text-lg">add</span>
                     Nova OS
-                </Link>
+                </button>
             </div>
 
             {/* Alertas Inteligentes */}
@@ -353,9 +359,9 @@ const Dashboard = () => {
                             key={index}
                             to={alerta.link}
                             className="card p-3 flex items-center gap-3 hover:shadow-md transition-all group border-l-4"
-                            style={{ borderLeftColor: `var(--tw-${alerta.cor.replace('bg-', '')})` }}
+                            style={{ borderLeftColor: `var(--tw - ${alerta.cor.replace('bg-', '')})` }}
                         >
-                            <div className={`w-10 h-10 rounded-full ${alerta.cor} flex items-center justify-center text-white shrink-0`}>
+                            <div className={`w - 10 h - 10 rounded - full ${alerta.cor} flex items - center justify - center text - white shrink - 0`}>
                                 <span className="material-symbols-outlined">{alerta.icon}</span>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -416,9 +422,9 @@ const Dashboard = () => {
                         <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
                             {stats.patio.total > 0 ? (
                                 <>
-                                    <div style={{ width: `${(stats.patio.execucao / stats.patio.total) * 100}%` }} className="h-full bg-blue-500 hover:bg-blue-600 transition-colors" title="Em Execução" />
-                                    <div style={{ width: `${(stats.patio.aguardando / stats.patio.total) * 100}%` }} className="h-full bg-orange-500 hover:bg-orange-600 transition-colors" title="Aguardando" />
-                                    <div style={{ width: `${(stats.patio.aberta / stats.patio.total) * 100}%` }} className="h-full bg-slate-500 hover:bg-slate-600 transition-colors" title="Aprovada (Não Iniciada)" />
+                                    <div style={{ width: `${(stats.patio.execucao / stats.patio.total) * 100}% ` }} className="h-full bg-blue-500 hover:bg-blue-600 transition-colors" title="Em Execução" />
+                                    <div style={{ width: `${(stats.patio.aguardando / stats.patio.total) * 100}% ` }} className="h-full bg-orange-500 hover:bg-orange-600 transition-colors" title="Aguardando" />
+                                    <div style={{ width: `${(stats.patio.aberta / stats.patio.total) * 100}% ` }} className="h-full bg-slate-500 hover:bg-slate-600 transition-colors" title="Aprovada (Não Iniciada)" />
                                 </>
                             ) : (
                                 <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] text-gray-400">
@@ -437,7 +443,7 @@ const Dashboard = () => {
                             </h3>
                             <div className="space-y-2">
                                 {stats.patio.proximasEntregas.map(os => (
-                                    <Link key={os.id} to={`/os/${os.id}`} className="flex items-center justify-between group">
+                                    <Link key={os.id} to={`/ os / ${os.id} `} className="flex items-center justify-between group">
                                         <div className="flex items-center gap-2 overflow-hidden">
                                             <span className="text-xs font-bold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded group-hover:bg-primary group-hover:text-white transition-colors">
                                                 #{os.numero}
@@ -508,7 +514,7 @@ const Dashboard = () => {
                         to={card.link}
                         className="card p-3 hover:shadow-sm transition-all text-center group"
                     >
-                        <span className={`material-symbols-outlined text-xl ${card.color} mb-1`}>{card.icon}</span>
+                        <span className={`material - symbols - outlined text - xl ${card.color} mb - 1`}>{card.icon}</span>
                         <p className="text-xl font-bold text-text-light dark:text-text-dark">
                             {card.value}
                         </p>
@@ -542,16 +548,16 @@ const Dashboard = () => {
                                         {dia.valor > 0 ? formatCurrency(dia.valor).replace('R$', '').trim() : '-'}
                                     </span>
                                     <div
-                                        className={`w-full rounded-t-lg transition-all ${isHoje
-                                            ? 'bg-gradient-to-t from-primary to-blue-400'
-                                            : dia.valor > 0
-                                                ? 'bg-gradient-to-t from-emerald-500 to-emerald-400'
-                                                : 'bg-gray-200 dark:bg-gray-700'
-                                            }`}
-                                        style={{ height: `${alturaPx}px`, minHeight: dia.valor > 0 ? '8px' : '4px' }}
-                                        title={`${dia.dia} ${dia.data}: ${formatCurrency(dia.valor)}`}
+                                        className={`w - full rounded - t - lg transition - all ${isHoje
+                                                ? 'bg-gradient-to-t from-primary to-blue-400'
+                                                : dia.valor > 0
+                                                    ? 'bg-gradient-to-t from-emerald-500 to-emerald-400'
+                                                    : 'bg-gray-200 dark:bg-gray-700'
+                                            } `}
+                                        style={{ height: `${alturaPx} px`, minHeight: dia.valor > 0 ? '8px' : '4px' }}
+                                        title={`${dia.dia} ${dia.data}: ${formatCurrency(dia.valor)} `}
                                     />
-                                    <span className={`text-xs ${isHoje ? 'font-bold text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
+                                    <span className={`text - xs ${isHoje ? 'font-bold text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'} `}>
                                         {dia.dia}
                                     </span>
                                 </div>
@@ -582,20 +588,20 @@ const Dashboard = () => {
                         </div>
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
-                                className={`h-full rounded-full transition-all duration-500 ${(stats.osFinalizadasMes || 0) >= META_OS_MES
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-400'
-                                    : 'bg-gradient-to-r from-primary to-blue-400'
-                                    }`}
-                                style={{ width: `${Math.min(((stats.osFinalizadasMes || 0) / META_OS_MES) * 100, 100)}%` }}
+                                className={`h - full rounded - full transition - all duration - 500 ${(stats.osFinalizadasMes || 0) >= META_OS_MES
+                                        ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                                        : 'bg-gradient-to-r from-primary to-blue-400'
+                                    } `}
+                                style={{ width: `${Math.min(((stats.osFinalizadasMes || 0) / META_OS_MES) * 100, 100)}% ` }}
                             />
                         </div>
                     </div>
 
                     {/* Status da meta */}
-                    <div className={`p-3 rounded-xl ${(stats.osFinalizadasMes || 0) >= META_OS_MES
-                        ? 'bg-green-50 dark:bg-green-900/20'
-                        : 'bg-blue-50 dark:bg-blue-900/20'
-                        }`}>
+                    <div className={`p - 3 rounded - xl ${(stats.osFinalizadasMes || 0) >= META_OS_MES
+                            ? 'bg-green-50 dark:bg-green-900/20'
+                            : 'bg-blue-50 dark:bg-blue-900/20'
+                        } `}>
                         {(stats.osFinalizadasMes || 0) >= META_OS_MES ? (
                             <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-green-500">celebration</span>
@@ -634,44 +640,65 @@ const Dashboard = () => {
                         Ações Rápidas
                     </h2>
                     <div className="space-y-2">
-                        {[
-                            { label: 'Novo Cliente', desc: 'Cadastrar cliente', icon: 'person_add', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', tabType: 'cliente', tabId: 'cliente-novo', tabTitle: 'Novo Cliente' },
-                            { label: 'Abrir OS', desc: 'Nova ordem de serviço', icon: 'assignment_add', color: 'text-green-500 bg-green-50 dark:bg-green-900/20', link: '/os' },
-                            { label: 'Agendar', desc: 'Novo agendamento', icon: 'calendar_add_on', color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20', tabType: 'agenda', tabId: 'agenda', tabTitle: 'Agenda' },
-                            { label: 'Financeiro', desc: 'Lançar receita/despesa', icon: 'payments', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20', tabType: 'financeiro', tabId: 'financeiro', tabTitle: 'Financeiro' },
-                        ].map((action, index) => (
-                            action.tabType ? (
-                                <button
-                                    key={index}
-                                    onClick={() => openTab({ id: action.tabId, type: action.tabType, title: action.tabTitle, data: {} })}
-                                    className="w-full card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all text-left"
-                                >
-                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color}`}>
-                                        <span className="material-symbols-outlined text-lg">{action.icon}</span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-text-light dark:text-text-dark">{action.label}</p>
-                                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{action.desc}</p>
-                                    </div>
-                                    <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
-                                </button>
-                            ) : (
-                                <Link
-                                    key={index}
-                                    to={action.link}
-                                    className="card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all"
-                                >
-                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color}`}>
-                                        <span className="material-symbols-outlined text-lg">{action.icon}</span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-text-light dark:text-text-dark">{action.label}</p>
-                                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{action.desc}</p>
-                                    </div>
-                                    <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
-                                </Link>
-                            )
-                        ))}
+                        {/* Novo Cliente - Abre cadastro direto */}
+                        <button
+                            onClick={() => openTab({ id: 'cliente-novo', type: 'cliente', title: 'Novo Cliente', data: {} })}
+                            className="w-full card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all text-left"
+                        >
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-blue-500 bg-blue-50 dark:bg-blue-900/20">
+                                <span className="material-symbols-outlined text-lg">person_add</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-text-light dark:text-text-dark">Novo Cliente</p>
+                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Cadastrar cliente</p>
+                            </div>
+                            <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+                        </button>
+
+                        {/* Abrir OS - Abre Modal de Nova OS diretamente */}
+                        <button
+                            onClick={() => openNovaOS()}
+                            className="w-full card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all text-left"
+                        >
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-green-500 bg-green-50 dark:bg-green-900/20">
+                                <span className="material-symbols-outlined text-lg">assignment_add</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-text-light dark:text-text-dark">Abrir OS</p>
+                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Nova ordem de serviço</p>
+                            </div>
+                            <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+                        </button>
+
+                        {/* Agendar - Abre Agenda com modal de agendamento automaticamente */}
+                        <button
+                            onClick={() => openTab({ id: 'agenda', type: 'agenda', title: 'Agenda', data: { autoOpenAgendamento: true, autoOpenTimestamp: Date.now() } })}
+                            className="w-full card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all text-left"
+                        >
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-purple-500 bg-purple-50 dark:bg-purple-900/20">
+                                <span className="material-symbols-outlined text-lg">calendar_add_on</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-text-light dark:text-text-dark">Agendar</p>
+                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Novo agendamento</p>
+                            </div>
+                            <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+                        </button>
+
+                        {/* Financeiro - Abre Financeiro com modal de lançamento automaticamente */}
+                        <button
+                            onClick={() => openTab({ id: 'financeiro', type: 'financeiro', title: 'Financeiro', data: { autoOpenLancamento: true, autoOpenTimestamp: Date.now() } })}
+                            className="w-full card p-3 flex items-center gap-3 hover:shadow-sm hover:translate-x-1 transition-all text-left"
+                        >
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20">
+                                <span className="material-symbols-outlined text-lg">payments</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-text-light dark:text-text-dark">Financeiro</p>
+                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Lançar receita/despesa</p>
+                            </div>
+                            <span className="material-symbols-outlined text-gray-400 text-lg">chevron_right</span>
+                        </button>
                     </div>
                 </div>
 
@@ -697,10 +724,10 @@ const Dashboard = () => {
                             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
                                 Abra sua primeira ordem de serviço para começar.
                             </p>
-                            <Link to="/os" className="btn-primary py-2 px-4 text-sm inline-flex">
+                            <button onClick={() => openNovaOS()} className="btn-primary py-2 px-4 text-sm inline-flex items-center gap-1">
                                 <span className="material-symbols-outlined text-lg">add</span>
                                 Nova OS
-                            </Link>
+                            </button>
                         </div>
                     ) : (
                         <div className="card overflow-hidden overflow-x-auto">
@@ -717,11 +744,11 @@ const Dashboard = () => {
                                     {osRecentes.map((os, index) => (
                                         <tr
                                             key={os.id}
-                                            onClick={() => navigate(`/os/${os.id}`)}
+                                            onClick={() => navigate(`/ os / ${os.id} `)}
                                             className={`
-                                                cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors
+cursor - pointer hover: bg - gray - 50 dark: hover: bg - gray - 800 / 50 transition - colors
                                                 ${index !== osRecentes.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}
-                                            `}
+`}
                                         >
                                             <td className="py-2.5 px-3">
                                                 <span className="text-xs font-bold text-primary">#{os.numero}</span>
@@ -733,18 +760,18 @@ const Dashboard = () => {
                                             </td>
                                             <td className="py-2.5 px-3 hidden sm:table-cell">
                                                 <div className="flex items-center gap-1.5">
-                                                    <div className={`w-2 h-2 rounded-full ${statusConfig[os.status]?.color}`} />
+                                                    <div className={`w - 2 h - 2 rounded - full ${statusConfig[os.status]?.color} `} />
                                                     <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
                                                         {statusConfig[os.status]?.label}
                                                     </span>
                                                     {os.tipo && os.tipo !== 'os' && os.tipo !== 'orcamento' && (
                                                         <span className={`
-                                                            text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ml-1
+text - [10px] uppercase font - bold px - 1.5 py - 0.5 rounded ml - 1
                                                             ${os.tipo === 'garantia' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''}
                                                             ${os.tipo === 'cortesia' ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' : ''}
                                                             ${os.tipo === 'retorno' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''}
                                                             ${os.tipo === 'interna' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}
-                                                        `}>
+`}>
                                                             {os.tipo}
                                                         </span>
                                                     )}

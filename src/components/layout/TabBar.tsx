@@ -1,4 +1,4 @@
-import { useState, useRef, type MouseEvent } from 'react';
+import { useState, useRef, type MouseEvent, type DragEvent } from 'react';
 import { useTabs } from '../../contexts/TabsContext';
 import { toTitleCase } from '../../lib/utils';
 import UnsavedChangesModal from '../common/UnsavedChangesModal';
@@ -6,13 +6,15 @@ import UnsavedChangesModal from '../common/UnsavedChangesModal';
 type TabType = 'os' | 'cliente' | 'veiculo' | 'produto' | 'fornecedor' | 'colaborador' | 'usuario' | 'configuracoes' | 'relatorios' | 'agenda' | string;
 
 const TabBar = () => {
-    const { tabs, activeTabId, focusTab, closeTab, isTabDirty, getSaveHandler } = useTabs();
+    const { tabs, activeTabId, focusTab, closeTab, isTabDirty, getSaveHandler, reorderTabs } = useTabs();
     const [pendingCloseTabId, setPendingCloseTabId] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownButtonRef = useRef<HTMLButtonElement>(null);
 
-    if (tabs.length === 0) return null;
+    // Estado para drag & drop de abas
+    const [draggingTabId, setDraggingTabId] = useState<string | null>(null);
+    const [dragOverTabId, setDragOverTabId] = useState<string | null>(null);
 
     const getTabIcon = (type: TabType): string => {
         switch (type) {
@@ -90,32 +92,63 @@ const TabBar = () => {
         setPendingCloseTabId(null);
     };
 
+    // Handlers de drag & drop para reordenação de abas
+    const handleTabDragStart = (e: DragEvent<HTMLButtonElement>, tabId: string) => {
+        setDraggingTabId(tabId);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', tabId);
+        // Adiciona classe para feedback visual após um pequeno delay
+        setTimeout(() => {
+            (e.target as HTMLElement).classList.add('opacity-50');
+        }, 0);
+    };
+
+    const handleTabDragOver = (e: DragEvent<HTMLButtonElement>, tabId: string) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (tabId !== draggingTabId) {
+            setDragOverTabId(tabId);
+        }
+    };
+
+    const handleTabDragLeave = () => {
+        setDragOverTabId(null);
+    };
+
+    const handleTabDrop = (e: DragEvent<HTMLButtonElement>, targetTabId: string) => {
+        e.preventDefault();
+        setDragOverTabId(null);
+
+        // Pegar o ID da aba sendo arrastada do dataTransfer
+        const draggedTabId = e.dataTransfer.getData('text/plain');
+
+        if (!draggedTabId || draggedTabId === targetTabId) return;
+
+        const fromIndex = tabs.findIndex(t => t.id === draggedTabId);
+        const toIndex = tabs.findIndex(t => t.id === targetTabId);
+
+        if (fromIndex !== -1 && toIndex !== -1) {
+            reorderTabs(fromIndex, toIndex);
+        }
+
+        setDraggingTabId(null);
+    };
+
+    const handleTabDragEnd = (e: DragEvent<HTMLButtonElement>) => {
+        (e.target as HTMLElement).classList.remove('opacity-50');
+        setDraggingTabId(null);
+        setDragOverTabId(null);
+    };
+
     const hasSaveHandler = pendingCloseTabId ? !!getSaveHandler(pendingCloseTabId) : false;
+
+    if (tabs.length === 0) return null;
 
     return (
         <>
             <div className="flex-none bg-primary/20 dark:bg-primary/25 border-t-2 border-t-primary border-b border-primary/30 dark:border-primary/40 shadow-md px-2">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1.5">
-                    {/* Contador de abas */}
-                    <div className="flex items-center gap-1.5 px-2 py-1 mr-1 rounded bg-primary/10 dark:bg-primary/20 text-primary text-xs font-semibold shrink-0">
-                        <span className="material-symbols-outlined text-sm">tab</span>
-                        <span>{tabs.length}</span>
-                    </div>
-
-                    {/* Dropdown "Todas as abas" */}
-                    <div className="relative shrink-0">
-                        <button
-                            ref={dropdownButtonRef}
-                            onClick={() => setShowDropdown(!showDropdown)}
-                            className="flex items-center gap-1 px-2 py-1.5 mr-1 rounded bg-white/50 dark:bg-gray-800/50 border border-gray-200/60 dark:border-gray-700/60 text-text-secondary-light dark:text-text-secondary-dark hover:bg-white dark:hover:bg-gray-800 text-xs font-medium transition-colors"
-                            title="Ver todas as abas"
-                        >
-                            <span className="material-symbols-outlined text-sm">menu</span>
-                            <span className="hidden sm:inline">Abas</span>
-                            <span className="material-symbols-outlined text-xs">{showDropdown ? 'expand_less' : 'expand_more'}</span>
-                        </button>
-                    </div>
-
+                    {/* Área de Abas (cresce para a direita) */}
                     {tabs.map((tab) => {
                         const isActive = tab.id === activeTabId;
                         const isDirty = tab.isDirty;
@@ -124,13 +157,21 @@ const TabBar = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => focusTab(tab.id)}
+                                draggable
+                                onDragStart={(e) => handleTabDragStart(e, tab.id)}
+                                onDragOver={(e) => handleTabDragOver(e, tab.id)}
+                                onDragLeave={handleTabDragLeave}
+                                onDrop={(e) => handleTabDrop(e, tab.id)}
+                                onDragEnd={handleTabDragEnd}
                                 className={`
                                     group relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-                                    transition-all duration-200 whitespace-nowrap min-w-0 max-w-[200px]
+                                    transition-all duration-200 whitespace-nowrap min-w-0 max-w-[200px] cursor-grab active:cursor-grabbing
                                     ${isActive
                                         ? 'bg-white dark:bg-gray-800 text-primary shadow-sm border border-primary/20'
                                         : 'bg-white/40 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/60 text-text-secondary-light dark:text-text-secondary-dark hover:bg-white/70 dark:hover:bg-gray-800/70 hover:border-gray-300 dark:hover:border-gray-600'
                                     }
+                                    ${dragOverTabId === tab.id ? 'ring-2 ring-primary ring-offset-1 scale-105' : ''}
+                                    ${draggingTabId === tab.id ? 'opacity-50' : ''}
                                 `}
                             >
                                 {/* Ícone do tipo */}
@@ -169,6 +210,74 @@ const TabBar = () => {
                             </button>
                         );
                     })}
+
+                    {/* Espaçador flexível - zona de drop para mover aba para o final */}
+                    <div
+                        className="flex-1 min-w-12 py-2"
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.dataTransfer.dropEffect = 'move';
+                        }}
+                        onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const draggedTabId = e.dataTransfer.getData('text/plain');
+                            if (!draggedTabId) return;
+
+                            const fromIndex = tabs.findIndex(t => t.id === draggedTabId);
+                            const toIndex = tabs.length - 1;
+
+                            if (fromIndex !== -1 && fromIndex !== toIndex) {
+                                reorderTabs(fromIndex, toIndex);
+                            }
+                            setDraggingTabId(null);
+                            setDragOverTabId(null);
+                        }}
+                    />
+
+                    {/* Controle Fixo (Direita) - também aceita drop para mover aba para o final */}
+                    <div
+                        className="flex items-center gap-1 shrink-0 ml-auto pl-2 border-l border-primary/20 dark:border-primary/30"
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.dataTransfer.dropEffect = 'move';
+                        }}
+                        onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const draggedTabId = e.dataTransfer.getData('text/plain');
+                            if (!draggedTabId) return;
+
+                            const fromIndex = tabs.findIndex(t => t.id === draggedTabId);
+                            const toIndex = tabs.length - 1;
+
+                            if (fromIndex !== -1 && fromIndex !== toIndex) {
+                                reorderTabs(fromIndex, toIndex);
+                            }
+                            setDraggingTabId(null);
+                            setDragOverTabId(null);
+                        }}
+                    >
+                        {/* Contador de abas */}
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-primary/10 dark:bg-primary/20 text-primary text-xs font-semibold">
+                            <span className="material-symbols-outlined text-sm">tab</span>
+                            <span>{tabs.length}</span>
+                        </div>
+
+                        {/* Dropdown "Todas as abas" */}
+                        <button
+                            ref={dropdownButtonRef}
+                            onClick={() => setShowDropdown(!showDropdown)}
+                            className="flex items-center gap-1 px-2 py-1.5 rounded bg-white/50 dark:bg-gray-800/50 border border-gray-200/60 dark:border-gray-700/60 text-text-secondary-light dark:text-text-secondary-dark hover:bg-white dark:hover:bg-gray-800 text-xs font-medium transition-colors"
+                            title="Ver todas as abas"
+                        >
+                            <span className="material-symbols-outlined text-sm">menu</span>
+                            <span className="hidden sm:inline">Abas</span>
+                            <span className="material-symbols-outlined text-xs">{showDropdown ? 'expand_less' : 'expand_more'}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -185,7 +294,7 @@ const TabBar = () => {
                         className="fixed w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] py-1 max-h-80 overflow-y-auto"
                         style={{
                             top: dropdownButtonRef.current ? dropdownButtonRef.current.getBoundingClientRect().bottom + 4 : 0,
-                            left: dropdownButtonRef.current ? dropdownButtonRef.current.getBoundingClientRect().left : 0,
+                            right: dropdownButtonRef.current ? window.innerWidth - dropdownButtonRef.current.getBoundingClientRect().right : 0,
                         }}
                     >
                         <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">

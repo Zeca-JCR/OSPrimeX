@@ -35,6 +35,7 @@ interface TabsContextType {
     registerSaveHandler: (tabId: string, saveFunction: SaveHandler) => void;
     unregisterSaveHandler: (tabId: string) => void;
     getSaveHandler: (tabId: string) => SaveHandler | null;
+    reorderTabs: (fromIndex: number, toIndex: number) => void;
     limitMessage: string | null;
 }
 
@@ -59,6 +60,7 @@ const TabsContext = createContext<TabsContextType>({
     registerSaveHandler: () => { },
     unregisterSaveHandler: () => { },
     getSaveHandler: () => null,
+    reorderTabs: () => { },
     limitMessage: null,
 });
 
@@ -175,6 +177,20 @@ export const TabsProvider = ({ children }: TabsProviderProps) => {
         return saveHandlers[tabId] || null;
     }, [saveHandlers]);
 
+    // Reordenar abas (drag & drop)
+    const reorderTabs = useCallback((fromIndex: number, toIndex: number) => {
+        setTabs(prev => {
+            if (fromIndex === toIndex) return prev;
+            if (fromIndex < 0 || fromIndex >= prev.length) return prev;
+            if (toIndex < 0 || toIndex >= prev.length) return prev;
+
+            const newTabs = [...prev];
+            const [movedTab] = newTabs.splice(fromIndex, 1);
+            newTabs.splice(toIndex, 0, movedTab);
+            return newTabs;
+        });
+    }, []);
+
     return (
         <TabsContext.Provider value={{
             tabs,
@@ -189,6 +205,7 @@ export const TabsProvider = ({ children }: TabsProviderProps) => {
             registerSaveHandler,
             unregisterSaveHandler,
             getSaveHandler,
+            reorderTabs,
             limitMessage
         }}>
             {children}
