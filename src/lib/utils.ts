@@ -50,8 +50,21 @@ export const formatDateTime = (dateString: string | null | undefined): string =>
 
 export const toISODate = (date: Date | null | undefined): string => {
     if (!date) return '';
-    return date.toISOString().split('T')[0];
+    // Usa componentes locais para evitar deslocamento de fuso horário
+    const ano = date.getFullYear();
+    const mes = String(date.getMonth() + 1).padStart(2, '0');
+    const dia = String(date.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
 };
+
+/**
+ * Retorna a data de HOJE no fuso local em formato YYYY-MM-DD.
+ * Use esta função sempre que precisar da data atual para formulários ou storage.
+ */
+export const getHojeISO = (): string => {
+    return toISODate(new Date());
+};
+
 
 export const parseDateLocal = (dateString: string | null | undefined): Date => {
     if (!dateString) return new Date();

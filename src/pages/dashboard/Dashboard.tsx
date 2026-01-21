@@ -1,6 +1,6 @@
 ﻿// @ts-nocheck
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useModal } from '../../contexts/ModalContext';
@@ -354,29 +354,40 @@ const Dashboard = () => {
             {/* Alertas Inteligentes */}
             {alertas.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {alertas.map((alerta, index) => (
-                        <Link
-                            key={index}
-                            to={alerta.link}
-                            className="card p-3 flex items-center gap-3 hover:shadow-md transition-all group border-l-4"
-                            style={{ borderLeftColor: `var(--tw - ${alerta.cor.replace('bg-', '')})` }}
-                        >
-                            <div className={`w - 10 h - 10 rounded - full ${alerta.cor} flex items - center justify - center text - white shrink - 0`}>
-                                <span className="material-symbols-outlined">{alerta.icon}</span>
+                    {alertas.map((alerta, index) => {
+                        const handleAlertClick = () => {
+                            if (alerta.link === '/os') {
+                                openTab({ id: 'os', type: 'list-os', title: 'Ordens de Serviço' });
+                            } else if (alerta.link === '/estoque') {
+                                openTab({ id: 'estoque', type: 'list-produtos', title: 'Estoque' });
+                            } else if (alerta.link?.includes('/crm')) {
+                                openTab({ id: 'crm', type: 'crm', title: 'CRM' });
+                            }
+                        };
+                        return (
+                            <div
+                                key={index}
+                                onClick={handleAlertClick}
+                                className="card p-3 flex items-center gap-3 hover:shadow-md transition-all group border-l-4 cursor-pointer"
+                                style={{ borderLeftColor: alerta.cor?.replace('bg-', '').includes('yellow') ? '#eab308' : alerta.cor?.replace('bg-', '').includes('blue') ? '#3b82f6' : alerta.cor?.replace('bg-', '').includes('red') ? '#ef4444' : alerta.cor?.replace('bg-', '').includes('orange') ? '#f97316' : '#6b7280' }}
+                            >
+                                <div className={`w-10 h-10 rounded-full ${alerta.cor} flex items-center justify-center text-white shrink-0`}>
+                                    <span className="material-symbols-outlined">{alerta.icon}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-text-light dark:text-text-dark truncate">
+                                        {alerta.titulo}
+                                    </p>
+                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark truncate">
+                                        {alerta.descricao}
+                                    </p>
+                                </div>
+                                <span className="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">
+                                    chevron_right
+                                </span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-text-light dark:text-text-dark truncate">
-                                    {alerta.titulo}
-                                </p>
-                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark truncate">
-                                    {alerta.descricao}
-                                </p>
-                            </div>
-                            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">
-                                chevron_right
-                            </span>
-                        </Link>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -399,9 +410,9 @@ const Dashboard = () => {
                             <p className="text-4xl font-extrabold text-text-light dark:text-text-dark leading-tight">
                                 {stats.patio.total}
                             </p>
-                            <Link to="/agenda" className="text-xs text-primary font-medium hover:underline flex items-center gap-1 mt-1">
+                            <button onClick={() => openTab({ id: 'agenda', type: 'agenda', title: 'Agenda' })} className="text-xs text-primary font-medium hover:underline flex items-center gap-1 mt-1">
                                 Ver na Agenda <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                            </Link>
+                            </button>
                         </div>
                     </div>
 
@@ -443,7 +454,11 @@ const Dashboard = () => {
                             </h3>
                             <div className="space-y-2">
                                 {stats.patio.proximasEntregas.map(os => (
-                                    <Link key={os.id} to={`/ os / ${os.id} `} className="flex items-center justify-between group">
+                                    <div
+                                        key={os.id}
+                                        onClick={() => openTab({ id: `os-${os.id}`, type: 'os', title: `OS #${os.numero}`, data: { osId: os.id } })}
+                                        className="flex items-center justify-between group cursor-pointer"
+                                    >
                                         <div className="flex items-center gap-2 overflow-hidden">
                                             <span className="text-xs font-bold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded group-hover:bg-primary group-hover:text-white transition-colors">
                                                 #{os.numero}
@@ -455,7 +470,7 @@ const Dashboard = () => {
                                         <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full whitespace-nowrap">
                                             {new Date(os.previsaoEntrega).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
-                                    </Link>
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -465,7 +480,7 @@ const Dashboard = () => {
 
             {/* Resumo do Dia */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="card p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                <div className="card p-4 bg-gradient-to-br from-blue-400/90 to-blue-500/90 text-white">
                     <div className="flex items-center justify-between mb-2">
                         <span className="material-symbols-outlined text-2xl opacity-80">assignment</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-white/20">Hoje</span>
@@ -473,7 +488,7 @@ const Dashboard = () => {
                     <p className="text-3xl font-bold">{stats.osHoje || 0}</p>
                     <p className="text-sm opacity-80">Não Iniciadas</p>
                 </div>
-                <div className="card p-4 bg-gradient-to-br from-green-500 to-green-600 text-white">
+                <div className="card p-4 bg-gradient-to-br from-green-400/90 to-green-500/90 text-white">
                     <div className="flex items-center justify-between mb-2">
                         <span className="material-symbols-outlined text-2xl opacity-80">check_circle</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-white/20">Hoje</span>
@@ -481,7 +496,7 @@ const Dashboard = () => {
                     <p className="text-3xl font-bold">{stats.finalizadasHoje || 0}</p>
                     <p className="text-sm opacity-80">Finalizadas</p>
                 </div>
-                <div className="card p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                <div className="card p-4 bg-gradient-to-br from-emerald-400/90 to-teal-500/90 text-white">
                     <div className="flex items-center justify-between mb-2">
                         <span className="material-symbols-outlined text-2xl opacity-80">payments</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-white/20">Semana</span>
@@ -489,7 +504,7 @@ const Dashboard = () => {
                     <p className="text-2xl font-bold">{formatCurrency(stats.receitaSemana || 0)}</p>
                     <p className="text-sm opacity-80">Receita</p>
                 </div>
-                <div className="card p-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <div className="card p-4 bg-gradient-to-br from-purple-400/90 to-violet-500/90 text-white">
                     <div className="flex items-center justify-between mb-2">
                         <span className="material-symbols-outlined text-2xl opacity-80">trending_up</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-white/20">Mês</span>
@@ -508,19 +523,30 @@ const Dashboard = () => {
                     { label: 'Não Iniciadas', value: stats.osAbertas, icon: 'inbox', color: 'text-slate-500', link: '/os' },
                     { label: 'Execução', value: stats.osExecucao, icon: 'engineering', color: 'text-orange-500', link: '/os' },
                     { label: 'Finalizadas', value: stats.osFinalizadas, icon: 'check_circle', color: 'text-green-500', link: '/os' },
-                ].map((card, index) => (
-                    <Link
-                        key={index}
-                        to={card.link}
-                        className="card p-3 hover:shadow-sm transition-all text-center group"
-                    >
-                        <span className={`material-symbols-outlined text-xl ${card.color} mb-1`}>{card.icon}</span>
-                        <p className="text-xl font-bold text-text-light dark:text-text-dark">
-                            {card.value}
-                        </p>
-                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{card.label}</p>
-                    </Link>
-                ))}
+                ].map((card, index) => {
+                    const handleClick = () => {
+                        if (card.link === '/clientes') {
+                            openTab({ id: 'clientes', type: 'list-clientes', title: 'Clientes' });
+                        } else if (card.link === '/veiculos') {
+                            openTab({ id: 'veiculos', type: 'list-veiculos', title: 'Veículos' });
+                        } else if (card.link === '/os') {
+                            openTab({ id: 'os', type: 'list-os', title: 'Ordens de Serviço' });
+                        }
+                    };
+                    return (
+                        <div
+                            key={index}
+                            onClick={handleClick}
+                            className="card p-3 hover:shadow-sm transition-all text-center group cursor-pointer"
+                        >
+                            <span className={`material-symbols-outlined text-xl ${card.color} mb-1`}>{card.icon}</span>
+                            <p className="text-xl font-bold text-text-light dark:text-text-dark">
+                                {card.value}
+                            </p>
+                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{card.label}</p>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Gráfico de Receita Semanal + Meta Mensal */}
@@ -564,11 +590,29 @@ const Dashboard = () => {
                             );
                         })}
                     </div>
+
+                    {/* Rodapé com contexto adicional */}
+                    {(() => {
+                        const totalSemana = receitaSemanal.reduce((acc, d) => acc + d.valor, 0);
+                        const mediaDia = totalSemana / 7;
+                        return (
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <div className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                    <span className="font-medium">Média/dia:</span> {formatCurrency(mediaDia)}
+                                </div>
+                                <div className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">trending_up</span>
+                                    vs semana passada
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                 </div>
 
-                {/* Meta Mensal */}
+                {/* Meta Mensal - Expandido */}
                 <div className="card p-4">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                         <h2 className="text-sm font-semibold text-text-light dark:text-text-dark flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary text-lg">flag</span>
                             Meta do Mês
@@ -578,56 +622,100 @@ const Dashboard = () => {
                         </span>
                     </div>
 
-                    {/* Barra de progresso */}
+                    {/* Barra de progresso com percentual */}
                     <div className="mb-4">
-                        <div className="flex justify-between mb-2">
-                            <span className="text-sm text-text-light dark:text-text-dark">OS Finalizadas</span>
-                            <span className="text-sm font-bold text-text-light dark:text-text-dark">
+                        <div className="flex justify-between mb-1">
+                            <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark">OS Finalizadas</span>
+                            <span className="text-xs font-bold text-text-light dark:text-text-dark">
                                 {Math.min(Math.round(((stats.osFinalizadasMes || 0) / META_OS_MES) * 100), 100)}%
                             </span>
                         </div>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
-                                className={`h - full rounded - full transition - all duration - 500 ${(stats.osFinalizadasMes || 0) >= META_OS_MES
+                                className={`h-full rounded-full transition-all duration-500 ${(stats.osFinalizadasMes || 0) >= META_OS_MES
                                     ? 'bg-gradient-to-r from-green-500 to-emerald-400'
                                     : 'bg-gradient-to-r from-primary to-blue-400'
-                                    } `}
-                                style={{ width: `${Math.min(((stats.osFinalizadasMes || 0) / META_OS_MES) * 100, 100)}% ` }}
+                                    }`}
+                                style={{ width: `${Math.min(((stats.osFinalizadasMes || 0) / META_OS_MES) * 100, 100)}%` }}
                             />
                         </div>
                     </div>
 
-                    {/* Status da meta */}
-                    <div className={`p - 3 rounded - xl ${(stats.osFinalizadasMes || 0) >= META_OS_MES
-                        ? 'bg-green-50 dark:bg-green-900/20'
-                        : 'bg-blue-50 dark:bg-blue-900/20'
-                        } `}>
-                        {(stats.osFinalizadasMes || 0) >= META_OS_MES ? (
-                            <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-green-500">celebration</span>
-                                <div>
-                                    <p className="text-sm font-semibold text-green-700 dark:text-green-400">
-                                        🎉 Meta atingida!
-                                    </p>
-                                    <p className="text-xs text-green-600 dark:text-green-500">
-                                        Parabéns! Você superou a meta do mês.
-                                    </p>
+                    {/* Métricas detalhadas */}
+                    {(() => {
+                        const faltam = Math.max(0, META_OS_MES - (stats.osFinalizadasMes || 0));
+                        const hoje = new Date();
+                        const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+                        const diasRestantes = ultimoDiaMes - hoje.getDate() + 1;
+                        const diasPassados = hoje.getDate();
+                        const necessarioPorDia = faltam > 0 ? faltam / diasRestantes : 0;
+                        const ritmoAtual = diasPassados > 0 ? (stats.osFinalizadasMes || 0) / diasPassados : 0;
+                        const metaAtingida = (stats.osFinalizadasMes || 0) >= META_OS_MES;
+                        const noRitmo = ritmoAtual >= (META_OS_MES / ultimoDiaMes);
+
+                        return (
+                            <>
+                                {/* Grid de métricas */}
+                                <div className="grid grid-cols-3 gap-2 text-center mb-3">
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg py-2">
+                                        <p className="text-lg font-bold text-text-light dark:text-text-dark">{faltam}</p>
+                                        <p className="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Faltam</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg py-2">
+                                        <p className="text-lg font-bold text-text-light dark:text-text-dark">{diasRestantes}</p>
+                                        <p className="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Dias restantes</p>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg py-2">
+                                        <p className="text-lg font-bold text-text-light dark:text-text-dark">{necessarioPorDia.toFixed(1)}</p>
+                                        <p className="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">OSs/dia</p>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary">trending_up</span>
-                                <div>
-                                    <p className="text-sm font-semibold text-primary">
-                                        Faltam {META_OS_MES - (stats.osFinalizadasMes || 0)} OS
-                                    </p>
-                                    <p className="text-xs text-blue-600 dark:text-blue-400">
-                                        Continue assim para atingir a meta!
-                                    </p>
+
+                                {/* Status de ritmo */}
+                                <div className={`p-2.5 rounded-lg flex items-center gap-2 ${metaAtingida
+                                    ? 'bg-green-50 dark:bg-green-900/20'
+                                    : noRitmo
+                                        ? 'bg-blue-50 dark:bg-blue-900/20'
+                                        : 'bg-orange-50 dark:bg-orange-900/20'
+                                    }`}>
+                                    <span className={`material-symbols-outlined text-lg ${metaAtingida
+                                        ? 'text-green-500'
+                                        : noRitmo
+                                            ? 'text-primary'
+                                            : 'text-orange-500'
+                                        }`}>
+                                        {metaAtingida ? 'celebration' : noRitmo ? 'check_circle' : 'warning'}
+                                    </span>
+                                    <div className="flex-1">
+                                        <p className={`text-xs font-semibold ${metaAtingida
+                                            ? 'text-green-700 dark:text-green-400'
+                                            : noRitmo
+                                                ? 'text-primary'
+                                                : 'text-orange-700 dark:text-orange-400'
+                                            }`}>
+                                            {metaAtingida
+                                                ? '🎉 Meta atingida!'
+                                                : `Ritmo atual: ${ritmoAtual.toFixed(1)} OS/dia`
+                                            }
+                                        </p>
+                                        <p className={`text-[10px] ${metaAtingida
+                                            ? 'text-green-600 dark:text-green-500'
+                                            : noRitmo
+                                                ? 'text-blue-600 dark:text-blue-400'
+                                                : 'text-orange-600 dark:text-orange-400'
+                                            }`}>
+                                            {metaAtingida
+                                                ? 'Parabéns! Você superou a meta do mês.'
+                                                : noRitmo
+                                                    ? 'Você está no ritmo para atingir a meta!'
+                                                    : 'Abaixo do ritmo necessário'
+                                            }
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            </>
+                        );
+                    })()}
                 </div>
             </div>
 
@@ -709,10 +797,13 @@ const Dashboard = () => {
                             <span className="material-symbols-outlined text-primary text-lg">history</span>
                             OS Recentes
                         </h2>
-                        <Link to="/os" className="text-xs text-primary hover:underline flex items-center gap-1">
+                        <button
+                            onClick={() => openTab({ id: 'os', type: 'list-os', title: 'Ordens de Serviço' })}
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                        >
                             Ver todas
                             <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                        </Link>
+                        </button>
                     </div>
 
                     {osRecentes.length === 0 ? (
@@ -744,7 +835,7 @@ const Dashboard = () => {
                                     {osRecentes.map((os, index) => (
                                         <tr
                                             key={os.id}
-                                            onClick={() => navigate(`/ os / ${os.id} `)}
+                                            onClick={() => openTab({ id: `os-${os.id}`, type: 'os', title: `OS #${os.numero}`, data: { osId: os.id } })}
                                             className={`
 cursor - pointer hover: bg - gray - 50 dark: hover: bg - gray - 800 / 50 transition - colors
                                                 ${index !== osRecentes.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}
