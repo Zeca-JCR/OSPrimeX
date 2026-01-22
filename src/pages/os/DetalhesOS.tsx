@@ -43,7 +43,7 @@ const calcularResumoFinanceiro = (itens, dTipo, dValor, aTipo, aValor) => {
 };
 
 const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirtyChange, onTitleChange }) => {
-    const { empresa } = useAuth();
+    const { empresa, usuario } = useAuth();
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
     const params = useParams();
@@ -157,6 +157,7 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
     const [showFinalizadoSuccess, setShowFinalizadoSuccess] = useState(false);
     const [itemEditando, setItemEditando] = useState(null);
     const [showMenuAcoes, setShowMenuAcoes] = useState(false);
+    const [showHistoricoDefeito, setShowHistoricoDefeito] = useState(false); // Expandir histórico do defeito relatado
 
     // Toast notification
     const [toastAprovacao, setToastAprovacao] = useState(false);
@@ -1780,9 +1781,94 @@ const DetalhesOS = ({ osId, isWindowMode, isTabMode, onClose, onMinimize, onDirt
                                     </div>
                                     Defeito Relatado
                                 </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 bg-red-50 dark:bg-red-900/10 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
-                                    {os.defeitoRelatado || 'Não informado.'}
-                                </p>
+                                <textarea
+                                    className="input text-sm w-full min-h-[80px] focus:ring-red-200 dark:focus:ring-red-800"
+                                    placeholder="Descreva o defeito relatado pelo cliente..."
+                                    value={form?.defeitoRelatado || ''}
+                                    onChange={(e) => {
+                                        setForm(prev => ({ ...prev, defeitoRelatado: e.target.value }));
+                                        if (e.target.value !== os?.defeitoRelatado) {
+                                            setIsDirty(true);
+                                        }
+                                    }}
+                                    onBlur={(e) => {
+                                        const novoValor = e.target.value;
+                                        const valorOriginal = os?.defeitoRelatado || '';
+                                        // Só registra histórico se o valor final for diferente do original
+                                        if (novoValor !== valorOriginal && novoValor.trim() !== '') {
+                                            const historicoAtual = form?.defeitoRelatadoHistorico || os?.defeitoRelatadoHistorico || [];
+                                            // Verifica se já existe um registro recente (últimos 60 segundos) do mesmo usuário
+                                            const ultimoRegistro = historicoAtual[historicoAtual.length - 1];
+                                            const agora = Date.now();
+                                            const ultimoTempo = ultimoRegistro ? new Date(ultimoRegistro.data).getTime() : 0;
+                                            // Só adiciona novo registro se passou mais de 60 segundos desde o último
+                                            if (!ultimoRegistro || agora - ultimoTempo > 60000) {
+                                                const novoRegistro = {
+                                                    data: new Date().toISOString(),
+                                                    usuario: usuario?.nome || 'Usuário',
+                                                    valorAnterior: valorOriginal
+                                                };
+                                                setForm(prev => ({
+                                                    ...prev,
+                                                    defeitoRelatadoHistorico: [...historicoAtual, novoRegistro]
+                                                }));
+                                            }
+                                        }
+                                    }}
+                                    disabled={os.status === 'finalizada' || os.status === 'cancelada'}
+                                />
+                                {/* Exibir última alteração e botão para ver histórico completo */}
+                                {(form?.defeitoRelatadoHistorico?.length > 0 || os?.defeitoRelatadoHistorico?.length > 0) && (
+                                    <div className="mt-2">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-xs">history</span>
+                                                Última alteração: {(() => {
+                                                    const historico = form?.defeitoRelatadoHistorico || os?.defeitoRelatadoHistorico || [];
+                                                    const ultimo = historico[historico.length - 1];
+                                                    if (ultimo) {
+                                                        const data = new Date(ultimo.data);
+                                                        return `${data.toLocaleDateString('pt-BR')} ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} por ${ultimo.usuario}`;
+                                                    }
+                                                    return '';
+                                                })()}
+                                            </p>
+                                            {(form?.defeitoRelatadoHistorico?.length > 1 || os?.defeitoRelatadoHistorico?.length > 1) && (
+                                                <button
+                                                    onClick={() => setShowHistoricoDefeito(!showHistoricoDefeito)}
+                                                    className="text-[10px] text-primary hover:underline flex items-center gap-0.5"
+                                                >
+                                                    <span className="material-symbols-outlined text-xs">{showHistoricoDefeito ? 'expand_less' : 'expand_more'}</span>
+                                                    {showHistoricoDefeito ? 'Ocultar' : 'Ver histórico'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        {/* Histórico completo expandido */}
+                                        {showHistoricoDefeito && (
+                                            <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 max-h-40 overflow-y-auto">
+                                                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-2">Histórico de alterações:</p>
+                                                <div className="space-y-2">
+                                                    {[...(form?.defeitoRelatadoHistorico || os?.defeitoRelatadoHistorico || [])].reverse().map((item, idx) => {
+                                                        const data = new Date(item.data);
+                                                        return (
+                                                            <div key={idx} className="text-[10px] border-l-2 border-gray-300 dark:border-gray-600 pl-2">
+                                                                <p className="text-gray-500 dark:text-gray-400">
+                                                                    <span className="font-medium">{data.toLocaleDateString('pt-BR')} {data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                                    {' por '}<span className="font-medium text-gray-700 dark:text-gray-300">{item.usuario}</span>
+                                                                </p>
+                                                                {item.valorAnterior && (
+                                                                    <p className="text-gray-400 dark:text-gray-500 italic mt-0.5 truncate" title={item.valorAnterior}>
+                                                                        Anterior: "{item.valorAnterior.substring(0, 50)}{item.valorAnterior.length > 50 ? '...' : ''}"
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <h3 className="text-sm font-bold text-gray-900 dark:text-white flex gap-2 items-center mb-2">

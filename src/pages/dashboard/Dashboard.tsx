@@ -6,7 +6,7 @@ import { useNotification } from '../../contexts/NotificationContext';
 import { useModal } from '../../contexts/ModalContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
-import { formatCurrency, parseDateLocal } from '../../lib/utils';
+import { formatCurrency, parseDateLocal, toTitleCase } from '../../lib/utils';
 
 const Dashboard = () => {
     const { empresa, usuario } = useAuth();
@@ -310,7 +310,7 @@ const Dashboard = () => {
         };
     }, [empresa]);
 
-    const getClienteNome = (id) => clientes.find(c => c.id === id)?.nome || 'Cliente';
+    const getClienteNome = (id) => toTitleCase(clientes.find(c => c.id === id)?.nome) || 'Cliente';
 
     const statusConfig = {
         orcamento: { label: 'Orçamento', color: 'bg-yellow-500' },

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDate, toISODate } from '../../lib/utils';
+import { formatCurrency, formatDate, toISODate, toTitleCase } from '../../lib/utils';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
 import { AtribuirTecnicoModal } from '../../components/os/AtribuirTecnicoModal';
 import { AtribuirPrismaModal } from '../../components/os/AtribuirPrismaModal';
@@ -238,7 +238,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
 
     const getClienteNome = (clienteId) => {
         const cliente = clientes.find((c) => c.id === clienteId);
-        return cliente?.nome || 'Cliente';
+        return toTitleCase(cliente?.nome) || 'Cliente';
     };
 
     const getVeiculoInfo = (veiculoId) => {
@@ -436,7 +436,7 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
 
     const getTecnicoNome = (tecnicoId) => {
         const tecnico = tecnicos.find((t) => t.id === tecnicoId);
-        return tecnico?.nome || 'Sem técnico';
+        return toTitleCase(tecnico?.nome) || 'Sem técnico';
     };
 
     // Filtrar e ordenar ordens usando o filtroAtivo
@@ -860,8 +860,8 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                                                                             </span>
                                                                         )}
 
-                                                                        {/* Badge de Prisma (Kanban) */}
-                                                                        {empresa?.usarPrismas && (
+                                                                        {/* Badge de Prisma (Kanban) - Só exibe em OSs ativas */}
+                                                                        {empresa?.usarPrismas && !['finalizada', 'cancelada'].includes(os.status) && (
                                                                             os.prisma ? (
                                                                                 <span className="text-[10px] bg-gray-50 dark:bg-gray-700/50 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 flex items-center gap-1 font-medium text-text-secondary-light dark:text-text-secondary-dark" title="Prisma">
                                                                                     {getEmojiCor(empresa.prismaCor)} #{os.prisma}
@@ -1008,8 +1008,8 @@ const KanbanOS = ({ isTabMode, onClose, autoOpenNovaOS, autoOpenTimestamp }) => 
                                                                 share_location
                                                             </span>
                                                         )}
-                                                        {/* Prisma inline na mesma linha */}
-                                                        {empresa?.usarPrismas && os.prisma && (
+                                                        {/* Prisma inline na mesma linha - Só exibe em OSs ativas */}
+                                                        {empresa?.usarPrismas && os.prisma && !['finalizada', 'cancelada'].includes(os.status) && (
                                                             <span className="text-[10px] bg-gray-50 dark:bg-gray-700/50 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 inline-flex items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark" title="Prisma">
                                                                 {getEmojiCor(empresa.prismaCor)} #{os.prisma}
                                                             </span>
