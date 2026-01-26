@@ -1,10 +1,9 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useRef, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import storage from '../../lib/storage';
+// import storage from '../../lib/storage'; // Unused import
 import BuscaGlobal from '../common/BuscaGlobal';
 import { useNotification } from '../../contexts/NotificationContext';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
@@ -15,51 +14,85 @@ import TabBar from '../../components/layout/TabBar';
 import TabContent from '../../components/layout/TabContent';
 import UserProfileModal from '../../components/users/UserProfileModal';
 
+interface MenuItem {
+    path?: string;
+    icon?: string;
+    label?: string;
+    exact?: boolean;
+    tour?: string;
+    submenu?: MenuItem[];
+    hidden?: boolean;
+    addon?: string;
+    locked?: boolean;
+    disabled?: boolean;
+    type?: string; // 'divider'
+}
 
 const MainLayoutContent = () => {
-    const { usuario, empresa, logout, isAdmin } = useAuth();
+    const { usuario, empresa, logout } = useAuth(); // isAdmin unused
     const { hasAddon } = useTenant();
     const { isDark, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
-    const { openTab, tabs, activeTabId, clearActiveTab } = useTabs();
+    const { openTab, tabs, activeTabId, clearActiveTab, getActiveTab } = useTabs();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const lastKeyRef = useRef('');
+
+    // Mapeamento de rotas que abrem abas (movido para topo para uso no isActive)
+    const tabRoutes: Record<string, { type: string, title: string }> = useMemo(() => ({
+        // Páginas que abrem como abas
+        '/configuracoes': { type: 'configuracoes', title: 'Configurações' },
+        '/relatorios': { type: 'relatorios', title: 'Relatórios' },
+        '/agenda': { type: 'agenda', title: 'Agenda' },
+        '/crm': { type: 'crm', title: 'CRM' },
+        '/estoque/importar': { type: 'importar_xml', title: 'Importar XML' },
+        '/estoque/movimentacoes': { type: 'estoque_movimentacoes', title: 'Movimentações' },
+        '/estoque/reposicao': { type: 'estoque_reposicao', title: 'Reposição' },
+        '/financeiro': { type: 'financeiro', title: 'Financeiro' },
+        // Listas que abrem como abas
+        '/os': { type: 'list-os', title: 'Ordens de Serviço' },
+        '/clientes': { type: 'list-clientes', title: 'Clientes' },
+        '/veiculos': { type: 'list-veiculos', title: 'Veículos' },
+        '/estoque': { type: 'list-produtos', title: 'Produtos & Serviços' },
+        '/colaboradores': { type: 'list-colaboradores', title: 'Colaboradores' },
+        '/usuarios': { type: 'list-usuarios', title: 'Usuários' },
+        '/fornecedores': { type: 'list-fornecedores', title: 'Fornecedores' },
+    }), []);
 
     const { notificacoes, unreadCount, markAsRead, clearAll } = useNotification();
 
     const [showNotificacoes, setShowNotificacoes] = useState(false);
 
     // Contexto Global de Nova OS
-    const { openNovaOS, closeNovaOS, novaOSOpen, novaOSData, loadingNovaOS, setLoadingNovaOS } = useModal();
+    const { openNovaOS, closeNovaOS, novaOSOpen, novaOSData } = useModal(); // loadingNovaOS, setLoadingNovaOS unused
 
 
     // Estado para Modal de Perfil
     const [showProfileModal, setShowProfileModal] = useState(false);
 
     // Submenus expandidos
-    // Submenus expandidos
-    const [expandedMenus, setExpandedMenus] = useState({});
+    const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
     // User Menu Dropdown
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    const toggleSubmenu = (path) => {
+    const toggleSubmenu = (path: string) => {
         setExpandedMenus(prev => ({ ...prev, [path]: !prev[path] }));
     };
 
     // Atalhos de teclado para navegação (G + letra)
     useEffect(() => {
-        const handleKeyDown = (e) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             // Ignorar se estiver digitando em input/textarea
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
                 return;
             }
 
             // Sistema G + Letra para navegação
             if (lastKeyRef.current === 'g') {
-                const routes = {
+                const routes: Record<string, string> = {
                     'd': '/dashboard',
                     'o': '/os',
                     'c': '/clientes',
@@ -166,11 +199,13 @@ const MainLayoutContent = () => {
                 // Se o estado calculado for diferente do atual, marcamos para atualização
                 // Nota: Verificamos se já existe valor definido para não sobrescrever toggle manual desnecessariamente
                 // Mas para comportamento "automático" rigoroso, sempre sobrescrevemos.
-                if (expandedMenus[item.path] !== shouldBeExpanded) {
-                    newExpanded[item.path] = shouldBeExpanded;
-                    changed = true;
-                } else {
-                    newExpanded[item.path] = expandedMenus[item.path];
+                if (item.path) {
+                    if (expandedMenus[item.path] !== shouldBeExpanded) {
+                        newExpanded[item.path] = shouldBeExpanded;
+                        changed = true;
+                    } else {
+                        newExpanded[item.path] = expandedMenus[item.path];
+                    }
                 }
             }
         });
@@ -180,14 +215,33 @@ const MainLayoutContent = () => {
         }
     }, [location.pathname, menuItems]);
 
-    const isActive = (item) => {
+    const isActive = (item: MenuItem) => {
+        const activeTab = getActiveTab();
+
+        // Se houver uma aba ativa, apenas o item correspondente à aba (ou seu pai) pode estar ativo
+        if (activeTab) {
+            // Caso 1: Item de primeira linha é a aba
+            if (item.path && tabRoutes[item.path]?.type === activeTab.type) return true;
+
+            // Caso 2: Item tem submenu e a aba está dentro dele
+            if (item.submenu) {
+                return item.submenu.some(sub => sub.path && tabRoutes[sub.path]?.type === activeTab.type);
+            }
+
+            // Se tem aba ativa, nenhum outro item baseado em URL pode estar ativo simultaneamente
+            return false;
+        }
+
+        // Sem abas ativas, caímos na navegação padrão por URL
+        if (!item.path) return false;
         if (item.submenu) {
             return item.submenu.some(sub =>
                 sub.exact
                     ? location.pathname === sub.path
-                    : location.pathname.startsWith(sub.path)
+                    : sub.path ? location.pathname.startsWith(sub.path) : false
             );
         }
+
         return item.exact
             ? location.pathname === item.path
             : location.pathname.startsWith(item.path);
@@ -204,15 +258,16 @@ const MainLayoutContent = () => {
             )}
 
 
-            {/* Sidebar - Estilo Stitch */}
+            {/* Sidebar - Estilo Técnico High Contrast */}
             <aside
                 className={`
-                    fixed inset-y-0 left-0 lg:static
-                    ${tabs?.length > 0 ? 'z-[2010]' : 'z-50'}
+                    fixed inset-y-0 left-0 lg:relative
+                    z-[60]
                     ${sidebarCollapsed ? 'w-[72px]' : 'w-56'}
-                    bg-surface-light dark:bg-surface-dark
-                    border-r border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]
-                    transform transition-all duration-200 ease-in-out
+                    bg-slate-100 dark:bg-gray-950
+                    border-r border-gray-300 dark:border-gray-800
+                    shadow-[5px_0_15px_rgba(0,0,0,0.08)]
+                    transform transition-all duration-300 ease-out
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                     flex flex-col
                 `}
@@ -220,9 +275,9 @@ const MainLayoutContent = () => {
                 {/* Logo */}
                 <div className={`h-14 flex items-center ${sidebarCollapsed ? 'flex-col justify-center gap-1 py-2' : 'justify-center px-3'} border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] relative`}>
                     <div className={`flex items-center gap-2 overflow-hidden ${sidebarCollapsed ? 'justify-center' : ''}`}>
-                        {empresa?.logoUrl ? (
+                        {(empresa as any)?.logoUrl ? (
                             <img
-                                src={empresa.logoUrl}
+                                src={(empresa as any).logoUrl}
                                 alt="Logo"
                                 className={`${sidebarCollapsed ? 'w-8 h-8' : 'h-8 w-auto max-w-[160px]'} object-contain transition-all`}
                             />
@@ -285,25 +340,9 @@ const MainLayoutContent = () => {
                 {/* Navigation - estilo Stitch */}
                 <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
                     {menuItems.filter(item => !item.hidden).map((item, index) => {
-                        const tabRoutes = {
-                            // Páginas que abrem como abas
-                            '/configuracoes': { type: 'configuracoes', title: 'Configurações' },
-                            '/relatorios': { type: 'relatorios', title: 'Relatórios' },
-                            '/agenda': { type: 'agenda', title: 'Agenda' },
-                            '/crm': { type: 'crm', title: 'CRM' },
-                            '/estoque/importar': { type: 'importar_xml', title: 'Importar XML' },
-                            '/estoque/movimentacoes': { type: 'estoque_movimentacoes', title: 'Movimentações' },
-                            '/estoque/reposicao': { type: 'estoque_reposicao', title: 'Reposição' },
-                            '/financeiro': { type: 'financeiro', title: 'Financeiro' },
-                            // Listas que abrem como abas
-                            '/os': { type: 'list-os', title: 'Ordens de Serviço' },
-                            '/clientes': { type: 'list-clientes', title: 'Clientes' },
-                            '/veiculos': { type: 'list-veiculos', title: 'Veículos' },
-                            '/estoque': { type: 'list-produtos', title: 'Produtos & Serviços' },
-                            '/colaboradores': { type: 'list-colaboradores', title: 'Colaboradores' },
-                            '/usuarios': { type: 'list-usuarios', title: 'Usuários' },
-                            '/fornecedores': { type: 'list-fornecedores', title: 'Fornecedores' },
-                        };
+                        const active = isActive(item);
+                        const isExpanded = expandedMenus[item.path || ''] || false;
+                        const isTabRoute = item.path ? tabRoutes[item.path] : undefined;
 
                         // Renderização de Divisor
                         if (item.type === 'divider') {
@@ -314,9 +353,7 @@ const MainLayoutContent = () => {
                             );
                         }
 
-                        const active = isActive(item);
-
-                        // Renderização para itens bloqueados/disabled (mantém lógica anterior, simplificada)
+                        // Renderização para itens bloqueados/disabled
                         if (item.disabled || item.locked) {
                             return (
                                 <div
@@ -350,14 +387,15 @@ const MainLayoutContent = () => {
                                     <button
                                         onClick={() => {
                                             if (sidebarCollapsed) setSidebarCollapsed(false);
-                                            toggleSubmenu(item.path);
+                                            if (item.path) toggleSubmenu(item.path);
                                         }}
                                         className={`
-                                            w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors relative
+                                            w-full flex items-center gap-2.5 px-3 py-2 rounded-[2px] transition-all duration-200 relative
                                             ${sidebarCollapsed ? 'justify-center' : ''}
+                                            hover:translate-x-1 active:scale-[0.98]
                                             ${active
-                                                ? 'text-primary bg-primary/5'
-                                                : 'text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                ? 'text-primary bg-white dark:bg-gray-800 font-bold shadow-sm border border-gray-200 dark:border-gray-700'
+                                                : 'text-text-light dark:text-text-dark hover:bg-gray-200/50 dark:hover:bg-gray-800'
                                             }
                                         `}
                                         title={sidebarCollapsed ? item.label : undefined}
@@ -368,7 +406,7 @@ const MainLayoutContent = () => {
                                         </span>
                                         {!sidebarCollapsed && (
                                             <>
-                                                <span className={`flex-1 text-left text-sm ${active ? 'font-medium' : ''}`}>
+                                                <span className={`flex-1 text-left text-sm ${active ? 'font-semibold text-primary' : 'text-text-light dark:text-text-dark'}`}>
                                                     {item.label}
                                                 </span>
                                                 <span className="material-symbols-outlined text-lg opacity-70">
@@ -378,15 +416,15 @@ const MainLayoutContent = () => {
                                         )}
                                     </button>
 
-                                    {/* Subitems */}
-                                    {!sidebarCollapsed && isExpanded && (
-                                        <div className="ml-9 mt-1 space-y-0.5 border-l-2 border-gray-100 dark:border-gray-800 pl-2">
+                                    {/* Subitems com Animação Accordion */}
+                                    <div className={`animate-accordion ${!sidebarCollapsed && isExpanded ? 'open' : ''}`}>
+                                        <div className="min-h-0 pl-11 mt-1 space-y-0.5 border-l-2 border-gray-100 dark:border-gray-800 ml-3">
                                             {item.submenu.map(sub => {
                                                 const subActive = sub.exact
                                                     ? location.pathname === sub.path
                                                     : location.pathname.startsWith(sub.path);
 
-                                                const isSubTabRoute = tabRoutes[sub.path];
+                                                const isSubTabRoute = sub.path ? tabRoutes[sub.path] : undefined;
 
                                                 if (isSubTabRoute) {
                                                     return (
@@ -402,10 +440,11 @@ const MainLayoutContent = () => {
                                                                 });
                                                             }}
                                                             className={`
-                                                                w-full text-left block px-3 py-1.5 rounded-lg text-sm transition-colors
+                                                                w-full text-left block px-3 py-1.5 rounded-[2px] text-sm transition-all duration-200
+                                                                hover:translate-x-1 active:scale-[0.98]
                                                                 ${subActive
-                                                                    ? 'text-primary font-medium bg-primary/10'
-                                                                    : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                                                                    ? 'text-primary font-bold bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700'
+                                                                    : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark hover:bg-gray-200/50'
                                                                 }
                                                             `}
                                                         >
@@ -417,13 +456,14 @@ const MainLayoutContent = () => {
                                                 return (
                                                     <NavLink
                                                         key={sub.path}
-                                                        to={sub.path}
+                                                        to={sub.path || '#'}
                                                         end={sub.exact}
                                                         className={`
-                                                            block px-3 py-1.5 rounded-lg text-sm transition-colors
+                                                            block px-3 py-1.5 rounded-[2px] text-sm transition-all duration-200
+                                                            hover:translate-x-1 active:scale-[0.98]
                                                             ${subActive
-                                                                ? 'text-primary font-medium bg-primary/10'
-                                                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                                                                ? 'text-primary font-bold bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700'
+                                                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark hover:bg-gray-200/50'
                                                             }
                                                         `}
                                                         onClick={() => {
@@ -436,12 +476,10 @@ const MainLayoutContent = () => {
                                                 )
                                             })}
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             );
                         }
-
-                        const isTabRoute = tabRoutes[item.path];
 
                         if (isTabRoute) {
                             // Renderiza como botão que abre aba
@@ -458,11 +496,12 @@ const MainLayoutContent = () => {
                                         });
                                     }}
                                     className={`
-                                        w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors relative
+                                        w-full flex items-center gap-2.5 px-3 py-2 rounded-[2px] transition-all duration-200 relative
                                         ${sidebarCollapsed ? 'justify-center' : ''}
+                                        hover:translate-x-1 active:scale-[0.98]
                                         ${active
-                                            ? 'bg-primary/10 text-primary'
-                                            : 'text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800'
+                                            ? 'text-primary bg-white dark:bg-gray-800 font-bold shadow-sm border border-gray-200 dark:border-gray-700'
+                                            : 'text-text-light dark:text-text-dark hover:bg-gray-200/50 dark:hover:bg-gray-800'
                                         }
                                     `}
                                     title={sidebarCollapsed ? item.label : undefined}
@@ -475,7 +514,7 @@ const MainLayoutContent = () => {
                                         {item.icon}
                                     </span>
                                     {!sidebarCollapsed && (
-                                        <span className={`text-sm ${active ? 'font-medium' : ''}`}>{item.label}</span>
+                                        <span className={`text-sm ${active ? 'font-bold' : ''}`}>{item.label}</span>
                                     )}
                                 </button>
                             );
@@ -484,14 +523,15 @@ const MainLayoutContent = () => {
                         return (
                             <NavLink
                                 key={item.path}
-                                to={item.path}
+                                to={item.path || '#'}
                                 end={item.exact}
                                 className={`
-                                    flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors relative
+                                    flex items-center gap-2.5 px-3 py-2 rounded-[2px] transition-all duration-200 relative
                                     ${sidebarCollapsed ? 'justify-center' : ''}
+                                    hover:translate-x-1 active:scale-[0.98]
                                     ${active
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        ? 'text-primary bg-white dark:bg-gray-800 font-bold shadow-sm border border-gray-200 dark:border-gray-700'
+                                        : 'text-text-light dark:text-text-dark hover:bg-gray-200/50 dark:hover:bg-gray-800'
                                     }
                                 `}
                                 onClick={() => {
@@ -508,7 +548,7 @@ const MainLayoutContent = () => {
                                     {item.icon}
                                 </span>
                                 {!sidebarCollapsed && (
-                                    <span className={`text-sm ${active ? 'font-medium' : ''}`}>{item.label}</span>
+                                    <span className={`text-sm ${active ? 'font-bold' : ''}`}>{item.label}</span>
                                 )}
                             </NavLink>
                         );
@@ -525,7 +565,7 @@ const MainLayoutContent = () => {
                     {/* Menu toggle (mobile) */}
                     < button
                         onClick={() => setSidebarOpen(true)}
-                        className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="lg:hidden p-2 rounded-[4px] hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform"
                     >
                         <span className="material-symbols-outlined">menu</span>
                     </button >
@@ -546,7 +586,7 @@ const MainLayoutContent = () => {
                         {/* Theme toggle */}
                         < button
                             onClick={toggleTheme}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
+                            className="p-2 rounded-[4px] hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark active:scale-95 transition-transform"
                             title={isDark ? 'Modo claro' : 'Modo escuro'}
                         >
                             <span className="material-symbols-outlined text-xl">
@@ -558,7 +598,7 @@ const MainLayoutContent = () => {
                         < div className="relative" >
                             <button
                                 onClick={() => setShowNotificacoes(!showNotificacoes)}
-                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark relative"
+                                className="p-2 rounded-[4px] hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark relative active:scale-95 transition-transform"
                             >
                                 <span className="material-symbols-outlined text-xl">notifications</span>
                                 {notificacoesNaoLidas > 0 && (
@@ -653,7 +693,7 @@ const MainLayoutContent = () => {
                         < div className="relative" >
                             <button
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2 pl-3 ml-2 border-l border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-1 transition-colors"
+                                className="flex items-center gap-2 pl-3 ml-2 border-l border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-[4px] p-1 transition-all active:scale-[0.98]"
                                 title="Menu do Usuário"
                             >
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">

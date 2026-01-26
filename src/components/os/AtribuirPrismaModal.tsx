@@ -1,9 +1,22 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import React from 'react';
+﻿import React from 'react';
+import type { Empresa } from '../../types';
+
+interface PrismaOcupado {
+    prisma: number | string;
+    osId: string;
+    osNumero: string | number;
+}
+
+interface AtribuirPrismaModalProps {
+    empresa: Empresa | null;
+    prismaAtual?: number | string;
+    prismasOcupados?: PrismaOcupado[];
+    onClose: () => void;
+    onSelect: (prisma: number | null) => Promise<void>;
+}
 
 // Helper para emoji de cor
-const getEmojiCor = (cor) => {
+const getEmojiCor = (cor?: string) => {
     switch (cor) {
         case 'Vermelho': return '🔴';
         case 'Azul': return '🔵';
@@ -18,10 +31,10 @@ const getEmojiCor = (cor) => {
 export const AtribuirPrismaModal = ({
     empresa,
     prismaAtual,
-    prismasOcupados = [], // Array de { prisma: number, osId: string, osNumero: string }
+    prismasOcupados = [],
     onClose,
     onSelect
-}) => {
+}: AtribuirPrismaModalProps) => {
     const totalPrismas = empresa?.prismaQuantidade || 20;
     const prismas = Array.from({ length: totalPrismas }, (_, i) => i + 1);
     const emojiCor = getEmojiCor(empresa?.prismaCor);

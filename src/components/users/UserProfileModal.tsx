@@ -1,14 +1,17 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import storage from '../../lib/storage';
 import { useToast } from '../../contexts/ToastContext';
+import { Usuario } from '../../types';
 
-const UserProfileModal = ({ onClose }) => {
-    const { usuario, logout, refreshEmpresa } = useAuth(); // Assuming refreshEmpresa might be useful if we update company context, but here we update user.
+interface UserProfileModalProps {
+    onClose: () => void;
+}
+
+const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) => {
+    const { usuario, logout } = useAuth();
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState('perfil'); // 'perfil' or 'senha'
+    const [activeTab, setActiveTab] = useState<'perfil' | 'senha'>('perfil');
     const [loading, setLoading] = useState(false);
 
     // Profile State
@@ -19,8 +22,9 @@ const UserProfileModal = ({ onClose }) => {
     const [novaSenha, setNovaSenha] = useState('');
     const [confirmaSenha, setConfirmaSenha] = useState('');
 
-    const handleUpdateProfile = async (e) => {
+    const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!usuario?.id) return;
         setLoading(true);
         try {
             // Update user name
@@ -43,8 +47,10 @@ const UserProfileModal = ({ onClose }) => {
         }
     };
 
-    const handleChangePassword = async (e) => {
+    const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!usuario?.id) return;
+
         if (novaSenha !== confirmaSenha) {
             showToast('As senhas não conferem', 'error');
             return;
@@ -61,9 +67,9 @@ const UserProfileModal = ({ onClose }) => {
             // In a real backend we would send old password to API.
             // With local storage/Supabase simulated: we assume we can read the user record.
             // SAFETY CHECK: Verify if currently logged user matches.
-            const userRecord = await storage.getById('usuarios', usuario.id);
+            const userRecord = await storage.getById<Usuario>('usuarios', usuario.id);
 
-            if (userRecord.senha !== senhaAtual) {
+            if (userRecord?.senha !== senhaAtual) {
                 showToast('Senha atual incorreta', 'error');
                 setLoading(false);
                 return;
@@ -104,8 +110,8 @@ const UserProfileModal = ({ onClose }) => {
                     <button
                         onClick={() => setActiveTab('perfil')}
                         className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'perfil'
-                                ? 'text-primary'
-                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark'
+                            ? 'text-primary'
+                            : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark'
                             }`}
                     >
                         Dados Pessoais
@@ -116,8 +122,8 @@ const UserProfileModal = ({ onClose }) => {
                     <button
                         onClick={() => setActiveTab('senha')}
                         className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'senha'
-                                ? 'text-primary'
-                                : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark'
+                            ? 'text-primary'
+                            : 'text-text-secondary-light dark:text-text-secondary-dark hover:text-text-light dark:hover:text-text-dark'
                             }`}
                     >
                         Alterar Senha
@@ -222,4 +228,3 @@ const UserProfileModal = ({ onClose }) => {
 };
 
 export default UserProfileModal;
-

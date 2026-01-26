@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Temporariamente desabilitado até as páginas serem migradas para TSX
 import { Suspense, lazy } from 'react';
 import { useTabs } from '../../contexts/TabsContext';
@@ -20,6 +19,7 @@ const ImportarNota = lazy(() => import('../../pages/estoque/ImportarNota'));
 const HistoricoEstoque = lazy(() => import('../../pages/estoque/HistoricoEstoque'));
 const PedidoReposicao = lazy(() => import('../../pages/estoque/PedidoReposicao'));
 const DashboardFinanceiro = lazy(() => import('../../pages/financeiro/DashboardFinanceiro'));
+const FinanceiroAdvanced = lazy(() => import('../../pages/financeiro/advanced/FinanceiroAdvanced'));
 
 // Componentes de Lista (para abas de listagem)
 const KanbanOS = lazy(() => import('../../pages/os/KanbanOS'));
@@ -177,6 +177,11 @@ const TabContent = () => {
                                 onClose={() => closeTab(tab.id)}
                                 autoOpenLancamento={tab.data?.autoOpenLancamento as boolean}
                                 autoOpenTimestamp={tab.data?.autoOpenTimestamp as number}
+                            />
+                        )}
+                        {tab.type === 'financeiro_avancado' && (
+                            <FinanceiroAdvanced
+                                isTabMode={true}
                             />
                         )}
                         {/* Abas de Listagem */}

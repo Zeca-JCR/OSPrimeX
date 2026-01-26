@@ -27,8 +27,9 @@ export const HelpTooltip = ({ text, position = 'top' }: HelpTooltipProps) => {
                 onMouseLeave={() => setShow(false)}
                 onClick={() => setShow(!show)}
                 className="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
+                aria-label={`Ajuda: ${text}`}
             >
-                <span className="material-symbols-outlined text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                <span className="material-symbols-outlined text-sm text-text-secondary-light dark:text-text-secondary-dark" aria-hidden="true">
                     help
                 </span>
             </button>
@@ -91,8 +92,9 @@ export const TipCard = ({ tip, onDismiss }: TipCardProps) => {
                 <button
                     onClick={onDismiss}
                     className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-text-secondary-light dark:text-text-secondary-dark"
+                    aria-label="Fechar dica"
                 >
-                    <span className="material-symbols-outlined text-sm">close</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">close</span>
                 </button>
             )}
         </div>
@@ -137,8 +139,9 @@ export const HelpButton = ({ onStartTour }: HelpButtonProps) => {
                                     setOpen(false);
                                 }}
                                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-text-light dark:text-text-dark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                aria-label={item.label}
                             >
-                                <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">
+                                <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark" aria-hidden="true">
                                     {item.icon}
                                 </span>
                                 {item.label}
@@ -148,8 +151,9 @@ export const HelpButton = ({ onStartTour }: HelpButtonProps) => {
                                 key={index}
                                 href={item.href}
                                 className="flex items-center gap-3 px-4 py-3 text-sm text-text-light dark:text-text-dark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                aria-label={item.label}
                             >
-                                <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark">
+                                <span className="material-symbols-outlined text-lg text-text-secondary-light dark:text-text-secondary-dark" aria-hidden="true">
                                     {item.icon}
                                 </span>
                                 {item.label}
@@ -170,8 +174,10 @@ export const HelpButton = ({ onStartTour }: HelpButtonProps) => {
                         : 'bg-primary hover:bg-primary-dark text-white'
                     }
                 `}
+                aria-label={open ? 'Fechar menu de ajuda' : 'Abrir menu de ajuda'}
+                aria-expanded={open}
             >
-                <span className="material-symbols-outlined text-2xl">
+                <span className="material-symbols-outlined text-2xl" aria-hidden="true">
                     {open ? 'close' : 'help'}
                 </span>
             </button>

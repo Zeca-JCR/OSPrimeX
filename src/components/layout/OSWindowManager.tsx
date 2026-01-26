@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Temporariamente desabilitado até DetalhesOS ser migrado para TSX
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';

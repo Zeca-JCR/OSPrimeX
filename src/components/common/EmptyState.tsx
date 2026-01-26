@@ -120,23 +120,27 @@ const EmptyState = ({
     const displayAction = action !== undefined ? action : config.action;
 
     return (
-        <div className={`flex flex-col items-center justify-center text-center ${compact ? 'py-8 px-4' : 'py-16 px-6'}`}>
-            {/* Ilustração decorativa */}
+        <div className={`flex flex-col items-center justify-center text-center animate-slideUp ${compact ? 'py-8 px-4' : 'py-16 px-6'}`}>
+            {/* Ilustração decorativa - Estilo Técnico */}
             <div className={`relative ${compact ? 'mb-3' : 'mb-6'}`}>
                 <div className={`
                     ${compact ? 'w-16 h-16' : 'w-24 h-24'}
-                    rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5
-                    flex items-center justify-center
+                    rounded-[4px] bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10
+                    flex items-center justify-center relative overflow-hidden
                 `}>
-                    <span className={`material-symbols-outlined ${compact ? 'text-3xl' : 'text-5xl'} text-primary/40`}>
+                    {/* Grid Pattern de fundo */}
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                        style={{ backgroundImage: 'radial-gradient(circle, var(--color-primary) 1px, transparent 1px)', backgroundSize: '12px 12px' }} />
+
+                    <span className={`material-symbols-outlined ${compact ? 'text-3xl' : 'text-5xl'} text-primary/60 relative z-10`}>
                         {displayIcon}
                     </span>
                 </div>
-                {/* Elementos decorativos */}
+                {/* Elementos decorativos - Tech Dots */}
                 {!compact && (
                     <>
-                        <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-primary/20 animate-pulse" />
-                        <div className="absolute -bottom-1 -left-3 w-3 h-3 rounded-full bg-primary/15" />
+                        <div className="absolute -top-2 -right-2 w-3 h-3 rounded-[2px] bg-primary/20 animate-pulse" />
+                        <div className="absolute -bottom-1 -left-3 w-2 h-2 rounded-[2px] bg-primary/15" />
                     </>
                 )}
             </div>
@@ -155,16 +159,18 @@ const EmptyState = ({
                 {displayDescription}
             </p>
 
-            {/* Ação */}
+            {/* Ação - Botão Tech */}
             {displayAction && onAction && (
                 <button
                     onClick={onAction}
                     className={`
-                        btn-primary mt-4 flex items-center gap-2
+                        btn-primary mt-4 flex items-center gap-2 rounded-[4px] shadow-sm
+                        hover:translate-y-[-1px] active:scale-[0.98] transition-all duration-200
                         ${compact ? 'px-4 py-2 text-sm' : 'px-6 py-2.5'}
                     `}
+                    aria-label={displayAction || 'Ação'}
                 >
-                    <span className="material-symbols-outlined text-lg">add</span>
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">add</span>
                     {displayAction}
                 </button>
             )}

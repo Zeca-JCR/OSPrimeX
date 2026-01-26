@@ -1,18 +1,18 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
 import storage from '../../../lib/storage';
 import { formatCurrency, formatDate, toISODate } from '../../../lib/utils';
 import LancamentoModal from '../../../components/financeiro/LancamentoModal';
+import { LancamentoFinanceiro } from '../../../types';
 
 const ContasPagarReceber = () => {
     const { empresa } = useAuth();
     const { showToast } = useToast();
-    const [itens, setItens] = useState([]);
+    const [itens, setItens] = useState<LancamentoFinanceiro[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [tipoLancamento, setTipoLancamento] = useState('despesa'); // despesa (pagar) ou receita (receber)
+    const [tipoLancamento, setTipoLancamento] = useState<'despesa' | 'receita'>('despesa'); // despesa (pagar) ou receita (receber)
     const [filtroPeriodo, setFiltroPeriodo] = useState('mes'); // mes, semana, todos
 
     useEffect(() => {
@@ -23,7 +23,7 @@ const ContasPagarReceber = () => {
         if (!empresa) return;
         setLoading(true);
         try {
-            const data = await storage.getAll('lancamentos_financeiros', empresa.id);
+            const data = await storage.getAll<LancamentoFinanceiro>('lancamentos_financeiros', empresa.id);
             // Filtrar apenas pendentes
             setItens(data.filter((l) => l.ativo && l.status === 'pendente'));
         } catch (error) {
@@ -34,10 +34,10 @@ const ContasPagarReceber = () => {
         }
     };
 
-    const handleBaixar = async (item) => {
+    const handleBaixar = async (item: LancamentoFinanceiro) => {
         if (window.confirm(`Confirmar baixa de: ${item.descricao}?`)) {
             try {
-                await storage.update('lancamentos_financeiros', item.id, {
+                await storage.update<LancamentoFinanceiro>('lancamentos_financeiros', item.id, {
                     status: 'pago',
                     data: toISODate(new Date()) // Data da baixa = hoje
                 });
@@ -50,7 +50,7 @@ const ContasPagarReceber = () => {
         }
     };
 
-    const handleExcluir = async (id) => {
+    const handleExcluir = async (id: string) => {
         if (window.confirm('Tem certeza que deseja excluir este agendamento?')) {
             try {
                 await storage.softDelete('lancamentos_financeiros', id);
@@ -63,7 +63,7 @@ const ContasPagarReceber = () => {
         }
     };
 
-    const handleNovo = (tipo) => {
+    const handleNovo = (tipo: 'despesa' | 'receita') => {
         setTipoLancamento(tipo);
         setShowModal(true);
     };
@@ -80,18 +80,18 @@ const ContasPagarReceber = () => {
             }
             if (filtroPeriodo === 'todos') return true;
             return true;
-        }).sort((a, b) => new Date(a.dataVencimento) - new Date(b.dataVencimento));
+        }).sort((a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime());
     };
 
     const itensFiltrados = getItensFiltrados();
 
     const totalPagar = itensFiltrados
         .filter(i => i.tipo === 'despesa')
-        .reduce((sum, i) => sum + (i.valor || 0), 0);
+        .reduce((sum, i) => sum + (Number(i.valor) || 0), 0);
 
     const totalReceber = itensFiltrados
         .filter(i => i.tipo === 'receita')
-        .reduce((sum, i) => sum + (i.valor || 0), 0);
+        .reduce((sum, i) => sum + (Number(i.valor) || 0), 0);
 
     if (loading) {
         return (
@@ -186,7 +186,7 @@ const ContasPagarReceber = () => {
                                 </tr>
                             ) : (
                                 itensFiltrados.map((item) => {
-                                    const vencimento = new Date(item.dataVencimento || item.data);
+                                    const vencimento = new Date(item.dataVencimento || item.data || Date.now());
                                     const hoje = new Date();
                                     hoje.setHours(0, 0, 0, 0);
                                     vencimento.setHours(0, 0, 0, 0);
@@ -215,7 +215,7 @@ const ContasPagarReceber = () => {
                                                 </span>
                                             </td>
                                             <td className={`px-4 py-3 text-right text-sm font-bold ${item.tipo === 'receita' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                                {formatCurrency(item.valor)}
+                                                {formatCurrency(Number(item.valor))}
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex justify-center gap-2">

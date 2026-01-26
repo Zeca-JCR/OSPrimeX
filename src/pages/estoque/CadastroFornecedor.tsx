@@ -1,13 +1,21 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { validaCPF, validaCNPJ } from '../../lib/utils';
 import { consultarCNPJ, consultarCEP } from '../../services/api';
+import { Fornecedor, Endereco, Produto } from '../../types';
 
-const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
+interface CadastroFornecedorProps {
+    fornecedorId?: string;
+    isTabMode?: boolean;
+    onClose?: () => void;
+    onDirtyChange?: (isDirty: boolean) => void;
+    onTitleChange?: (title: string) => void;
+}
+
+const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, onTitleChange }: CadastroFornecedorProps) => {
     const { empresa } = useAuth();
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
@@ -30,8 +38,8 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
         onTitleChangeRef.current = onTitleChange;
     });
 
-    const [form, setForm] = useState({
-        tipo: 'pj',
+    const [form, setForm] = useState<Partial<Fornecedor> & { endereco: Endereco }>({
+        tipo: 'pj', // Default to 'pj' but defined as string in state init below
         nome: '',
         documento: '',
         contato: '',
@@ -71,11 +79,11 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
 
     // Função de salvar para saveHandler
     const salvarFornecedor = useCallback(async () => {
-        if (!form.nome.trim()) throw new Error('Nome/Razão Social é obrigatório');
-        const payload = { ...form, empresaId: empresa.id };
-        if (isEdicao) {
+        if (!form.nome?.trim()) throw new Error('Nome/Razão Social é obrigatório');
+        const payload = { ...form, empresaId: empresa?.id };
+        if (isEdicao && id) {
             await storage.update('fornecedores', id, payload);
-        } else {
+        } else if (empresa?.id) {
             await storage.create('fornecedores', payload, empresa.id);
         }
         setIsDirty(false);
@@ -94,10 +102,10 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
     const carregarFornecedor = async () => {
         setLoading(true);
         try {
-            const fornecedor = await storage.getById('fornecedores', id);
+            const fornecedor = await storage.getById<Fornecedor>('fornecedores', id!);
             if (fornecedor) {
                 // Tratamento de legado para endereço
-                let enderecoStruct = { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' };
+                let enderecoStruct: Endereco = { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' };
                 if (typeof fornecedor.endereco === 'string') {
                     enderecoStruct.logradouro = fornecedor.endereco;
                 } else if (fornecedor.endereco) {
@@ -105,9 +113,9 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
                 }
 
                 setForm({
-                    tipo: fornecedor.tipo || 'pj',
+                    tipo: (fornecedor as any).tipo || 'pj',
                     nome: fornecedor.nome || '',
-                    documento: fornecedor.documento || '',
+                    documento: fornecedor.documento || fornecedor.cnpj || '',
                     contato: fornecedor.contato || '',
                     telefone: fornecedor.telefone || '',
                     email: fornecedor.email || '',
@@ -125,13 +133,13 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
         }
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setIsDirty(true);
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleEnderecoChange = (e) => {
+    const handleEnderecoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setIsDirty(true);
         setForm(prev => ({
@@ -141,7 +149,7 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
     };
 
     const handleBuscarCNPJ = async () => {
-        const doc = form.documento.replace(/\D/g, '');
+        const doc = form.documento?.replace(/\D/g, '') || '';
         if (doc.length !== 14) return;
 
         setLoading(true);
@@ -162,7 +170,7 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
                     estado: data.endereco.estado || '',
                 }
             }));
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
             alert('Erro ao buscar CNPJ: ' + error.message);
         } finally {
@@ -171,7 +179,7 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
     };
 
     const handleBuscarCEP = async () => {
-        const cep = form.endereco.cep.replace(/\D/g, '');
+        const cep = form.endereco.cep?.replace(/\D/g, '') || '';
         if (cep.length !== 8) return;
 
         try {
@@ -191,18 +199,18 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSalvando(true);
 
         try {
-            if (!form.nome.trim()) throw new Error('Nome é obrigatório');
+            if (!form.nome?.trim()) throw new Error('Nome é obrigatório');
 
             const payload = {
                 ...form,
-                documento: form.documento.replace(/\D/g, ''),
-                empresaId: empresa.id
+                documento: form.documento?.replace(/\D/g, '') || '',
+                empresaId: empresa?.id || ''
             };
 
             // Validação simples de documento
@@ -212,10 +220,12 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
                 if (!valido) throw new Error(`${isCpf ? 'CPF' : 'CNPJ'} inválido`);
             }
 
-            if (isEdicao) {
+            if (isEdicao && id) {
                 await storage.update('fornecedores', id, payload);
             } else {
-                await storage.create('fornecedores', payload, empresa.id);
+                if (empresa?.id) {
+                    await storage.create('fornecedores', payload, empresa.id);
+                }
             }
 
             setIsDirty(false);
@@ -224,7 +234,7 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
             } else {
                 navigate('/fornecedores');
             }
-        } catch (error) {
+        } catch (error: any) {
             setError(error.message || 'Erro ao salvar');
         } finally {
             setSalvando(false);
@@ -237,7 +247,7 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
         if (window.confirm('Deseja realmente excluir este fornecedor?')) {
             try {
                 // Validação: Verificar vínculo com Produtos
-                const produtos = await storage.getAll('produtos', empresa?.id);
+                const produtos = await storage.getAll<Produto>('produtos', empresa?.id);
                 const temProdutos = produtos.some(p => p.fornecedorId === id);
 
                 if (temProdutos) {
@@ -272,10 +282,10 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
         <div className="min-h-full pb-20 bg-background-light dark:bg-background-dark">
             {/* Header */}
             <header className="bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] sticky top-0 z-20">
-                <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto w-full">
+                <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
                         <div>
-                            <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                            <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                                 {isEdicao ? 'Editar Fornecedor' : 'Novo Fornecedor'}
                             </h1>
                             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
@@ -339,7 +349,7 @@ const CadastroFornecedor = ({ fornecedorId, isTabMode, onClose, onDirtyChange, o
                                         type="text"
                                         name="documento"
                                         className="input w-full pr-10"
-                                        value={form.documento}
+                                        value={form.documento || ''}
                                         onChange={handleChange}
                                         placeholder="Apenas números"
                                     />

@@ -1,20 +1,25 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import storage from '../../lib/storage';
 import { gerarPayloadPix } from '../../lib/pix';
 import { formatCurrency, formatDate } from '../../lib/utils';
 import PlacaBadge from '../../components/common/PlacaBadge';
+import { OrdemServico, Cliente, Veiculo, Empresa } from '../../types';
+
+interface ToastState {
+    mensagem: string;
+    tipo: 'success' | 'error';
+}
 
 const RastreamentoPublico = () => {
     const { codigo } = useParams();
     const [searchParams] = useSearchParams();
     const empresaId = searchParams.get('e');
 
-    const [os, setOs] = useState(null);
-    const [cliente, setCliente] = useState(null);
-    const [veiculo, setVeiculo] = useState(null);
-    const [empresa, setEmpresa] = useState(null);
+    const [os, setOs] = useState<OrdemServico | null>(null);
+    const [cliente, setCliente] = useState<Cliente | null>(null);
+    const [veiculo, setVeiculo] = useState<Veiculo | null>(null);
+    const [empresa, setEmpresa] = useState<Empresa | null>(null);
     const [loading, setLoading] = useState(true);
     const [erro, setErro] = useState('');
 
@@ -28,9 +33,8 @@ const RastreamentoPublico = () => {
     const [showPix, setShowPix] = useState(false);
     const [pixPayload, setPixPayload] = useState('');
 
-
     // Toast notification
-    const [toast, setToast] = useState(null);
+    const [toast, setToast] = useState<ToastState | null>(null);
 
     useEffect(() => {
         carregarDados();
@@ -42,7 +46,7 @@ const RastreamentoPublico = () => {
             setErro('');
 
             // Carregar todas as OS e encontrar pelo número/código
-            const todasOS = await storage.getAll('ordens_servico', empresaId);
+            const todasOS = await storage.getAll<OrdemServico>('ordens_servico', empresaId);
             const osEncontrada = todasOS.find(o =>
                 o.numero?.toString() === codigo ||
                 o.id === codigo ||
@@ -58,18 +62,20 @@ const RastreamentoPublico = () => {
 
             // Registrar visualização (Incrementar contador)
             try {
-                await storage.update('ordens_servico', osEncontrada.id, {
-                    visualizacoes: (osEncontrada.visualizacoes || 0) + 1
-                });
+                if (osEncontrada.id) {
+                    await storage.update('ordens_servico', osEncontrada.id, {
+                        visualizacoes: (osEncontrada.visualizacoes || 0) + 1
+                    }, empresaId || undefined);
+                }
             } catch (err) {
                 console.error('Erro ao registrar visualização:', err);
             }
 
             // Carregar dados relacionados
             const [clienteData, veiculoData, empresaData] = await Promise.all([
-                osEncontrada.clienteId ? storage.getById('clientes', osEncontrada.clienteId) : null,
-                osEncontrada.veiculoId ? storage.getById('veiculos', osEncontrada.veiculoId) : null,
-                empresaId ? storage.getById('empresas', empresaId) : null,
+                osEncontrada.clienteId ? storage.getById<Cliente>('clientes', osEncontrada.clienteId, empresaId || undefined) : null,
+                osEncontrada.veiculoId ? storage.getById<Veiculo>('veiculos', osEncontrada.veiculoId, empresaId || undefined) : null,
+                empresaId ? storage.getById<Empresa>('empresas', empresaId) : null,
             ]);
 
             setCliente(clienteData);
@@ -84,22 +90,22 @@ const RastreamentoPublico = () => {
         }
     };
 
-    const mostrarToast = (mensagem, tipo = 'success') => {
+    const mostrarToast = (mensagem: string, tipo: 'success' | 'error' = 'success') => {
         setToast({ mensagem, tipo });
         setTimeout(() => setToast(null), 4000);
     };
 
     const handleGerarPix = () => {
-        if (!empresa?.chavePix) {
+        if (!empresa?.chavePix || !os) {
             mostrarToast('Chave PIX da empresa não configurada.', 'error');
             return;
         }
 
         const payload = gerarPayloadPix({
             chave: empresa.chavePix,
-            nome: empresa.razaoSocial || empresa.nomeFantasia,
+            nome: empresa.razaoSocial || empresa.nomeFantasia || '',
             cidade: empresa.endereco?.cidade || 'Cidade',
-            valor: os.valorTotal,
+            valor: os.valorTotal || 0,
             txid: `OS${os.numero}`
         });
 
@@ -117,7 +123,7 @@ const RastreamentoPublico = () => {
     };
 
     const aprovarOrcamento = async () => {
-        if (!os.valorTotal || os.valorTotal <= 0) {
+        if (!os || !os.valorTotal || os.valorTotal <= 0) {
             mostrarToast('Não é possível aprovar um orçamento sem valor (R$ 0,00).', 'error');
             return;
         }
@@ -129,20 +135,22 @@ const RastreamentoPublico = () => {
 
         setAprovando(true);
         try {
-            // Atualizar OS com aprovação
-            await storage.update('ordens_servico', os.id, {
-                status: 'aberta', // Padronizado: Aprovação leva para "Aprovada (Não Iniciada)"
-                aprovadoEm: new Date().toISOString(),
-                aprovadoPor: nomeAprovador,
-                observacoes: `${os.observacoes || ''}\n[APROVADO ONLINE por ${nomeAprovador} em ${new Date().toLocaleString('pt-BR')}]`.trim(),
-            });
+            if (os.id) {
+                // Atualizar OS com aprovação
+                await storage.update('ordens_servico', os.id, {
+                    status: 'aberta', // Padronizado: Aprovação leva para "Aprovada (Não Iniciada)"
+                    aprovadoEm: new Date().toISOString(),
+                    aprovadoPor: nomeAprovador,
+                    observacoes: `${os.observacoes || ''}\n[APROVADO ONLINE por ${nomeAprovador} em ${new Date().toLocaleString('pt-BR')}]`.trim(),
+                }, empresaId || undefined);
 
-            setAprovacaoSucesso(true);
-            setShowAprovacao(false);
-            mostrarToast('âœ… Orçamento aprovado com sucesso! A oficina foi notificada.', 'success');
+                setAprovacaoSucesso(true);
+                setShowAprovacao(false);
+                mostrarToast('✅ Orçamento aprovado com sucesso! A oficina foi notificada.', 'success');
 
-            // Recarregar dados
-            carregarDados();
+                // Recarregar dados
+                carregarDados();
+            }
         } catch (error) {
             console.error('Erro ao aprovar:', error);
             mostrarToast('Erro ao aprovar orçamento. Tente novamente.', 'error');
@@ -151,16 +159,20 @@ const RastreamentoPublico = () => {
         }
     };
 
-    const getStatusConfig = (status) => ({
-        'orcamento': { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-700', icon: 'pending', progress: 15 },
-        'aguardando_aprovacao': { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-700', icon: 'pending', progress: 15 },
-        'aberta': { label: 'Aprovada (Não Iniciada)', color: 'bg-slate-100 text-slate-700', icon: 'schedule', progress: 25 },
-        'execucao': { label: 'Em Execução', color: 'bg-primary/10 text-primary', icon: 'engineering', progress: 60 },
-        'finalizada': { label: 'Finalizada', color: 'bg-green-100 text-green-700', icon: 'check_circle', progress: 100 },
-        'cancelada': { label: 'Cancelada', color: 'bg-red-100 text-red-700', icon: 'cancel', progress: 0 },
-    })[status] || { label: status, color: 'bg-gray-100 text-gray-700', icon: 'info', progress: 0 };
+    const getStatusConfig = (status?: string) => {
+        const s = status?.toLowerCase() || '';
+        const configs: Record<string, { label: string; color: string; icon: string; progress: number }> = {
+            'orcamento': { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-700', icon: 'pending', progress: 15 },
+            'aguardando_aprovacao': { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-700', icon: 'pending', progress: 15 },
+            'aberta': { label: 'Aprovada (Não Iniciada)', color: 'bg-slate-100 text-slate-700', icon: 'schedule', progress: 25 },
+            'execucao': { label: 'Em Execução', color: 'bg-primary/10 text-primary', icon: 'engineering', progress: 60 },
+            'finalizada': { label: 'Finalizada', color: 'bg-green-100 text-green-700', icon: 'check_circle', progress: 100 },
+            'cancelada': { label: 'Cancelada', color: 'bg-red-100 text-red-700', icon: 'cancel', progress: 0 },
+        };
+        return configs[s] || { label: status || 'Desconhecido', color: 'bg-gray-100 text-gray-700', icon: 'info', progress: 0 };
+    };
 
-    const isOrcamento = ['orcamento', 'aguardando_aprovacao', 'pendente'].includes(os?.status?.toLowerCase());
+    const isOrcamento = ['orcamento', 'aguardando_aprovacao', 'pendente'].includes(os?.status?.toLowerCase() || '');
 
     if (loading) {
         return (
@@ -271,12 +283,12 @@ const RastreamentoPublico = () => {
                                     </span>
                                 )}
                             </h2>
-                            {isOrcamento && os.validadeOrcamento && (() => {
+                            {isOrcamento && os?.validadeOrcamento && (() => {
                                 const hoje = new Date();
                                 hoje.setHours(0, 0, 0, 0);
                                 // Fix timezone offset logic similar to DetalhesOS
                                 const validade = new Date(os.validadeOrcamento + 'T00:00:00');
-                                const diffDias = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24));
+                                const diffDias = Math.ceil((validade.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
                                 return (
                                     <p className={`text-sm mt-1 font-medium ${diffDias < 0 ? 'text-red-500' : 'text-text-secondary-light'}`}>
@@ -342,18 +354,18 @@ const RastreamentoPublico = () => {
                 )}
 
                 {/* Defeito Reclamado */}
-                {os?.defeitoReclamado && (
+                {os?.defeitoRelatado && (
                     <div className="card p-4">
                         <h3 className="font-semibold text-text-light mb-2 flex items-center gap-2">
                             <span className="material-symbols-outlined text-orange-500">report_problem</span>
                             Defeito Relatado
                         </h3>
-                        <p className="text-text-secondary-light">{os.defeitoReclamado}</p>
+                        <p className="text-text-secondary-light">{os.defeitoRelatado}</p>
                     </div>
                 )}
 
                 {/* Itens/Serviços */}
-                {os?.itens?.length > 0 && (
+                {os?.itens && os.itens.length > 0 && (
                     <div className="card p-4">
                         <h3 className="font-semibold text-text-light mb-3 flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary">handyman</span>
@@ -369,10 +381,10 @@ const RastreamentoPublico = () => {
                                         </p>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <p className={`font-semibold ${item.isento ? 'text-gray-400 line-through decoration-2' : 'text-primary'}`}>
+                                        <p className={`font-semibold ${item.garantia ? 'text-gray-400 line-through decoration-2' : 'text-primary'}`}>
                                             {formatCurrency(item.total)}
                                         </p>
-                                        {item.isento && (
+                                        {item.garantia && (
                                             <span className="text-[10px] font-bold uppercase text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
                                                 Garantia / Isento
                                             </span>
@@ -584,8 +596,8 @@ const RastreamentoPublico = () => {
 
                                 <button
                                     onClick={() => {
-                                        const texto = `Olá! Segue o comprovante de pagamento da OS #${os.numero}.`;
-                                        window.open(`https://wa.me/55${empresa.whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}`, '_blank');
+                                        const texto = `Olá! Segue o comprovante de pagamento da OS #${os?.numero}.`;
+                                        window.open(`https://wa.me/55${empresa?.whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}`, '_blank');
                                     }}
                                     className="btn-primary w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 border-green-600"
                                 >
@@ -665,4 +677,3 @@ const RastreamentoPublico = () => {
 };
 
 export default RastreamentoPublico;
-

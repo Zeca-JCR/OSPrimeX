@@ -1,16 +1,16 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import storage from '../../../lib/storage';
 import { formatCurrency } from '../../../lib/utils';
+import { LancamentoFinanceiro } from '../../../types';
 
 const DREView = () => {
     const { empresa } = useAuth();
-    const [lancamentos, setLancamentos] = useState([]);
+    const [lancamentos, setLancamentos] = useState<LancamentoFinanceiro[]>([]);
     const [loading, setLoading] = useState(true);
     const [ano, setAno] = useState(new Date().getFullYear());
-    const [categoriasReceita, setCategoriasReceita] = useState(new Set());
-    const [categoriasDespesa, setCategoriasDespesa] = useState(new Set());
+    const [categoriasReceita, setCategoriasReceita] = useState<string[]>([]);
+    const [categoriasDespesa, setCategoriasDespesa] = useState<string[]>([]);
 
     useEffect(() => {
         carregarDados();
@@ -20,24 +20,24 @@ const DREView = () => {
         if (!empresa) return;
         setLoading(true);
         try {
-            const data = await storage.getAll('lancamentos_financeiros', empresa.id);
+            const data = await storage.getAll<LancamentoFinanceiro>('lancamentos_financeiros', empresa.id);
             // Considerar apenas lançamentos EFETIVADOS (pago/recebido) e ativos
             // Se status for indefinido, consideramos como realizado (legado)
             const efetivados = data.filter(l =>
                 l.ativo &&
                 (l.status === 'pago' || !l.status) &&
-                new Date(l.data || l.criadoEm).getFullYear() === ano
+                new Date(l.data || l.criadoEm || Date.now()).getFullYear() === ano
             );
 
             setLancamentos(efetivados);
 
             // Extrair categorias usadas
-            const catReceita = new Set();
-            const catDespesa = new Set();
+            const catReceita = new Set<string>();
+            const catDespesa = new Set<string>();
 
             efetivados.forEach(l => {
-                if (l.tipo === 'receita') catReceita.add(l.categoria);
-                if (l.tipo === 'despesa') catDespesa.add(l.categoria);
+                if (l.tipo === 'receita' && l.categoria) catReceita.add(l.categoria);
+                if (l.tipo === 'despesa' && l.categoria) catDespesa.add(l.categoria);
             });
 
             setCategoriasReceita(Array.from(catReceita).sort());
@@ -50,22 +50,22 @@ const DREView = () => {
         }
     };
 
-    const getValor = (categoria, mes) => {
+    const getValor = (categoria: string, mes: number) => {
         return lancamentos
             .filter(l =>
                 l.categoria === categoria &&
-                new Date(l.data || l.criadoEm).getMonth() === mes
+                new Date(l.data || l.criadoEm || Date.now()).getMonth() === mes
             )
-            .reduce((sum, l) => sum + (l.valor || 0), 0);
+            .reduce((sum, l) => sum + (Number(l.valor) || 0), 0);
     };
 
-    const getTotalMes = (tipo, mes) => {
+    const getTotalMes = (tipo: string, mes: number) => {
         return lancamentos
             .filter(l =>
                 l.tipo === tipo &&
-                new Date(l.data || l.criadoEm).getMonth() === mes
+                new Date(l.data || l.criadoEm || Date.now()).getMonth() === mes
             )
-            .reduce((sum, l) => sum + (l.valor || 0), 0);
+            .reduce((sum, l) => sum + (Number(l.valor) || 0), 0);
     };
 
     const meses = [
@@ -82,8 +82,9 @@ const DREView = () => {
     }
 
     // Calcula totais anuais para ordenação (opcional)
-    const categoriasReceitaOrdenadas = [...categoriasReceita].sort();
-    const categoriasDespesaOrdenadas = [...categoriasDespesa].sort();
+    // Arrays já estão ordenados no state
+    const categoriasReceitaOrdenadas = categoriasReceita;
+    const categoriasDespesaOrdenadas = categoriasDespesa;
 
     return (
         <div className="animate-fadeIn space-y-6">
@@ -152,7 +153,7 @@ const DREView = () => {
                                     </td>
                                 ))}
                                 <td className="p-2 text-right text-green-800 dark:text-green-300">
-                                    {formatCurrency(lancamentos.filter(l => l.tipo === 'receita').reduce((acc, curr) => acc + curr.valor, 0))}
+                                    {formatCurrency(lancamentos.filter(l => l.tipo === 'receita').reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0))}
                                 </td>
                             </tr>
 
@@ -186,7 +187,7 @@ const DREView = () => {
                                     </td>
                                 ))}
                                 <td className="p-2 text-right text-red-800 dark:text-red-300">
-                                    {formatCurrency(lancamentos.filter(l => l.tipo === 'despesa').reduce((acc, curr) => acc + curr.valor, 0))}
+                                    {formatCurrency(lancamentos.filter(l => l.tipo === 'despesa').reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0))}
                                 </td>
                             </tr>
 
@@ -203,7 +204,7 @@ const DREView = () => {
                                 })}
                                 <td className="p-3 text-right text-white">
                                     {formatCurrency(
-                                        lancamentos.reduce((acc, curr) => acc + (curr.tipo === 'receita' ? curr.valor : -curr.valor), 0)
+                                        lancamentos.reduce((acc, curr) => acc + (curr.tipo === 'receita' ? (Number(curr.valor) || 0) : -(Number(curr.valor) || 0)), 0)
                                     )}
                                 </td>
                             </tr>

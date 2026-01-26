@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+﻿// ListaVeiculos.tsx
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -7,13 +7,19 @@ import storage from '../../lib/storage';
 import { toTitleCase } from '../../lib/utils';
 import useTableColumns from '../../hooks/useTableColumns';
 import ColumnToggler from '../../components/common/ColumnToggler';
+import type { Veiculo, Cliente } from '../../types';
 
-const ListaVeiculos = () => {
+interface ListaVeiculosProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const ListaVeiculos = ({ isTabMode, onClose }: ListaVeiculosProps = {}) => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
     const { openTab } = useTabs();
-    const [veiculos, setVeiculos] = useState([]);
-    const [clientes, setClientes] = useState([]);
+    const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState('');
 
@@ -34,11 +40,11 @@ const ListaVeiculos = () => {
     }, [empresa]);
 
     const carregarDados = async () => {
-        if (!empresa) return;
+        if (!empresa?.id) return;
         try {
             const [veiculosData, clientesData] = await Promise.all([
-                storage.getAll('veiculos', empresa.id),
-                storage.getAll('clientes', empresa.id),
+                storage.getAll<Veiculo>('veiculos', empresa.id),
+                storage.getAll<Cliente>('clientes', empresa.id),
             ]);
             setVeiculos(veiculosData.filter((v) => v.ativo));
             setClientes(clientesData);
@@ -49,12 +55,12 @@ const ListaVeiculos = () => {
         }
     };
 
-    const getClienteNome = (clienteId) => {
+    const getClienteNome = (clienteId: string) => {
         const cliente = clientes.find((c) => c.id === clienteId);
         return cliente?.nome || '-';
     };
 
-    const handleOpenVeiculo = (veiculo) => {
+    const handleOpenVeiculo = (veiculo: Veiculo) => {
         openTab({
             id: `veiculo-${veiculo.id}`,
             type: 'veiculo',
@@ -94,11 +100,11 @@ const ListaVeiculos = () => {
     }
 
     return (
-        <div className="p-4 lg:p-6">
+        <div className="p-4 lg:p-6 space-y-4">
             {/* Header - estilo Stitch */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Veículos
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
@@ -119,7 +125,7 @@ const ListaVeiculos = () => {
             </div>
 
             {/* Filtros */}
-            <div className="card mb-4">
+            <div className="card">
                 <div className="p-3">
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">

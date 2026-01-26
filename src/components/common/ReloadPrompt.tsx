@@ -1,5 +1,5 @@
-// @ts-nocheck
 // PWA Registration - Types not available for virtual modules
+// @ts-expect-error virtual module
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 function ReloadPrompt() {

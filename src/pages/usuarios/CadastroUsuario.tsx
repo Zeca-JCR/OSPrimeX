@@ -1,18 +1,35 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
+import { Usuario, PerfilUsuario } from '../../types';
 
-const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
+interface CadastroUsuarioProps {
+    usuarioId?: string;
+    isTabMode?: boolean;
+    onClose?: () => void;
+    onDirtyChange?: (isDirty: boolean) => void;
+    onTitleChange?: (title: string) => void;
+}
+
+interface UsuarioForm {
+    nome: string;
+    email: string;
+    senha: string;
+    perfil: PerfilUsuario;
+    comissao: string | number;
+    ativo: boolean;
+}
+
+const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitleChange }: CadastroUsuarioProps) => {
     const { empresa, usuario: usuarioLogado } = useAuth();
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
     const params = useParams();
     const id = usuarioId || params.id; // Prioriza prop (TabMode) sobre URL
     const isEdicao = !!id;
-    const isProprioUsuario = id === usuarioLogado?.id;
+    const isProprioUsuario = !!id && !!usuarioLogado && id === usuarioLogado.id;
 
     const [loading, setLoading] = useState(false);
     const [salvando, setSalvando] = useState(false);
@@ -29,7 +46,7 @@ const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitle
         onTitleChangeRef.current = onTitleChange;
     });
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<UsuarioForm>({
         nome: '',
         email: '',
         senha: '',
@@ -38,11 +55,34 @@ const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitle
         ativo: true
     });
 
+    const carregarUsuario = useCallback(async () => {
+        if (!id) return;
+        setLoading(true);
+        try {
+            const usuario = await storage.getById<Usuario>('usuarios', id);
+            if (usuario) {
+                setForm({
+                    nome: usuario.nome || '',
+                    email: usuario.email || '',
+                    senha: '', // Senha é sempre vazia na edição
+                    perfil: usuario.perfil || 'tecnico',
+                    comissao: usuario.comissao !== undefined ? usuario.comissao : '',
+                    ativo: usuario.ativo !== false
+                });
+            }
+        } catch (error) {
+            console.error('Erro ao carregar usuário:', error);
+            setError('Erro ao carregar dados do usuário');
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
     useEffect(() => {
         if (isEdicao) {
             carregarUsuario();
         }
-    }, [id]);
+    }, [id, isEdicao, carregarUsuario]);
 
     // Comunicar dirty state para aba
     useEffect(() => {
@@ -58,28 +98,29 @@ const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitle
 
     // Função de salvar para saveHandler
     const salvarUsuario = useCallback(async () => {
+        if (!empresa?.id) return;
         if (!form.nome.trim()) throw new Error('Nome é obrigatório');
         if (!form.email.trim()) throw new Error('Email é obrigatório');
         if (!isEdicao && !form.senha) throw new Error('Senha é obrigatória');
 
         // Verificar email duplicado
-        const usuarios = await storage.getAll('usuarios', empresa.id);
+        const usuarios = await storage.getAll<Usuario>('usuarios', empresa.id);
         const emailExiste = usuarios.some(
             (u) => u.email.toLowerCase() === form.email.toLowerCase() && u.id !== id
         );
         if (emailExiste) throw new Error('Email já cadastrado');
 
-        const payload = {
+        const payload: any = { // Using partial type or any for strict payload construction
             nome: form.nome,
             email: form.email.toLowerCase(),
             perfil: form.perfil,
-            comissao: form.perfil === 'tecnico' ? (parseFloat(form.comissao) || 0) : null,
+            comissao: form.perfil === 'tecnico' ? (Number(form.comissao) || 0) : null,
             ativo: form.ativo,
             empresaId: empresa.id
         };
         if (form.senha) payload.senha = form.senha;
 
-        if (isEdicao) {
+        if (isEdicao && id) {
             await storage.update('usuarios', id, payload);
         } else {
             await storage.create('usuarios', payload, empresa.id);
@@ -97,78 +138,26 @@ const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitle
         }
     }, [isTabMode, usuarioId, salvarUsuario, registerSaveHandler, unregisterSaveHandler]);
 
-    const carregarUsuario = async () => {
-        setLoading(true);
-        try {
-            const usuario = await storage.getById('usuarios', id);
-            if (usuario) {
-                setForm({
-                    nome: usuario.nome || '',
-                    email: usuario.email || '',
-                    senha: '', // Senha é sempre vazia na edição
-                    perfil: usuario.perfil || 'tecnico',
-                    comissao: usuario.comissao || '',
-                    ativo: usuario.ativo !== false
-                });
-            }
-        } catch (error) {
-            console.error('Erro ao carregar usuário:', error);
-            setError('Erro ao carregar dados do usuário');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setIsDirty(true);
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSalvando(true);
 
         try {
-            if (!form.nome.trim()) throw new Error('Nome é obrigatório');
-            if (!form.email.trim()) throw new Error('Email é obrigatório');
-            if (!isEdicao && !form.senha) throw new Error('Senha é obrigatória');
-
-            // Verificar email duplicado
-            const usuarios = await storage.getAll('usuarios', empresa.id);
-            const emailExiste = usuarios.some(
-                (u) => u.email.toLowerCase() === form.email.toLowerCase() && u.id !== id
-            );
-            if (emailExiste) throw new Error('Email já cadastrado');
-
-            const payload = {
-                nome: form.nome,
-                email: form.email.toLowerCase(),
-                perfil: form.perfil,
-                comissao: form.perfil === 'tecnico' ? (parseFloat(form.comissao) || 0) : null,
-                ativo: form.ativo,
-                empresaId: empresa.id
-            };
-
-            // Só atualiza senha se preenchida
-            if (form.senha) {
-                payload.senha = form.senha;
-            }
-
-            if (isEdicao) {
-                await storage.update('usuarios', id, payload);
-            } else {
-                await storage.create('usuarios', payload, empresa.id);
-            }
-
-            setIsDirty(false);
+            await salvarUsuario();
             if (isTabMode) {
                 onClose?.();
             } else {
                 navigate('/usuarios');
             }
-        } catch (error) {
+        } catch (error: any) {
             setError(error.message || 'Erro ao salvar');
         } finally {
             setSalvando(false);
@@ -176,7 +165,7 @@ const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitle
     };
 
     const handleDelete = async () => {
-        if (!isEdicao || isProprioUsuario) return;
+        if (!isEdicao || isProprioUsuario || !id) return;
 
         if (window.confirm('Deseja realmente excluir este usuário?')) {
             try {
@@ -207,10 +196,10 @@ const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitle
         <div className="min-h-full pb-20 bg-background-light dark:bg-background-dark">
             {/* Header */}
             <header className="bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] sticky top-0 z-20">
-                <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto w-full">
+                <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
                         <div>
-                            <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                            <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                                 {isEdicao ? 'Editar Usuário' : 'Novo Usuário'}
                             </h1>
                             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
@@ -417,4 +406,3 @@ const CadastroUsuario = ({ usuarioId, isTabMode, onClose, onDirtyChange, onTitle
 };
 
 export default CadastroUsuario;
-

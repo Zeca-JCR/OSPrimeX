@@ -1,13 +1,37 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import storage from '../../lib/storage';
 import { toISODate } from '../../lib/utils';
 import CurrencyInput from '../common/CurrencyInput';
+import { CategoriaFinanceira, LancamentoFinanceiro } from '../../types';
 
-const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pago' }) => {
+interface LancamentoModalProps {
+    tipo: 'receita' | 'despesa';
+    empresaId?: string;
+    onClose: () => void;
+    onSave: () => void;
+    defaultStatus?: 'pago' | 'pendente';
+}
+
+interface LancamentoForm {
+    descricao: string;
+    valor: number | string;
+    categoria: string;
+    data: string;
+    dataVencimento: string;
+    status: 'pago' | 'pendente';
+    observacoes: string;
+    osId: string;
+}
+
+interface ParcelaPreview {
+    descricao: string;
+    valor: number;
+    data: string;
+}
+
+const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pago' }: LancamentoModalProps) => {
     const isReceita = tipo === 'receita';
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<LancamentoForm>({
         descricao: '',
         valor: 0,
         categoria: '',
@@ -19,11 +43,11 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
     });
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
-    const [categorias, setCategorias] = useState([]);
+    const [categorias, setCategorias] = useState<{ value: string; label: string }[]>([]);
 
     // Estado para Preview de Parcelamento
     const [showPreview, setShowPreview] = useState(false);
-    const [previewParcelas, setPreviewParcelas] = useState([]);
+    const [previewParcelas, setPreviewParcelas] = useState<ParcelaPreview[]>([]);
 
     // Categorias padrão (fallback)
     const categoriasReceitaDefault = [
@@ -36,7 +60,7 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
         { value: 'fornecedor', label: 'Fornecedor' },
         { value: 'aluguel', label: 'Aluguel' },
         { value: 'energia', label: 'Energia' },
-        { value: 'agua', label: 'Ãgua' },
+        { value: 'agua', label: 'Água' },
         { value: 'internet', label: 'Internet/Telefone' },
         { value: 'salario', label: 'Salário/Comissão' },
         { value: 'manutencao', label: 'Manutenção' },
@@ -49,7 +73,7 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
 
     const carregarCategorias = async () => {
         try {
-            const cats = await storage.getAll('categorias_financeiras', empresaId);
+            const cats = await storage.getAll<CategoriaFinanceira>('categorias_financeiras', empresaId);
             const catsFiltradas = cats.filter(c => c.tipo === tipo);
 
             if (catsFiltradas.length > 0) {
@@ -70,12 +94,12 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
     const [repetir, setRepetir] = useState(false);
     const [numeroParcelas, setNumeroParcelas] = useState(2);
 
-    const handleChange = (e) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    // --- NOVA LÃ“GICA DE PREVIEW ---
+    // --- NOVA LÓGICA DE PREVIEW ---
 
     // 1. Gera as parcelas sugeridas
     const gerarPreview = () => {
@@ -83,8 +107,8 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
         // Criar data base corrigindo timezone (Date(string) usa UTC)
         const [ano, mes, dia] = dataBaseStr.split('-').map(Number);
 
-        const parcelas = [];
-        const valorParcela = parseFloat(form.valor); // Valor fixo repetido
+        const parcelas: ParcelaPreview[] = [];
+        const valorParcela = typeof form.valor === 'string' ? parseFloat(form.valor) : form.valor;
 
         for (let i = 0; i < numeroParcelas; i++) {
             // Lógica inteligente de data: Tenta manter o dia fixo
@@ -113,7 +137,7 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
     };
 
     // 2. Atualiza item no preview
-    const handlePreviewChange = (index, field, value) => {
+    const handlePreviewChange = (index: number, field: keyof ParcelaPreview, value: string | number) => {
         const newParcelas = [...previewParcelas];
         newParcelas[index] = { ...newParcelas[index], [field]: value };
         setPreviewParcelas(newParcelas);
@@ -128,7 +152,7 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
                 const payload = {
                     tipo,
                     descricao: parcela.descricao,
-                    valor: parseFloat(parcela.valor),
+                    valor: typeof parcela.valor === 'string' ? parseFloat(parcela.valor) : parcela.valor,
                     categoria: form.categoria,
                     // Se pendente: data=hoje, vencimento=parcela.data
                     // Se pago: data=parcela.data (baixa na data futura)
@@ -137,19 +161,22 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
                     status: form.status,
                     observacoes: form.observacoes,
                     osId: form.osId || null,
+                    criadoEm: new Date().toISOString(),
+                    ativo: true
                 };
 
-                await storage.create('lancamentos_financeiros', payload, empresaId);
+                await storage.create('lancamentos_financeiros', payload as unknown as LancamentoFinanceiro, empresaId);
+                // Casting as unknown as LancamentoFinanceiro as simple check, assuming schema match.
             }
             onSave();
-        } catch (error) {
+        } catch (error: any) {
             setError('Erro ao salvar: ' + error.message);
         } finally {
             setSalvando(false);
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
 
@@ -157,7 +184,8 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
             setError('Descrição é obrigatória');
             return;
         }
-        if (!form.valor || parseFloat(form.valor) <= 0) {
+        const val = typeof form.valor === 'string' ? parseFloat(form.valor) : form.valor;
+        if (!val || val <= 0) {
             setError('Valor deve ser maior que zero');
             return;
         }
@@ -175,18 +203,20 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
             const payload = {
                 tipo,
                 descricao: form.descricao,
-                valor: parseFloat(form.valor),
+                valor: val,
                 categoria: form.categoria,
                 data: form.status === 'pendente' ? form.data : dataBaseStr,
                 dataVencimento: form.status === 'pendente' ? dataBaseStr : null,
                 status: form.status,
                 observacoes: form.observacoes,
                 osId: form.osId || null,
+                criadoEm: new Date().toISOString(),
+                ativo: true
             };
 
-            await storage.create('lancamentos_financeiros', payload, empresaId);
+            await storage.create('lancamentos_financeiros', payload as unknown as LancamentoFinanceiro, empresaId);
             onSave();
-        } catch (error) {
+        } catch (error: any) {
             setError(error.message || 'Erro ao salvar');
         } finally {
             setSalvando(false);
@@ -236,7 +266,7 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
                                     <input
                                         type="number"
                                         value={p.valor}
-                                        onChange={(e) => handlePreviewChange(index, 'valor', e.target.value)}
+                                        onChange={(e) => handlePreviewChange(index, 'valor', parseFloat(e.target.value))}
                                         className="input h-8 text-sm w-full"
                                     />
                                 </div>
@@ -262,7 +292,7 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
         );
     }
 
-    // --- RENDERIZAR FORMULÃRIO PADRÃƒO ---
+    // --- RENDERIZAR FORMULÁRIO PADRÃO ---
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <div className="card p-6 w-full max-w-md animate-slideUp max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -383,7 +413,7 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
                             <div className="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg animate-fadeIn mt-2">
                                 <div>
                                     <label className="block text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark mb-1">
-                                        NÂº de Vezes
+                                        Nº de Vezes
                                     </label>
                                     <input
                                         type="number"
@@ -447,4 +477,3 @@ const LancamentoModal = ({ tipo, empresaId, onClose, onSave, defaultStatus = 'pa
 };
 
 export default LancamentoModal;
-

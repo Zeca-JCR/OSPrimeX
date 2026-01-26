@@ -1,10 +1,13 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useRef, useState } from 'react';
+﻿import { useRef, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 
-const AssinaturaCanvas = ({ onConfirm, onClose }) => {
-    const sigCanvas = useRef(null);
+interface AssinaturaCanvasProps {
+    onConfirm: (dataUrl: string) => void;
+    onClose: () => void;
+}
+
+const AssinaturaCanvas: React.FC<AssinaturaCanvasProps> = ({ onConfirm, onClose }) => {
+    const sigCanvas = useRef<SignatureCanvas | null>(null);
     const [isEmpty, setIsEmpty] = useState(true);
 
     const clear = () => {
@@ -17,7 +20,7 @@ const AssinaturaCanvas = ({ onConfirm, onClose }) => {
         console.log("Tentando salvar assinatura - Click detectado");
 
         if (!sigCanvas.current) {
-            alert("ERRO CRÃTICO: Referência do Canvas não encontrada. Tente recarregar a página.");
+            alert("ERRO CRÍTICO: Referência do Canvas não encontrada. Tente recarregar a página.");
             return;
         }
 
@@ -32,7 +35,7 @@ const AssinaturaCanvas = ({ onConfirm, onClose }) => {
             const dataURL = sigCanvas.current.toDataURL('image/png');
             console.log("Assinatura gerada, tamanho:", dataURL.length);
             onConfirm(dataURL);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erro ao gerar imagem:", error);
             alert("Erro ao processar assinatura: " + error.message);
         }
@@ -96,4 +99,3 @@ const AssinaturaCanvas = ({ onConfirm, onClose }) => {
 };
 
 export default AssinaturaCanvas;
-

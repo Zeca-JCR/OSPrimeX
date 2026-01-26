@@ -1,20 +1,33 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDate, parseDateLocal } from '../../lib/utils';
 import LancamentoModal from '../../components/financeiro/LancamentoModal';
+import { LancamentoFinanceiro, CategoriaFinanceira, OrdemServico } from '../../types';
 
-const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenTimestamp }) => {
+interface DashboardFinanceiroProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+    autoOpenLancamento?: boolean;
+    autoOpenTimestamp?: number;
+}
+
+interface CategoriaMap {
+    [key: string]: CategoriaFinanceira;
+}
+
+const DashboardFinanceiro = ({ autoOpenLancamento, autoOpenTimestamp, isTabMode, onClose }: DashboardFinanceiroProps) => {
     const { empresa } = useAuth();
-    const [lancamentos, setLancamentos] = useState([]);
+    const { openTab } = useTabs();
+    const [lancamentos, setLancamentos] = useState<LancamentoFinanceiro[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [tipoLancamento, setTipoLancamento] = useState('receita');
-    const [periodo, setPeriodo] = useState('mes'); // mes, semana, hoje
+    const [tipoLancamento, setTipoLancamento] = useState<'receita' | 'despesa'>('receita');
+    const [periodo, setPeriodo] = useState<'mes' | 'semana' | 'hoje'>('mes'); // mes, semana, hoje
 
-    const [categoriasMap, setCategoriasMap] = useState({});
+    const [categoriasMap, setCategoriasMap] = useState<CategoriaMap>({});
 
     useEffect(() => {
         carregarDados();
@@ -31,15 +44,15 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
         if (!empresa) return;
         try {
             const [lancamentosData, categoriasData] = await Promise.all([
-                storage.getAll('lancamentos_financeiros', empresa.id),
-                storage.getAll('categorias_financeiras', empresa.id)
+                storage.getAll<LancamentoFinanceiro>('lancamentos_financeiros', empresa.id),
+                storage.getAll<CategoriaFinanceira>('categorias_financeiras', empresa.id)
             ]);
 
             // Filtrar apenas lançamentos ativos e realizados (não pendentes)
             setLancamentos(lancamentosData.filter((l) => l.ativo && l.status !== 'pendente'));
 
             // Criar mapa de categorias para acesso rápido ao ícone
-            const map = {};
+            const map: CategoriaMap = {};
             categoriasData.forEach(c => {
                 map[c.nome] = c;
             });
@@ -71,7 +84,11 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
                 break;
         }
 
-        return lancamentos.filter((l) => parseDateLocal(l.data || l.criadoEm) >= dataInicio);
+        return lancamentos.filter((l) => {
+            const dataLancamento = parseDateLocal(l.data || l.criadoEm);
+            if (!dataLancamento) return false;
+            return dataLancamento.getTime() >= dataInicio.getTime();
+        });
     };
 
     const lancamentosFiltrados = getLancamentosFiltrados();
@@ -87,7 +104,7 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
 
     const saldo = receitas - despesas;
 
-    const handleNovoLancamento = (tipo) => {
+    const handleNovoLancamento = (tipo: 'receita' | 'despesa') => {
         setTipoLancamento(tipo);
         setShowModal(true);
     };
@@ -112,7 +129,7 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
             {/* Header - estilo Stitch */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Financeiro
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
@@ -120,13 +137,18 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
                     </p>
                 </div>
                 <div className="flex gap-2">
-                    <Link
-                        to="/financeiro/avancado"
+                    <button
+                        onClick={() => openTab({
+                            id: 'financeiro_avancado',
+                            type: 'financeiro_avancado',
+                            title: 'Financeiro Avançado',
+                            data: {}
+                        })}
                         className="btn-secondary py-2 px-4 text-sm flex items-center gap-2 border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/20"
                     >
                         <span className="material-symbols-outlined text-lg">diamond</span>
                         Avançado
-                    </Link>
+                    </button>
                     <button
                         onClick={() => handleNovoLancamento('receita')}
                         className="btn-primary py-2 px-4 text-sm"
@@ -147,22 +169,21 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
             {/* Filtro de período - compacto */}
             <div className="flex flex-wrap items-center gap-3">
                 <div className="card p-2 inline-flex gap-1">
-                    {[
-                        { value: 'hoje', label: 'Hoje' },
-                        { value: 'semana', label: '7 dias' },
-                        { value: 'mes', label: 'Mês' },
-                    ].map((p) => (
-                        <button
-                            key={p.value}
-                            onClick={() => setPeriodo(p.value)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${periodo === p.value
-                                ? 'bg-primary text-white'
-                                : 'text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800'
-                                }`}
-                        >
-                            {p.label}
-                        </button>
-                    ))}
+                    {(['hoje', 'semana', 'mes'] as const).map((periodoOption) => {
+                        const label = periodoOption === 'hoje' ? 'Hoje' : periodoOption === 'semana' ? '7 dias' : 'Mês';
+                        return (
+                            <button
+                                key={periodoOption}
+                                onClick={() => setPeriodo(periodoOption)}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${periodo === periodoOption
+                                    ? 'bg-primary text-white'
+                                    : 'text-text-light dark:text-text-dark hover:bg-gray-100 dark:hover:bg-gray-800'
+                                    }`}
+                            >
+                                {label}
+                            </button>
+                        )
+                    })}
                 </div>
 
                 <Link
@@ -229,11 +250,11 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
                 ) : (
                     <div className="card divide-y divide-[var(--color-border-light)] dark:divide-[var(--color-border-dark)]">
                         {lancamentosFiltrados
-                            .sort((a, b) => new Date(b.data || b.criadoEm) - new Date(a.data || a.criadoEm))
+                            .sort((a, b) => new Date(b.data || b.criadoEm || 0).getTime() - new Date(a.data || a.criadoEm || 0).getTime())
                             .slice(0, 20)
                             .map((lancamento) => {
                                 const isReceita = lancamento.tipo === 'receita';
-                                const categoriaInfo = categoriasMap[lancamento.categoria];
+                                const categoriaInfo = lancamento.categoria ? categoriasMap[lancamento.categoria] : undefined;
                                 const icone = categoriaInfo?.icone || (isReceita ? 'add' : 'remove');
                                 const corIcone = categoriaInfo?.cor; // Opcional: usar a cor da categoria se desejar
 
@@ -271,21 +292,27 @@ const DashboardFinanceiro = ({ isTabMode, onClose, autoOpenLancamento, autoOpenT
             </div>
 
             {/* Modal */}
-            {showModal && (
-                <LancamentoModal
-                    tipo={tipoLancamento}
-                    empresaId={empresa?.id}
-                    onClose={() => setShowModal(false)}
-                    onSave={handleSave}
-                    defaultStatus="pago"
-                />
-            )}
-        </div>
+            {
+                showModal && (
+                    <LancamentoModal
+                        tipo={tipoLancamento}
+                        empresaId={empresa?.id}
+                        onClose={() => setShowModal(false)}
+                        onSave={handleSave}
+                        defaultStatus="pago"
+                    />
+                )
+            }
+        </div >
     );
 };
 
 // Componente de Fluxo de Caixa Projetado
-const FluxoCaixaProjetado = ({ empresaId }) => {
+interface FluxoCaixaProjetadoProps {
+    empresaId?: string;
+}
+
+const FluxoCaixaProjetado = ({ empresaId }: FluxoCaixaProjetadoProps) => {
     const [projecao, setProjecao] = useState({
         receitasProjetadas: 0,
         despesasProjetadas: 0,
@@ -304,7 +331,7 @@ const FluxoCaixaProjetado = ({ empresaId }) => {
 
         try {
             // Buscar OS abertas/em execução (receitas previstas)
-            const ordensServico = await storage.getAll('ordens_servico', empresaId);
+            const ordensServico = await storage.getAll<OrdemServico>('ordens_servico', empresaId);
             const osAtivas = ordensServico.filter(os =>
                 os.ativo &&
                 ['aberta', 'execucao', 'aguardando_peca', 'orcamento'].includes(os.status)
@@ -318,7 +345,7 @@ const FluxoCaixaProjetado = ({ empresaId }) => {
             }, 0);
 
             // Buscar despesas pendentes (lançamentos futuros)
-            const lancamentos = await storage.getAll('lancamentos_financeiros', empresaId);
+            const lancamentos = await storage.getAll<LancamentoFinanceiro>('lancamentos_financeiros', empresaId);
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
 

@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+﻿// CadastroCliente.tsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -6,8 +6,32 @@ import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { validaCPF, validaCNPJ } from '../../lib/utils';
 import { consultarCNPJ, consultarCEP } from '../../services/api';
+import type { Cliente, Endereco } from '../../types';
 
-const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
+interface CadastroClienteProps {
+    clienteId?: string;
+    isTabMode?: boolean;
+    onClose?: () => void;
+    onDirtyChange?: (isDirty: boolean) => void;
+    onTitleChange?: (title: string) => void;
+}
+
+// Interface local para o formulário, estendendo Cliente mas com alguns campos obrigatórios ou específicos
+interface ClienteForm extends Partial<Omit<Cliente, 'endereco'>> {
+    tipo: 'pf' | 'pj';
+    nome: string;
+    documento: string;
+    telefone: string;
+    whatsapp: string;
+    dataNascimento: string;
+    email: string;
+    endereco: Endereco;
+    ativo: boolean;
+    observacoes: string;
+    tags: string[];
+}
+
+const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitleChange }: CadastroClienteProps) => {
     const { empresa } = useAuth();
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
@@ -30,7 +54,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
         onTitleChangeRef.current = onTitleChange;
     });
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<ClienteForm>({
         tipo: 'pf',
         nome: '',
         documento: '',
@@ -59,7 +83,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
         { id: 'indicacao', label: 'Indicação', color: 'bg-purple-500', icon: 'share' },
     ];
 
-    const toggleTag = (tagId) => {
+    const toggleTag = (tagId: string) => {
         setForm((prev) => ({
             ...prev,
             tags: prev.tags.includes(tagId)
@@ -101,7 +125,11 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             throw new Error('Telefone é obrigatório');
         }
 
-        if (isEdicao) {
+        if (!empresa?.id) {
+            throw new Error('Empresa não identificada');
+        }
+
+        if (isEdicao && id) {
             await storage.update('clientes', id, form);
         } else {
             await storage.create('clientes', form, empresa.id);
@@ -120,9 +148,10 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
     }, [isTabMode, clienteId, salvarCliente, registerSaveHandler, unregisterSaveHandler]);
 
     const carregarCliente = async () => {
+        if (!id) return;
         setLoading(true);
         try {
-            const cliente = await storage.getById('clientes', id);
+            const cliente = await storage.getById<Cliente>('clientes', id);
             if (cliente) {
                 setForm({
                     tipo: cliente.tipo || 'pf',
@@ -155,7 +184,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
     };
 
     // Tratamento de Telefone (Fixo vs Celular)
-    const handlePhoneChange = (e) => {
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
         // Remove tudo que não é número
@@ -200,12 +229,12 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
         setIsDirty(true);
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setIsDirty(true);
 
         if (name.startsWith('endereco.')) {
-            const campo = name.split('.')[1];
+            const campo = name.split('.')[1] as keyof Endereco;
             setForm((prev) => ({
                 ...prev,
                 endereco: { ...prev.endereco, [campo]: value },
@@ -217,7 +246,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
 
     // Buscar CEP
     const buscarCEP = async () => {
-        const cep = form.endereco.cep.replace(/\D/g, '');
+        const cep = form.endereco.cep ? form.endereco.cep.replace(/\D/g, '') : '';
         if (cep.length !== 8) return;
 
         try {
@@ -235,7 +264,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             setError('');
         } catch (error) {
             console.error('Erro ao buscar CEP:', error);
-            setError('Erro ao buscar CEP: ' + error.message);
+            setError('Erro ao buscar CEP: ' + (error as Error).message);
         }
     };
 
@@ -269,7 +298,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             }));
         } catch (error) {
             console.error('Erro ao buscar CNPJ:', error);
-            setError(error.message);
+            setError((error as Error).message);
         } finally {
             setLoading(false);
         }
@@ -292,12 +321,13 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
     };
 
     const handleDelete = async () => {
-        if (!confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) return;
+        if (!window.confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) return;
+        if (!empresa?.id || !id) return;
 
         setSalvando(true);
         try {
             // 1. Verificar vínculo com Veículos
-            const veiculos = await storage.getAll('veiculos', empresa?.id);
+            const veiculos = await storage.getAll<any>('veiculos', empresa.id);
             const temVeiculos = veiculos.some(v => v.clienteId === id);
 
             if (temVeiculos) {
@@ -306,7 +336,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             }
 
             // 2. Verificar vínculo com OS
-            const ordens = await storage.getAll('ordens_servico', empresa?.id);
+            const ordens = await storage.getAll<any>('ordens_servico', empresa.id);
             const temOS = ordens.some(os => os.clienteId === id);
 
             if (temOS) {
@@ -315,7 +345,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             }
 
             // Se passou, exclui
-            await storage.delete('clientes', id);
+            await storage.softDelete('clientes', id);
 
             if (isTabMode) {
                 onClose?.();
@@ -324,15 +354,21 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             }
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
-            setError('Erro ao excluir cliente: ' + error.message);
+            setError('Erro ao excluir cliente: ' + (error as Error).message);
         } finally {
             setSalvando(false);
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        if (!empresa?.id) {
+            setError('Empresa não identificada');
+            return;
+        }
+
         setSalvando(true);
 
         try {
@@ -351,7 +387,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
                 throw new Error('Telefone é obrigatório');
             }
 
-            if (isEdicao) {
+            if (isEdicao && id) {
                 await storage.update('clientes', id, form);
             } else {
                 await storage.create('clientes', form, empresa.id);
@@ -364,7 +400,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
                 navigate('/clientes');
             }
         } catch (error) {
-            setError(error.message || 'Erro ao salvar cliente');
+            setError((error as Error).message || 'Erro ao salvar cliente');
         } finally {
             setSalvando(false);
         }
@@ -386,7 +422,7 @@ const CadastroCliente = ({ clienteId, isTabMode, onClose, onDirtyChange, onTitle
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="flex items-center gap-3 px-4 py-3">
                     <div>
-                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                        <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                             {isEdicao ? 'Editar Cliente' : 'Novo Cliente'}
                         </h1>
                         <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">

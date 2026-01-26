@@ -1,31 +1,31 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import storage from '../../lib/storage';
+import { OrdemServico } from '../../types';
 
 const Prismas = () => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
-    const [osAtivas, setOsAtivas] = useState([]);
+    const [osAtivas, setOsAtivas] = useState<OrdemServico[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         carregarOSAtivas();
 
-        const handleStorageChange = (e) => {
+        const handleStorageChange = (e: CustomEvent) => {
             if (e.detail?.key?.includes('ordens_servico')) {
                 carregarOSAtivas();
             }
         };
 
-        window.addEventListener('osprimex-storage', handleStorageChange);
-        return () => window.removeEventListener('osprimex-storage', handleStorageChange);
+        window.addEventListener('osprimex-storage', handleStorageChange as EventListener);
+        return () => window.removeEventListener('osprimex-storage', handleStorageChange as EventListener);
     }, []);
 
     const carregarOSAtivas = async () => {
         try {
-            const todas = await storage.getAll('ordens_servico');
+            const todas = await storage.getAll<OrdemServico>('ordens_servico');
             // Filtro generalizado: Pega qualquer OS que tenha prisma E não esteja finalizada/cancelada
             // Filtro: Somente status que fazem sentido usar prisma (veículo na oficina)
             const statusPermitidos = ['aberta', 'execucao', 'aguardando_peca'];
@@ -42,8 +42,8 @@ const Prismas = () => {
         }
     };
 
-    // Mapear prismas Ã s OSs
-    const prismasMap = new Map();
+    // Mapear prismas à OSs
+    const prismasMap = new Map<number, OrdemServico>();
     osAtivas.forEach(os => {
         if (os.prisma) {
             prismasMap.set(Number(os.prisma), os);
@@ -52,7 +52,7 @@ const Prismas = () => {
 
     // Criar array com todos os prismas numbers (1 até quantidade configurada)
     // GARANTIA ANTI-CRASH: Fallback seguro para 20 se undefined/null/0
-    const qtdPrismas = empresa?.prismaQuantidade ? parseInt(empresa.prismaQuantidade) : 20;
+    const qtdPrismas = empresa?.prismaQuantidade ? parseInt(String(empresa.prismaQuantidade)) : 20;
     const totalPrismas = (!isNaN(qtdPrismas) && qtdPrismas > 0) ? qtdPrismas : 20;
 
     const prismas = Array.from({ length: totalPrismas }, (_, i) => i + 1);
@@ -61,7 +61,7 @@ const Prismas = () => {
     const disponiveis = totalPrismas - prismasMap.size;
 
     // Função para determinar cor do status (alinhado com Kanban)
-    const getCorStatus = (status) => {
+    const getCorStatus = (status: string) => {
         switch (status) {
             case 'aberta':
                 return 'bg-slate-500';      // Aprovada (Não Iniciada)
@@ -74,7 +74,7 @@ const Prismas = () => {
         }
     };
 
-    const getLabelStatus = (status) => {
+    const getLabelStatus = (status: string) => {
         switch (status) {
             case 'aberta':
                 return 'Aprovada (Não Iniciada)';
@@ -199,12 +199,13 @@ const Prismas = () => {
                     {prismas.map(num => {
                         const os = prismasMap.get(num);
                         const corStatus = os ? getCorStatus(os.status) : 'bg-green-500';
+                        // @ts-ignore - unused variable but kept from original structure
                         const disponivel = !os;
 
                         return (
                             <button
                                 key={num}
-                                onClick={() => os && navigate(`/os/${os.id}`)}
+                                onClick={() => os && os.id && navigate(`/os/${os.id}`)}
                                 className={`aspect-square rounded-lg border-2 p-2 transition-all ${os
                                     ? 'border-gray-400 hover:border-gray-600 hover:scale-105 cursor-pointer shadow-md'
                                     : 'border-gray-200 dark:border-gray-700 cursor-default'
@@ -235,4 +236,3 @@ const Prismas = () => {
 };
 
 export default Prismas;
-

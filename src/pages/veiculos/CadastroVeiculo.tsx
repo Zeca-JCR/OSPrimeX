@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+﻿// CadastroVeiculo.tsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -6,8 +6,22 @@ import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatDate, formatCurrency, formatPlaca } from '../../lib/utils';
 import GraficoKM from '../../components/veiculos/GraficoKM';
+import type { Veiculo, Cliente, OrdemServico } from '../../types';
 
-const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
+interface CadastroVeiculoProps {
+    veiculoId?: string;
+    isTabMode?: boolean;
+    onClose?: () => void;
+    onDirtyChange?: (isDirty: boolean) => void;
+    onTitleChange?: (title: string) => void;
+}
+
+interface VeiculoForm extends Partial<Veiculo> {
+    proximaRevisaoData?: string;
+    proximaRevisaoKm?: string;
+}
+
+const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitleChange }: CadastroVeiculoProps) => {
     const { empresa } = useAuth();
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
@@ -21,8 +35,8 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
     const [isDirty, setIsDirty] = useState(false);
-    const [clientes, setClientes] = useState([]);
-    const [ordensVeiculo, setOrdensVeiculo] = useState([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [ordensVeiculo, setOrdensVeiculo] = useState<OrdemServico[]>([]);
 
     // Refs para callbacks que podem mudar - evita loops infinitos
     const onDirtyChangeRef = useRef(onDirtyChange);
@@ -34,7 +48,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
         onTitleChangeRef.current = onTitleChange;
     });
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<VeiculoForm>({
         clienteId: clienteIdFromUrl || '',
         marca: '',
         modelo: '',
@@ -42,13 +56,10 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
         ano: '',
         cor: '',
         combustivel: 'flex',
-        // km removido
         renavam: '',
         observacoes: '',
-        // CRM - Próxima revisão
         proximaRevisaoData: '',
         proximaRevisaoKm: '',
-        // Foto do veículo
         foto: '',
     });
 
@@ -75,19 +86,22 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
     // Função de salvar para saveHandler
     const salvarVeiculo = useCallback(async () => {
         if (!form.clienteId) throw new Error('Selecione um cliente');
-        if (!form.marca.trim()) throw new Error('Marca é obrigatória');
-        if (!form.modelo.trim()) throw new Error('Modelo é obrigatório');
-        if (!form.placa.trim()) throw new Error('Placa é obrigatória');
+        if (!form.marca || !form.marca.trim()) throw new Error('Marca é obrigatória');
+        if (!form.modelo || !form.modelo.trim()) throw new Error('Modelo é obrigatório');
+        if (!form.placa || !form.placa.trim()) throw new Error('Placa é obrigatória');
+
+        if (!empresa?.id) throw new Error('Empresa não identificada');
 
         const payload = {
             ...form,
             placa: form.placa,
-            ano: form.ano ? parseInt(form.ano) : null,
-            // km removido do payload
-            proximaRevisaoKm: form.proximaRevisaoKm ? parseInt(form.proximaRevisaoKm) : null,
+            ano: form.ano ? Number(form.ano) : undefined,
+            proximaRevisaoKm: form.proximaRevisaoKm ? Number(form.proximaRevisaoKm) : undefined,
+            // Garantir campos obrigatórios para satisfazer o tipo se necessário, ou confiar no Partial
+            // Mas o storage espera Partial<T>
         };
 
-        if (isEdicao) {
+        if (isEdicao && id) {
             await storage.update('veiculos', id, payload);
         } else {
             await storage.create('veiculos', payload, empresa.id);
@@ -106,8 +120,9 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
     }, [isTabMode, veiculoId, salvarVeiculo, registerSaveHandler, unregisterSaveHandler]);
 
     const carregarClientes = async () => {
+        if (!empresa?.id) return;
         try {
-            const data = await storage.getAll('clientes', empresa?.id);
+            const data = await storage.getAll<Cliente>('clientes', empresa.id);
             setClientes(data.filter((c) => c.ativo));
         } catch (error) {
             console.error('Erro ao carregar clientes:', error);
@@ -115,11 +130,12 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
     };
 
     const carregarVeiculo = async () => {
+        if (!id || !empresa?.id) return;
         setLoading(true);
         try {
             const [veiculo, ordensData] = await Promise.all([
-                storage.getById('veiculos', id),
-                storage.getAll('ordens_servico', empresa?.id),
+                storage.getById<Veiculo>('veiculos', id),
+                storage.getAll<OrdemServico>('ordens_servico', empresa.id),
             ]);
 
             if (veiculo) {
@@ -128,21 +144,21 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                     marca: veiculo.marca || '',
                     modelo: veiculo.modelo || '',
                     placa: veiculo.placa || '',
-                    ano: veiculo.ano || '',
+                    ano: veiculo.ano ? String(veiculo.ano) : '',
                     cor: veiculo.cor || '',
                     combustivel: veiculo.combustivel || 'flex',
-                    // km removido
                     renavam: veiculo.renavam || '',
                     observacoes: veiculo.observacoes || '',
-                    proximaRevisaoData: veiculo.proximaRevisaoData || '',
-                    proximaRevisaoKm: veiculo.proximaRevisaoKm || '',
+                    // Campos adicionais que podem não estar na interface Veiculo strict
+                    proximaRevisaoData: (veiculo as any).proximaRevisaoData || '',
+                    proximaRevisaoKm: (veiculo as any).proximaRevisaoKm || '',
                     foto: veiculo.foto || '',
                 });
 
                 // Carregar histórico de OS deste veículo
                 const osDoVeiculo = ordensData
                     .filter(o => o.veiculoId === id && o.ativo)
-                    .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+                    .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
                 setOrdensVeiculo(osDoVeiculo);
             }
         } catch (error) {
@@ -153,7 +169,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
         }
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setIsDirty(true);
         if (name === 'placa') {
@@ -164,7 +180,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
     };
 
     // Função para comprimir/redimensionar imagem
-    const handleFotoChange = (e) => {
+    const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -182,6 +198,8 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
 
         const reader = new FileReader();
         reader.onload = (event) => {
+            if (!event.target?.result || typeof event.target.result !== 'string') return;
+
             const img = new Image();
             img.onload = () => {
                 // Redimensionar para max 800px de largura
@@ -203,6 +221,8 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
                 ctx.drawImage(img, 0, 0, width, height);
 
                 // Comprimir para JPEG com qualidade 0.7
@@ -218,31 +238,36 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
         setForm((prev) => ({ ...prev, foto: '' }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        if (!empresa?.id) {
+            setError('Empresa não identificada');
+            return;
+        }
+
         setSalvando(true);
 
         try {
             if (!form.clienteId) {
                 throw new Error('Selecione um cliente');
             }
-            if (!form.marca.trim()) {
+            if (!form.marca || !form.marca.trim()) {
                 throw new Error('Marca é obrigatória');
             }
-            if (!form.modelo.trim()) {
+            if (!form.modelo || !form.modelo.trim()) {
                 throw new Error('Modelo é obrigatório');
             }
-            if (!form.placa.trim()) {
+            if (!form.placa || !form.placa.trim()) {
                 throw new Error('Placa é obrigatória');
             }
 
             const payload = {
                 ...form,
                 placa: form.placa,
-                ano: form.ano ? parseInt(form.ano) : null,
-                // km removido
-                proximaRevisaoKm: form.proximaRevisaoKm ? parseInt(form.proximaRevisaoKm) : null,
+                ano: form.ano ? parseInt(String(form.ano)) : null,
+                proximaRevisaoKm: form.proximaRevisaoKm ? parseInt(String(form.proximaRevisaoKm)) : null,
             };
 
             // Debug: verificar se a foto está no payload
@@ -264,19 +289,20 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                 navigate('/veiculos');
             }
         } catch (error) {
-            setError(error.message || 'Erro ao salvar veículo');
+            setError((error as Error).message || 'Erro ao salvar veículo');
         } finally {
             setSalvando(false);
         }
     };
 
     const handleDelete = async () => {
-        if (!confirm('Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita.')) return;
+        if (!window.confirm('Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita.')) return;
+        if (!empresa?.id || !id) return;
 
         setSalvando(true);
         try {
             // Validação: Verificar vínculo com OS
-            const todasOS = await storage.getAll('ordens_servico', empresa?.id);
+            const todasOS = await storage.getAll<OrdemServico>('ordens_servico', empresa.id);
             const vinculado = todasOS.some(os => os.veiculoId === id);
 
             if (vinculado) {
@@ -284,7 +310,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                 return;
             }
 
-            await storage.delete('veiculos', id);
+            await storage.softDelete('veiculos', id);
 
             // Navegar de volta
             if (isTabMode) {
@@ -296,7 +322,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
             }
         } catch (error) {
             console.error('Erro ao excluir veículo:', error);
-            setError('Erro ao excluir veículo: ' + error.message);
+            setError('Erro ao excluir veículo: ' + (error as Error).message);
         } finally {
             setSalvando(false);
         }
@@ -327,7 +353,7 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
                 <div className="flex items-center gap-3 px-4 py-3">
                     <div>
-                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                        <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                             {isEdicao ? 'Editar Veículo' : 'Novo Veículo'}
                         </h1>
                         <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
@@ -561,13 +587,13 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                 {/* Gráfico de Evolução da KM */}
                 {isEdicao && (() => {
                     const dadosGrafico = ordensVeiculo
-                        .filter(o => o.status === 'finalizada' && (o.kmAtual || o.km))
+                        .filter(o => o.status === 'finalizada' && (o.kmAtual || (o as any).km))
                         .map(o => ({
                             data: o.criadoEm, // Idealmente usar data de finalização se houver, mas criadoEm serve
-                            km: o.kmAtual || o.km,
+                            km: o.kmAtual || (o as any).km,
                             osNumero: o.numero
                         }))
-                        .sort((a, b) => new Date(a.data) - new Date(b.data));
+                        .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
 
                     return <GraficoKM dados={dadosGrafico} />;
                 })()}
@@ -592,12 +618,15 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                         ) : (
                             <div className="space-y-2">
                                 {ordensVeiculo.slice(0, 10).map((os) => {
-                                    const statusConfig = {
+                                    const statusConfig: Record<string, { label: string; color: string }> = {
                                         orcamento: { label: 'Orçamento', color: 'bg-yellow-500' },
-                                        aberta: { label: 'Aprovada (Não Iniciada)', color: 'bg-blue-500' },
+                                        aguardando_aprovacao: { label: 'Aguard. Aprov.', color: 'bg-yellow-600' },
+                                        aprovada: { label: 'Aprovada', color: 'bg-blue-400' },
+                                        aberta: { label: 'Aberta', color: 'bg-blue-500' },
                                         execucao: { label: 'Execução', color: 'bg-orange-500' },
                                         aguardando_peca: { label: 'Aguard. Peça', color: 'bg-purple-500' },
                                         finalizada: { label: 'Finalizada', color: 'bg-green-500' },
+                                        entregue: { label: 'Entregue', color: 'bg-green-600' },
                                         cancelada: { label: 'Cancelada', color: 'bg-red-500' },
                                     };
 
@@ -615,9 +644,9 @@ const CadastroVeiculo = ({ veiculoId, isTabMode, onClose, onDirtyChange, onTitle
                                                     <p className="text-sm font-medium text-text-light dark:text-text-dark">
                                                         OS #{os.numero}
                                                     </p>
-                                                    {(os.kmAtual || os.km) && (
+                                                    {(os.kmAtual || (os as any).km) && (
                                                         <span className="text-xs font-semibold text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">
-                                                            {Number(os.kmAtual || os.km).toLocaleString('pt-BR')} km
+                                                            {Number(os.kmAtual || (os as any).km).toLocaleString('pt-BR')} km
                                                         </span>
                                                     )}
                                                 </div>

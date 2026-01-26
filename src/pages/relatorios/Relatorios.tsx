@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDate, parseDateLocal, toISODate } from '../../lib/utils';
@@ -7,9 +6,15 @@ import { formatCurrency, formatDate, parseDateLocal, toISODate } from '../../lib
 import PDFLinkWrapper from '../../components/pdf/PDFLinkWrapper';
 // import { RelatorioDocument } from '../../components/pdf/RelatorioDocument'; // Importado dinamicamente no wrapper
 import { FaturamentoChart, FinanceiroChart, DistributionChart } from '../../components/relatorios/RelatoriosCharts';
+import { Cliente, OrdemServico, LancamentoFinanceiro, Produto, Colaborador } from '../../types';
 import RelatorioComparativo from '../../components/relatorios/RelatorioComparativo';
 
-const Relatorios = ({ isTabMode, onClose }) => {
+interface RelatoriosProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const Relatorios = ({ isTabMode, onClose }: RelatoriosProps = {}) => {
     const { empresa } = useAuth();
     const [loading, setLoading] = useState(true);
     const [tipoRelatorio, setTipoRelatorio] = useState('faturamento');
@@ -17,11 +22,11 @@ const Relatorios = ({ isTabMode, onClose }) => {
     const [dataInicio, setDataInicio] = useState('');
     const [dataFim, setDataFim] = useState('');
 
-    const [ordens, setOrdens] = useState([]);
-    const [clientes, setClientes] = useState([]);
-    const [lancamentos, setLancamentos] = useState([]);
-    const [produtos, setProdutos] = useState([]);
-    const [usuarios, setUsuarios] = useState([]); // This allows us to keep 'usuarios' state variable name but fill it with collaborators to minimize refactor
+    const [ordens, setOrdens] = useState<OrdemServico[]>([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [lancamentos, setLancamentos] = useState<LancamentoFinanceiro[]>([]);
+    const [produtos, setProdutos] = useState<Produto[]>([]);
+    const [usuarios, setUsuarios] = useState<Colaborador[]>([]); // This allows us to keep 'usuarios' state variable name but fill it with collaborators to minimize refactor
     const [filtroTecnico, setFiltroTecnico] = useState('');
 
     useEffect(() => {
@@ -40,11 +45,11 @@ const Relatorios = ({ isTabMode, onClose }) => {
         if (!empresa) return;
         try {
             const [ordensData, clientesData, lancamentosData, produtosData, colaboradoresData] = await Promise.all([
-                storage.getAll('ordens_servico', empresa.id),
-                storage.getAll('clientes', empresa.id),
-                storage.getAll('lancamentos_financeiros', empresa.id),
-                storage.getAll('produtos', empresa.id),
-                storage.getAll('colaboradores', empresa.id),
+                storage.getAll<OrdemServico>('ordens_servico', empresa.id),
+                storage.getAll<Cliente>('clientes', empresa.id),
+                storage.getAll<LancamentoFinanceiro>('lancamentos_financeiros', empresa.id),
+                storage.getAll<Produto>('produtos', empresa.id),
+                storage.getAll<Colaborador>('colaboradores', empresa.id),
             ]);
             setOrdens(ordensData);
             setClientes(clientesData);
@@ -318,7 +323,7 @@ const Relatorios = ({ isTabMode, onClose }) => {
             {/* Header - estilo Stitch */}
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Relatórios
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">

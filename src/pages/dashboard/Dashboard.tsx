@@ -1,18 +1,63 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom'; // Unused
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useModal } from '../../contexts/ModalContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 import { formatCurrency, parseDateLocal, toTitleCase } from '../../lib/utils';
+import type {
+    Cliente,
+    Veiculo,
+    OrdemServico,
+    Produto,
+    LancamentoFinanceiro,
+    EventoAgenda
+} from '../../types';
+
+interface PatioStats {
+    total: number;
+    execucao: number;
+    aguardando: number;
+    aberta: number;
+    proximasEntregas: OrdemServico[];
+}
+
+interface DashboardStats {
+    clientes: number;
+    veiculos: number;
+    osAbertas: number;
+    osExecucao: number;
+    osFinalizadas: number;
+    osFinalizadasMes: number;
+    osHoje?: number;
+    finalizadasHoje?: number;
+    orcamentosPendentes?: number;
+    receitaMes: number;
+    receitaSemana: number;
+    patio: PatioStats;
+}
+
+interface Alerta {
+    tipo: 'info' | 'warning' | 'error' | 'success'; // added success
+    icon: string;
+    titulo: string;
+    descricao: string;
+    link: string;
+    cor: string;
+}
+
+interface ReceitaDia {
+    dia: string;
+    data: number;
+    valor: number;
+}
 
 const Dashboard = () => {
     const { empresa, usuario } = useAuth();
     const { openTab } = useTabs();
-    const navigate = useNavigate();
-    const [stats, setStats] = useState({
+    // const navigate = useNavigate(); // Unused
+    const [stats, setStats] = useState<DashboardStats>({
         clientes: 0,
         veiculos: 0,
         osAbertas: 0,
@@ -24,12 +69,12 @@ const Dashboard = () => {
         patio: { total: 0, execucao: 0, aguardando: 0, aberta: 0, proximasEntregas: [] }
     });
     const [loading, setLoading] = useState(true);
-    const { notificacoes, unreadCount, markAsRead, clearAll } = useNotification();
+    const { notificacoes } = useNotification(); // Used implicitly by showing notifications? No, alerts use local state.
     const { openNovaOS } = useModal();
-    const [osRecentes, setOsRecentes] = useState([]);
-    const [clientes, setClientes] = useState([]);
-    const [alertas, setAlertas] = useState([]);
-    const [receitaSemanal, setReceitaSemanal] = useState([]);
+    const [osRecentes, setOsRecentes] = useState<OrdemServico[]>([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [alertas, setAlertas] = useState<Alerta[]>([]);
+    const [receitaSemanal, setReceitaSemanal] = useState<ReceitaDia[]>([]);
 
     // Meta mensal de OS finalizadas (lida das configurações da empresa)
     const META_OS_MES = empresa?.metaMensalOS || 30;
@@ -56,12 +101,12 @@ const Dashboard = () => {
 
             try {
                 const [clientesData, veiculos, ordens, produtos, lancamentos, agendamentos] = await Promise.all([
-                    storage.getAll('clientes', empresa.id),
-                    storage.getAll('veiculos', empresa.id),
-                    storage.getAll('ordens_servico', empresa.id),
-                    storage.getAll('produtos', empresa.id),
-                    storage.getAll('lancamentos_financeiros', empresa.id),
-                    storage.getAll('agendamentos', empresa.id),
+                    storage.getAll<Cliente>('clientes', empresa.id),
+                    storage.getAll<Veiculo>('veiculos', empresa.id),
+                    storage.getAll<OrdemServico>('ordens_servico', empresa.id),
+                    storage.getAll<Produto>('produtos', empresa.id),
+                    storage.getAll<LancamentoFinanceiro>('lancamentos_financeiros', empresa.id),
+                    storage.getAll<EventoAgenda>('agendamentos', empresa.id),
                 ]);
 
                 const ativos = clientesData.filter(c => c.ativo);
@@ -93,7 +138,7 @@ const Dashboard = () => {
                 const osFinalizadasMes = ordensAtivas.filter(o => {
                     if (o.status !== 'finalizada') return false;
                     const dataFim = o.execucaoFinalizadaEm || o.atualizadoEm || o.criadoEm;
-                    return new Date(dataFim) >= inicioMes;
+                    return parseDateLocal(dataFim) >= inicioMes;
                 });
 
                 // Métricas Financeiras
@@ -125,14 +170,14 @@ const Dashboard = () => {
                         aberta: ordensAtivas.filter(o => o.status === 'aberta').length,
                         proximasEntregas: ordensAtivas
                             .filter(o => ['aberta', 'execucao'].includes(o.status) && o.previsaoEntrega)
-                            .sort((a, b) => new Date(a.previsaoEntrega) - new Date(b.previsaoEntrega))
+                            .sort((a, b) => new Date(a.previsaoEntrega!).getTime() - new Date(b.previsaoEntrega!).getTime())
                             .slice(0, 3)
                     }
                 });
 
                 // Calcular receita dos últimos 7 dias para o gráfico
                 const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-                const receitaPorDia = [];
+                const receitaPorDia: ReceitaDia[] = [];
                 for (let i = 6; i >= 0; i--) {
                     const dia = new Date(hoje);
                     dia.setDate(hoje.getDate() - i);
@@ -159,20 +204,20 @@ const Dashboard = () => {
 
                 setOsRecentes(
                     ordensAtivas
-                        .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm))
+                        .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
                         .slice(0, 5)
                 );
 
                 // Gerar alertas inteligentes
-                const novosAlertas = [];
+                const novosAlertas: Alerta[] = [];
 
                 // Agendamentos para Amanhã (NOVO)
                 const amanha = new Date(hoje);
                 amanha.setDate(hoje.getDate() + 1);
 
                 const agendamentosAmanha = (agendamentos || []).filter(a => {
-                    if (!a.data || !a.ativo) return false;
-                    const d = parseDateLocal(a.data);
+                    if (!a.dataInicio || !a.ativo) return false;
+                    const d = parseDateLocal(a.dataInicio);
                     return d.getDate() === amanha.getDate() &&
                         d.getMonth() === amanha.getMonth() &&
                         d.getFullYear() === amanha.getFullYear();
@@ -235,7 +280,7 @@ const Dashboard = () => {
                 // OS em execução há muito tempo (mais de 3 dias)
                 const osAtrasadas = ordensAtivas.filter(o => {
                     if (o.status !== 'execucao') return false;
-                    const diasEmExecucao = Math.floor((Date.now() - new Date(o.criadoEm)) / (1000 * 60 * 60 * 24));
+                    const diasEmExecucao = Math.floor((Date.now() - new Date(o.criadoEm).getTime()) / (1000 * 60 * 60 * 24));
                     return diasEmExecucao > 3;
                 });
                 if (osAtrasadas.length > 0) {
@@ -250,13 +295,21 @@ const Dashboard = () => {
                 }
 
                 // Revisões de Veículos
+                /* 
+                   Commented out per original logic being complex or custom property. 
+                   Assuming 'proximaRevisaoData' is not standard in Veiculo interface yet.
+                   Unless we added it. Checking models.ts... it is NOT there. 
+                   I will keep it commented or typecast if needed. 
+                   Original code used it. I will check for 'proximaRevisaoData' treating as any for now to be safe with existing data but strict with TS.
+                */
                 const veiculosRevisao = veiculosAtivos.filter(v => {
                     let precisaRevisao = false;
+                    const vAny = v as any;
 
                     // Verificar por Data
-                    if (v.proximaRevisaoData) {
-                        const dataRevisao = new Date(v.proximaRevisaoData + 'T23:59:59'); // Fim do dia
-                        const diffDias = Math.floor((dataRevisao - hoje) / (1000 * 60 * 60 * 24));
+                    if (vAny.proximaRevisaoData) {
+                        const dataRevisao = new Date(vAny.proximaRevisaoData + 'T23:59:59'); // Fim do dia
+                        const diffDias = Math.floor((dataRevisao.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
                         if (diffDias <= 7) precisaRevisao = true; // Vencida ou próxima (7 dias)
                     }
 
@@ -285,7 +338,7 @@ const Dashboard = () => {
         carregarDados();
 
         // Listener para sincronização em tempo real (Outras abas)
-        const handleStorageChange = (e) => {
+        const handleStorageChange = (e: StorageEvent) => {
             if (e.key?.includes('ordens_servico') || e.key?.includes('lancamentos_financeiros')) {
                 carregarDados();
             }
@@ -293,8 +346,9 @@ const Dashboard = () => {
         window.addEventListener('storage', handleStorageChange);
 
         // Listener para sincronização na MESMA aba (via CustomEvent do storage.js)
-        const handleCustomStorageChange = (e) => {
-            if (e.detail?.key?.includes('ordens_servico') || e.detail?.key?.includes('lancamentos_financeiros')) {
+        const handleCustomStorageChange = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail?.key?.includes('ordens_servico') || customEvent.detail?.key?.includes('lancamentos_financeiros')) {
                 carregarDados();
             }
         };
@@ -310,9 +364,10 @@ const Dashboard = () => {
         };
     }, [empresa]);
 
-    const getClienteNome = (id) => toTitleCase(clientes.find(c => c.id === id)?.nome) || 'Cliente';
+    const getClienteNome = (id: string) => toTitleCase(clientes.find(c => c.id === id)?.nome) || 'Cliente';
 
-    const statusConfig = {
+    // Type checking for statusConfig is implicit based on keys
+    const statusConfig: Record<string, { label: string; color: string }> = {
         orcamento: { label: 'Orçamento', color: 'bg-yellow-500' },
         aberta: { label: 'Aprovada (Não Iniciada)', color: 'bg-slate-500' },
         execucao: { label: 'Execução', color: 'bg-primary' },
@@ -337,7 +392,7 @@ const Dashboard = () => {
             {/* Header com saudação contextual */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark flex items-center gap-2">
                         {getSaudacao()}, {usuario?.nome?.split(' ')[0]}!
                         <span className="text-2xl">{new Date().getHours() < 12 ? '☀️' : new Date().getHours() < 18 ? '🌤️' : '🌙'}</span>
                     </h1>
@@ -468,7 +523,7 @@ const Dashboard = () => {
                                             </span>
                                         </div>
                                         <span className="text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                            {new Date(os.previsaoEntrega).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {os.previsaoEntrega ? new Date(os.previsaoEntrega).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                         </span>
                                     </div>
                                 ))}
@@ -574,16 +629,16 @@ const Dashboard = () => {
                                         {dia.valor > 0 ? formatCurrency(dia.valor).replace('R$', '').trim() : '-'}
                                     </span>
                                     <div
-                                        className={`w - full rounded - t - lg transition - all ${isHoje
+                                        className={`w-full rounded-t-lg transition-all ${isHoje
                                             ? 'bg-gradient-to-t from-primary to-blue-400'
                                             : dia.valor > 0
                                                 ? 'bg-gradient-to-t from-emerald-500 to-emerald-400'
                                                 : 'bg-gray-200 dark:bg-gray-700'
                                             } `}
-                                        style={{ height: `${alturaPx} px`, minHeight: dia.valor > 0 ? '8px' : '4px' }}
+                                        style={{ height: `${alturaPx}px`, minHeight: dia.valor > 0 ? '8px' : '4px' }}
                                         title={`${dia.dia} ${dia.data}: ${formatCurrency(dia.valor)} `}
                                     />
-                                    <span className={`text - xs ${isHoje ? 'font-bold text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'} `}>
+                                    <span className={`text-xs ${isHoje ? 'font-bold text-primary' : 'text-text-secondary-light dark:text-text-secondary-dark'} `}>
                                         {dia.dia}
                                     </span>
                                 </div>
@@ -837,7 +892,7 @@ const Dashboard = () => {
                                             key={os.id}
                                             onClick={() => openTab({ id: `os-${os.id}`, type: 'os', title: `OS #${os.numero}`, data: { osId: os.id } })}
                                             className={`
-cursor - pointer hover: bg - gray - 50 dark: hover: bg - gray - 800 / 50 transition - colors
+cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors
                                                 ${index !== osRecentes.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}
 `}
                                         >
@@ -875,9 +930,8 @@ cursor - pointer hover: bg - gray - 50 dark: hover: bg - gray - 800 / 50 transit
                     )}
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 
 export default Dashboard;
-

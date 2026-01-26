@@ -1,9 +1,19 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { OrdemServico } from '../../types';
 
-const PatioSidebar = ({ activeOS, loading }) => {
+interface PatioOrdemServico extends OrdemServico {
+    veiculo?: { placa?: string; modelo?: string };
+    cliente?: { nome?: string };
+    previsaoEntrega?: string;
+}
+
+interface PatioSidebarProps {
+    activeOS: PatioOrdemServico[];
+    loading?: boolean;
+}
+
+const PatioSidebar = ({ activeOS, loading }: PatioSidebarProps) => {
     const navigate = useNavigate();
 
     // Filtra apenas OSs relevantes para o pátio
@@ -69,7 +79,7 @@ const PatioSidebar = ({ activeOS, loading }) => {
 
                                 <div className="flex items-center gap-2 mt-2">
                                     {(() => {
-                                        const statusConfig = {
+                                        const statusConfig: Record<string, { label: string, color: string }> = {
                                             'aberta': { label: 'Aprovada (Não Iniciada)', color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
                                             'execucao': { label: 'Execução', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
                                             'aguardando_peca': { label: 'Aguardando Peça', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },

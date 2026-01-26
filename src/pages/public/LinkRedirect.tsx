@@ -1,22 +1,27 @@
-﻿// @ts-nocheck
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import storage from '../../lib/storage';
+import { LinkRastreavel } from '../../types';
 
 const LinkRedirect = () => {
-    const { codigo } = useParams();
+    const { codigo } = useParams<{ codigo: string }>();
     const navigate = useNavigate();
     const [error, setError] = useState(false);
 
     useEffect(() => {
         const processarLink = async () => {
+            if (!codigo) {
+                setError(true);
+                return;
+            }
+
             try {
                 // Como não temos um backend real com índice, precisamos buscar quem tem esse código.
                 // Em produção real, isso seria um SELECT * FROM links WHERE codigo = x.
                 // Aqui, vamos varrer (ineficiente mas ok para MVP local) ou esperar que o ID do link seja o código.
 
-                // Vamos assumir que o "codigo" Ã‰ o ID do registro em links_rastreaveis para simplificar o MVP sem backend real.
-                const link = await storage.getById('links_rastreaveis', codigo);
+                // Vamos assumir que o "codigo" É o ID do registro em links_rastreaveis para simplificar o MVP sem backend real.
+                const link = await storage.getById<LinkRastreavel>('links_rastreaveis', codigo);
 
                 if (link && link.ativo !== false) {
 
@@ -25,7 +30,7 @@ const LinkRedirect = () => {
                     await storage.update('links_rastreaveis', link.id, {
                         cliques: (link.cliques || 0) + 1,
                         ultimoClique: new Date().toISOString()
-                    });
+                    } as any);
 
                     // Se tiver uma OS, podemos adicionar um log na timeline da OS também (opcional futuro)
 
@@ -73,4 +78,3 @@ const LinkRedirect = () => {
 };
 
 export default LinkRedirect;
-

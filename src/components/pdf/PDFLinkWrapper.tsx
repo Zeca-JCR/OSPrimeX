@@ -1,12 +1,10 @@
-// @ts-nocheck
-// Componentes PDF usam @react-pdf/renderer com tipagem específica
-import React, { useState, type ReactNode } from 'react';
+import React, { useState, ReactNode } from 'react';
 
 interface PDFLinkWrapperProps {
     fileName: string;
     className?: string;
     children?: ReactNode;
-    [key: string]: unknown;
+    [key: string]: any;
 }
 
 interface LoadedComponents {
@@ -14,12 +12,13 @@ interface LoadedComponents {
     RelatorioDocument: React.ComponentType<any>;
 }
 
-const PDFLinkWrapper = ({ fileName, className, children, ...docProps }: PDFLinkWrapperProps) => {
+const PDFLinkWrapper: React.FC<PDFLinkWrapperProps> = ({ fileName, className, children, ...docProps }) => {
     const [Components, setComponents] = useState<LoadedComponents | null>(null);
 
     React.useEffect(() => {
         const loadDeps = async () => {
             try {
+                // @ts-ignore - Dynamic import
                 const [pdfModule, docModule] = await Promise.all([
                     import('@react-pdf/renderer'),
                     import('./RelatorioDocument')

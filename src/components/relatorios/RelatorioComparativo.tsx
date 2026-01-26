@@ -1,12 +1,21 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
+﻿
 import { useMemo } from 'react';
 import { formatCurrency } from '../../lib/utils';
+import { OrdemServico, Produto } from '../../types';
 
-const RelatorioComparativo = ({ ordens, servicos = [], ano, mes, dataInicio, dataFim }) => {
+interface RelatorioComparativoProps {
+    ordens: OrdemServico[];
+    servicos?: Produto[];
+    ano: number;
+    mes: number;
+    dataInicio?: string;
+    dataFim?: string;
+}
+
+const RelatorioComparativo = ({ ordens, servicos = [], ano, mes, dataInicio, dataFim }: RelatorioComparativoProps) => {
 
     // Função auxiliar para calcular métricas de um mês específico
-    const calcularMetricas = (targetAno, targetMes, limitStartDate = null, limitEndDate = null) => {
+    const calcularMetricas = (targetAno: number, targetMes: number, limitStartDate: string | null = null, limitEndDate: string | null = null) => {
         // Filtrar ordens finalizadas do mês alvo (ou período específico)
         const osDoMes = ordens.filter(o => {
             if (o.status !== 'finalizada') return false;
@@ -59,7 +68,7 @@ const RelatorioComparativo = ({ ordens, servicos = [], ano, mes, dataInicio, dat
         const previous = calcularMetricas(prevAno, prevMes);
 
         // Calcular Crescimento (%)
-        const calcGrowth = (curr, prev) => {
+        const calcGrowth = (curr: number, prev: number) => {
             if (prev === 0) return curr > 0 ? 100 : 0;
             return ((curr - prev) / prev) * 100;
         };
@@ -77,7 +86,16 @@ const RelatorioComparativo = ({ ordens, servicos = [], ano, mes, dataInicio, dat
     }, [ordens, ano, mes, dataFim]);
 
     // Componente de Card Individual
-    const ComparisonCard = ({ title, value, prevValue, growth, isCurrency = false, icon }) => {
+    interface ComparisonCardProps {
+        title: string;
+        value: number;
+        prevValue: number;
+        growth: number;
+        isCurrency?: boolean;
+        icon: string;
+    }
+
+    const ComparisonCard = ({ title, value, prevValue, growth, isCurrency = false, icon }: ComparisonCardProps) => {
         const isPositive = growth >= 0;
         const arrowIcon = isPositive ? 'trending_up' : 'trending_down';
         const colorClass = isPositive ? 'text-green-500' : 'text-red-500';

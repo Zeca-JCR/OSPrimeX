@@ -1,9 +1,7 @@
-// @ts-nocheck
-// Componentes PDF usam @react-pdf/renderer com tipagem específica
-import { useState, type ReactElement } from 'react';
+import { useState, ReactElement } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { OSDocument, ThermalDocument } from './OSDocument';
-import type { OrdemServico, Cliente, Veiculo, Empresa, Colaborador } from '../../types';
+import type { OrdemServico, Cliente, Veiculo, Empresa, Usuario } from '../../types';
 
 // Helper function to handle print using hidden iframe
 const handlePrint = async (docInstance: ReactElement): Promise<void> => {
@@ -49,15 +47,15 @@ const handlePrint = async (docInstance: ReactElement): Promise<void> => {
 };
 
 interface PrintOSButtonProps {
-    os: OrdemServico & { fotos?: Array<{ url: string; descricao?: string }> };
-    cliente: Cliente;
-    veiculo: Veiculo;
-    empresa: Empresa;
-    tecnico?: Colaborador;
+    os: OrdemServico & { fotos?: Array<{ id: string; data: string; descricao?: string; criadoEm?: string }> };
+    cliente: Cliente | null;
+    veiculo: Veiculo | null;
+    empresa: Empresa | null;
+    tecnico?: Usuario | null;
     className?: string;
 }
 
-export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, className = '' }: PrintOSButtonProps) => {
+export const PrintOSButton: React.FC<PrintOSButtonProps> = ({ os, cliente, veiculo, empresa, tecnico, className = '' }) => {
     const [loading, setLoading] = useState(false);
     const [showPhotoConfirm, setShowPhotoConfirm] = useState(false);
 
@@ -83,7 +81,7 @@ export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, classNam
                 cliente={cliente}
                 veiculo={veiculo}
                 empresa={empresa}
-                tecnico={tecnico}
+                tecnico={tecnico || null}
                 incluirFotos={incluirFotos}
             />
         );
@@ -164,13 +162,13 @@ export const PrintOSButton = ({ os, cliente, veiculo, empresa, tecnico, classNam
 
 interface PrintThermalButtonProps {
     os: OrdemServico;
-    cliente: Cliente;
-    veiculo: Veiculo;
-    empresa: Empresa;
+    cliente: Cliente | null;
+    veiculo: Veiculo | null;
+    empresa: Empresa | null;
     className?: string;
 }
 
-export const PrintThermalButton = ({ os, cliente, veiculo, empresa, className = '' }: PrintThermalButtonProps) => {
+export const PrintThermalButton: React.FC<PrintThermalButtonProps> = ({ os, cliente, veiculo, empresa, className = '' }) => {
     const [loading, setLoading] = useState(false);
 
     const handleClick = async () => {

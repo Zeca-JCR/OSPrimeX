@@ -1,11 +1,16 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import storage from '../../lib/storage';
 import { formatPlaca } from '../../lib/utils';
+import { Veiculo } from '../../types';
 
-export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
+interface EditVeiculoModalProps {
+    veiculo: Veiculo;
+    empresaId: string;
+    onClose: () => void;
+    onSave: (veiculo: Veiculo | null) => void;
+}
+
+export const EditVeiculoModal: React.FC<EditVeiculoModalProps> = ({ veiculo, empresaId, onClose, onSave }) => {
     const [form, setForm] = useState({
         placa: '',
         marca: '',
@@ -27,18 +32,16 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
         }
     }, [veiculo]);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-
-
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSalvando(true);
         try {
-            await storage.update('veiculos', veiculo.id, form, empresaId);
+            await storage.update('veiculos', veiculo.id, form);
             onSave({ ...veiculo, ...form });
             onClose();
         } catch (error) {
@@ -137,7 +140,7 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
                                 setSalvando(true);
                                 try {
                                     // Validação: Verificar vínculo com OS
-                                    const todasOS = await storage.getAll('ordens_servico', empresaId);
+                                    const todasOS = await storage.getAll<any>('ordens_servico', empresaId);
                                     const vinculado = todasOS.some(os => os.veiculoId === veiculo.id);
 
                                     if (vinculado) {
@@ -187,4 +190,3 @@ export const EditVeiculoModal = ({ veiculo, empresaId, onClose, onSave }) => {
         </div >
     );
 };
-

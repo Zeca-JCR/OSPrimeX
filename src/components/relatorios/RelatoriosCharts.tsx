@@ -1,6 +1,4 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import React from 'react';
+﻿import React from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush,
     BarChart, Bar,
@@ -11,8 +9,18 @@ import { formatCurrency } from '../../lib/utils';
 // Cores para gráficos
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
-// === GRÃFICO DE FATURAMENTO (ÃREA) ===
-export const FaturamentoChart = ({ data }) => {
+interface ChartDataPoint {
+    name: string;
+    valor?: number;
+    [key: string]: any;
+}
+
+interface FaturamentoChartProps {
+    data: ChartDataPoint[];
+}
+
+// === GRÁFICO DE FATURAMENTO (ÁREA) ===
+export const FaturamentoChart: React.FC<FaturamentoChartProps> = ({ data }) => {
     return (
         <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -34,7 +42,7 @@ export const FaturamentoChart = ({ data }) => {
                         tickLine={false}
                     />
                     <Tooltip
-                        formatter={(value) => formatCurrency(value)}
+                        formatter={(value: number) => formatCurrency(value)}
                         contentStyle={{
                             backgroundColor: '#fff',
                             borderRadius: '8px',
@@ -57,8 +65,12 @@ export const FaturamentoChart = ({ data }) => {
     );
 };
 
-// === GRÃFICO FINANCEIRO (BARRA) ===
-export const FinanceiroChart = ({ data }) => {
+interface FinanceiroChartProps {
+    data: any[];
+}
+
+// === GRÁFICO FINANCEIRO (BARRA) ===
+export const FinanceiroChart: React.FC<FinanceiroChartProps> = ({ data }) => {
     return (
         <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -70,7 +82,7 @@ export const FinanceiroChart = ({ data }) => {
                     <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} />
                     <YAxis tickFormatter={(val) => `R$${val}`} tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} />
                     <Tooltip
-                        formatter={(value) => formatCurrency(value)}
+                        formatter={(value: number) => formatCurrency(value)}
                         cursor={{ fill: 'transparent' }}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                     />
@@ -83,8 +95,14 @@ export const FinanceiroChart = ({ data }) => {
     );
 };
 
-// === GRÃFICO DE PIZZA (GENÃ‰RICO) ===
-export const DistributionChart = ({ data, dataKey = "value", nameKey = "name" }) => {
+interface DistributionChartProps {
+    data: any[];
+    dataKey?: string;
+    nameKey?: string;
+}
+
+// === GRÁFICO DE PIZZA (GENÉRICO) ===
+export const DistributionChart: React.FC<DistributionChartProps> = ({ data, dataKey = "value", nameKey = "name" }) => {
     return (
         <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -104,7 +122,7 @@ export const DistributionChart = ({ data, dataKey = "value", nameKey = "name" })
                         ))}
                     </Pie>
                     <Tooltip
-                        formatter={(value) => dataKey === 'valor' ? formatCurrency(value) : value}
+                        formatter={(value: number) => dataKey === 'valor' ? formatCurrency(value) : value}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                     />
                     <Legend verticalAlign="bottom" height={36} />
@@ -113,4 +131,3 @@ export const DistributionChart = ({ data, dataKey = "value", nameKey = "name" })
         </div>
     );
 };
-

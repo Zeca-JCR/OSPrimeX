@@ -1,14 +1,13 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import { Colaborador, Comissao } from '../../types';
 
 const RelatorioComissoes = () => {
     const { empresa } = useAuth();
-    const [comissoes, setComissoes] = useState([]);
-    const [tecnicos, setTecnicos] = useState([]);
-    const [clientes, setClientes] = useState([]);
+    const [comissoes, setComissoes] = useState<Comissao[]>([]);
+    const [tecnicos, setTecnicos] = useState<Colaborador[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Filtros
@@ -23,15 +22,13 @@ const RelatorioComissoes = () => {
     const carregarDados = async () => {
         if (!empresa) return;
         try {
-            const [comissoesData, colaboradoresData, clientesData] = await Promise.all([
-                storage.getAll('comissoes', empresa.id),
-                storage.getAll('colaboradores', empresa.id),
-                storage.getAll('clientes', empresa.id),
+            const [comissoesData, colaboradoresData] = await Promise.all([
+                storage.getAll<Comissao>('comissoes', empresa.id),
+                storage.getAll<Colaborador>('colaboradores', empresa.id),
             ]);
 
-            setComissoes(comissoesData.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm)));
+            setComissoes(comissoesData.sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()));
             setTecnicos(colaboradoresData.filter(c => c.ativo !== false));
-            setClientes(clientesData);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
         } finally {
@@ -39,10 +36,10 @@ const RelatorioComissoes = () => {
         }
     };
 
-    const marcarComoPago = async (comissaoId) => {
+    const marcarComoPago = async (comissaoId: string) => {
         if (!confirm('Marcar esta comissão como paga?')) return;
         try {
-            await storage.update('comissoes', comissaoId, {
+            await storage.update<Comissao>('comissoes', comissaoId, {
                 status: 'pago',
                 dataPagamento: new Date().toISOString()
             });
@@ -94,8 +91,7 @@ const RelatorioComissoes = () => {
         .filter(c => c.status === 'pago')
         .reduce((sum, c) => sum + c.valorComissao, 0);
 
-    const getTecnicoNome = (id) => tecnicos.find(t => t.id === id)?.nome || 'N/A';
-    const getClienteNome = (id) => clientes.find(c => c.id === id)?.nome || 'N/A';
+    const getTecnicoNome = (id: string) => tecnicos.find(t => t.id === id)?.nome || 'N/A';
 
     if (loading) {
         return (

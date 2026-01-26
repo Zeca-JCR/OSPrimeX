@@ -1,15 +1,39 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom'; // Navigation hooks
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
-import storage from '../../lib/storage'; // Data access
-import { formatCurrency } from '../../lib/utils';
+import storage from '../../lib/storage';
 import CreatableSelect from '../../components/common/CreatableSelect';
 import CurrencyInput from '../../components/common/CurrencyInput';
-import { useTenant } from '../../contexts/TenantContext'; // Contexts
+import { Produto, Fornecedor, OrdemServico, MovimentacaoEstoque } from '../../types';
 
-const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitleChange }) => {
+interface CadastroProdutoProps {
+    produtoId?: string;
+    isTabMode?: boolean;
+    onClose?: () => void;
+    onDirtyChange?: (dirty: boolean) => void;
+    onTitleChange?: (title: string) => void;
+}
+
+interface ProdutoForm {
+    tipo: 'produto' | 'servico';
+    nome: string;
+    descricao: string;
+    unidade: string;
+    precoCusto: number | string;
+    precoVenda: number | string;
+    quantidade: number | string;
+    estoqueMinimo: number | string;
+    servicoRapido: boolean;
+    fornecedorId: string;
+    codigoBarras: string;
+    referencia: string;
+    marca: string;
+    classificacao: string;
+    aplicacao: string;
+}
+
+const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitleChange }: CadastroProdutoProps) => {
     const { empresa } = useAuth(); // Get current company context
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const navigate = useNavigate();
@@ -34,7 +58,7 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
     });
 
     // Initial Form State
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<ProdutoForm>({
         tipo: 'produto',
         nome: '',
         descricao: '',
@@ -52,7 +76,7 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
         aplicacao: '',
     });
 
-    const [fornecedores, setFornecedores] = useState([]);
+    const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
     const unidades = ['UN', 'L', 'KG', 'M', 'JG', 'PC', 'CX', 'SV'];
     const isProduto = form.tipo === 'produto';
 
@@ -105,29 +129,29 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
 
     // Load Data (Suppliers + Product if editing)
     useEffect(() => {
-        const loadDada = async () => {
+        const loadData = async () => {
             setLoading(true);
             try {
                 if (!empresa?.id) return;
 
                 // 1. Load Suppliers
-                const suppliersData = await storage.list('fornecedores', empresa.id);
+                const suppliersData = await storage.list<Fornecedor>('fornecedores', empresa.id);
                 setFornecedores(suppliersData);
 
                 // 2. Load Product if Editing
                 if (isEdicao) {
-                    const produto = await storage.getById('produtos', id);
+                    const produto = await storage.getById<Produto>('produtos', id);
                     if (produto) {
                         setForm({
-                            tipo: produto.tipo || 'produto',
+                            tipo: (produto.tipo as 'produto' | 'servico') || 'produto',
                             nome: produto.nome || '',
                             descricao: produto.descricao || '',
                             unidade: produto.unidade || 'UN',
                             precoCusto: produto.precoCusto || 0,
                             precoVenda: produto.precoVenda || 0,
-                            quantidade: produto.quantidade || 0,
+                            quantidade: isProduto && typeof produto.quantidade === 'number' ? produto.quantidade : 0,
                             estoqueMinimo: produto.estoqueMinimo || 0,
-                            servicoRapido: produto.servicoRapido || false,
+                            servicoRapido: isProduto ? false : (!!produto.servicoRapido),
                             fornecedorId: produto.fornecedorId || '',
                             codigoBarras: produto.codigoBarras || '',
                             referencia: produto.referencia || '',
@@ -135,7 +159,7 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
                             classificacao: produto.classificacao || '',
                             aplicacao: produto.aplicacao || '',
                         });
-                        setEstoqueOriginal(parseInt(produto.quantidade) || 0);
+                        setEstoqueOriginal(Number(produto.quantidade) || 0);
                     } else {
                         setError('Produto não encontrado');
                     }
@@ -147,17 +171,17 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
                 setLoading(false);
             }
         };
-        loadDada();
+        loadData();
     }, [id, empresa?.id, isEdicao]);
 
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | { target: { name: string; value: any } }) => {
         const { name, value } = e.target;
         setIsDirty(true);
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSalvando(true);
@@ -165,13 +189,15 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
         try {
             if (!form.nome.trim()) throw new Error('Nome é obrigatório');
             if (!form.precoVenda) throw new Error('Preço de venda é obrigatório');
+            if (!empresa?.id) throw new Error('Empresa não identificada');
 
-            const payload = {
+            const payload: Partial<Produto> = {
                 ...form,
-                precoCusto: form.precoCusto ? parseFloat(form.precoCusto) : 0,
-                precoVenda: parseFloat(form.precoVenda),
-                quantidade: isProduto ? parseInt(form.quantidade) || 0 : null,
-                estoqueMinimo: isProduto ? parseInt(form.estoqueMinimo) || 0 : null,
+                precoCusto: form.precoCusto ? parseFloat(String(form.precoCusto)) : 0,
+                precoVenda: parseFloat(String(form.precoVenda)),
+                quantidade: isProduto ? parseInt(String(form.quantidade)) || 0 : undefined,
+                estoqueMinimo: isProduto ? parseInt(String(form.estoqueMinimo)) || 0 : undefined,
+                servicoRapido: !isProduto ? form.servicoRapido : undefined,
             };
 
             let produtoId = id;
@@ -179,37 +205,37 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
             if (isEdicao) {
                 await storage.update('produtos', id, payload);
             } else {
-                const novo = await storage.create('produtos', payload, empresa.id);
+                const novo = await storage.create<Produto>('produtos', payload, empresa.id);
                 produtoId = novo.id;
 
                 // Saldo Inicial
-                if (isProduto && payload.quantidade > 0) {
-                    await storage.create('movimentacoes_estoque', {
+                if (isProduto && payload.quantidade && payload.quantidade > 0) {
+                    await storage.create<MovimentacaoEstoque>('movimentacoes_estoque', {
                         produtoId: produtoId,
                         tipo: 'entrada',
                         quantidade: payload.quantidade,
                         motivo: 'Saldo Inicial',
-                        estoqueAnterior: 0,
-                        estoqueAtual: payload.quantidade,
-                        valorCusto: (payload.precoCusto || 0) * payload.quantidade,
-                        novoPrecoCusto: payload.precoCusto || 0,
+                        osId: undefined,
+                        fornecedorId: undefined,
+                        notaFiscal: undefined,
                     }, empresa.id);
                 }
             }
 
             // Registrar histórico se houve mudança manual de estoque na edição
             if (isEdicao && isProduto) {
-                const estoqueNovo = parseInt(form.quantidade) || 0;
+                const estoqueNovo = parseInt(String(form.quantidade)) || 0;
                 const diferenca = estoqueNovo - estoqueOriginal;
 
                 if (diferenca !== 0) {
-                    await storage.create('movimentacoes_estoque', {
+                    await storage.create<MovimentacaoEstoque>('movimentacoes_estoque', {
                         produtoId: produtoId,
                         tipo: diferenca > 0 ? 'entrada' : 'saida',
                         quantidade: Math.abs(diferenca),
                         motivo: 'Ajuste manual de cadastro',
-                        estoqueAnterior: estoqueOriginal,
-                        estoqueAtual: estoqueNovo,
+                        osId: undefined,
+                        fornecedorId: undefined,
+                        notaFiscal: undefined,
                     }, empresa.id);
                 }
             }
@@ -233,8 +259,8 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
         setLoading(true); // Usar loading ou salvando para feedback visual
         try {
             // 1. Verificar em Movimentações de Estoque
-            const movimentacoes = await storage.getAll('movimentacoes_estoque', empresa?.id);
-            const temMovimento = movimentacoes.some(m => m.produtoId === id);
+            const movimentacoes = await storage.getAll<MovimentacaoEstoque>('movimentacoes_estoque', empresa?.id);
+            const temMovimento = movimentacoes.some((m) => m.produtoId === id);
 
             if (temMovimento) {
                 alert('Não é possível excluir este item pois existem movimentações de estoque registradas.');
@@ -243,7 +269,7 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
             }
 
             // 2. Verificar em Ordens de Serviço (percorrer itens das OSs)
-            const ordens = await storage.getAll('ordens_servico', empresa?.id);
+            const ordens = await storage.getAll<OrdemServico>('ordens_servico', empresa?.id);
             const emUsoOS = ordens.some(os =>
                 os.itens && os.itens.some(item => item.produtoId === id)
             );
@@ -260,9 +286,9 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
             } else {
                 navigate('/estoque');
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erro ao excluir produto:', err);
-            setError('Erro ao excluir item: ' + err.message);
+            setError('Erro ao excluir item: ' + (err.message || String(err)));
             setLoading(false);
         }
     };
@@ -282,9 +308,9 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
         <div className="min-h-full bg-background-light dark:bg-background-dark">
             {/* Header Sticky */}
             <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto w-full">
+                <div className="flex items-center gap-3 px-4 py-3">
                     <div>
-                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                        <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                             {isEdicao ? 'Editar Item' : 'Novo Item'}
                         </h1>
                         <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">
@@ -522,7 +548,7 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
                             <div>
                                 <CurrencyInput
                                     label="Custo R$"
-                                    value={form.precoCusto}
+                                    value={Number(form.precoCusto) || 0}
                                     onChange={(val) => setForm(prev => ({ ...prev, precoCusto: val }))}
                                 />
                             </div>
@@ -530,7 +556,7 @@ const CadastroProduto = ({ produtoId, isTabMode, onClose, onDirtyChange, onTitle
                         <div className={isProduto ? '' : 'col-span-2'}>
                             <CurrencyInput
                                 label="Preço Venda R$"
-                                value={form.precoVenda}
+                                value={Number(form.precoVenda) || 0}
                                 onChange={(val) => setForm(prev => ({ ...prev, precoVenda: val }))}
                                 size="lg"
                                 required

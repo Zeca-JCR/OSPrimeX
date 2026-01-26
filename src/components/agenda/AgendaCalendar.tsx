@@ -1,13 +1,8 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useState, useCallback, useMemo } from 'react';
+﻿import { useState, useCallback, useMemo } from 'react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
-import format from 'date-fns/format';
-import parse from 'date-fns/parse';
-import startOfWeek from 'date-fns/startOfWeek';
-import getDay from 'date-fns/getDay';
-import ptBR from 'date-fns/locale/pt-BR';
+import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 
@@ -24,18 +19,43 @@ const localizer = dateFnsLocalizer({
     locales,
 });
 
-const DnDCalendar = withDragAndDrop(Calendar);
+// Workaround for type issues with DnD and Calendar generic
+const DnDCalendar = withDragAndDrop(Calendar as any) as any;
 
-const AgendaCalendar = ({ events, view, onView, onEventDrop, onEventClick, onSlotSelect, resources, resourceTitleAccessor }) => {
+interface CalendarEvent {
+    id?: string;
+    title?: string;
+    start: Date;
+    end: Date;
+    resourceId?: string;
+    status?: string;
+    type?: string;
+    isDraggable?: boolean;
+    data?: any;
+    [key: string]: any;
+}
+
+interface AgendaCalendarProps {
+    events: CalendarEvent[];
+    view: string;
+    onView: (view: any) => void;
+    onEventDrop: (args: any) => void;
+    onEventClick: (event: CalendarEvent) => void;
+    onSlotSelect: (slotInfo: any) => void;
+    resources?: any[];
+    resourceTitleAccessor?: string;
+}
+
+const AgendaCalendar = ({ events, view, onView, onEventDrop, onEventClick, onSlotSelect, resources, resourceTitleAccessor }: AgendaCalendarProps) => {
     // view e onView agora vêm via props do pai (Agenda) para persistência
     const [date, setDate] = useState(new Date());
 
     // Customização de estilos de eventos
-    const eventPropGetter = useCallback((event) => {
+    const eventPropGetter = useCallback((event: CalendarEvent) => {
         let className = 'bg-primary text-white border-0';
 
         // Verificar se é passado
-        const isPast = new Date(event.end) < new Date();
+        const isPast = event.end && new Date(event.end) < new Date();
 
         switch (event.status) {
             case 'confirmado':
@@ -135,4 +155,3 @@ const AgendaCalendar = ({ events, view, onView, onEventDrop, onEventClick, onSlo
 };
 
 export default AgendaCalendar;
-

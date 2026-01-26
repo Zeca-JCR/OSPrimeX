@@ -1,23 +1,36 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import storage from '../../lib/storage';
-import { parseNFe } from '../../lib/nfeParser';
+import { parseNFe, NFeParsed, ProdutoNFe } from '../../lib/nfeParser';
 import { formatCurrency, formatDate, toISODate } from '../../lib/utils';
 import { useTenant } from '../../contexts/TenantContext';
+import { Produto, Fornecedor, MovimentacaoEstoque, LancamentoFinanceiro } from '../../types';
 
-const ImportarNota = ({ isTabMode, onClose }) => {
+interface ProdutoMatch {
+    xml: ProdutoNFe;
+    sistema: Produto | null;
+    acao: string; // 'novo' | 'atualizar' | 'ignorar'
+    novoNome: string;
+    novoPrecoVenda: string;
+}
+
+interface ImportarNotaProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const ImportarNota = ({ isTabMode, onClose }: ImportarNotaProps) => {
     const { empresa } = useAuth();
     const { hasAddon } = useTenant();
     const { showSaveToast } = useToast();
     const navigate = useNavigate();
 
     const [step, setStep] = useState(1); // 1: Upload, 2: Revisão
-    const [xmlData, setXmlData] = useState(null);
-    const [produtosSistema, setProdutosSistema] = useState([]);
-    const [produtosMatch, setProdutosMatch] = useState([]); // Produtos mapeados
+    const [xmlData, setXmlData] = useState<NFeParsed | null>(null);
+    const [produtosSistema, setProdutosSistema] = useState<Produto[]>([]);
+    const [produtosMatch, setProdutosMatch] = useState<ProdutoMatch[]>([]); // Produtos mapeados
     const [loading, setLoading] = useState(false);
     const [dragging, setDragging] = useState(false);
     const [markup, setMarkup] = useState(50); // Markup atual da tela
@@ -44,18 +57,18 @@ const ImportarNota = ({ isTabMode, onClose }) => {
 
     const carregarProdutosSistema = async () => {
         if (!empresa?.id) return;
-        const prods = await storage.getAll('produtos', empresa.id);
+        const prods = await storage.getAll<Produto>('produtos', empresa.id);
         setProdutosSistema(prods.filter(p => p.ativo));
     };
 
-    const handleFile = async (file) => {
+    const handleFile = async (file: File) => {
         setLoading(true);
         try {
             const data = await parseNFe(file);
             setXmlData(data);
             fazerCorrespondencia(data.produtos, produtosSistema);
             setStep(2);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
             alert('Erro ao ler XML: ' + error.message);
         } finally {
@@ -63,8 +76,8 @@ const ImportarNota = ({ isTabMode, onClose }) => {
         }
     };
 
-    const fazerCorrespondencia = (produtosXML, produtosSys) => {
-        const matches = produtosXML.map(prodXml => {
+    const fazerCorrespondencia = (produtosXML: ProdutoNFe[], produtosSys: Produto[]) => {
+        const matches: ProdutoMatch[] = produtosXML.map(prodXml => {
             const nomeXml = prodXml.nome.toLowerCase().trim();
             const eanXml = prodXml.ean !== 'SEM GTIN' ? prodXml.ean : null;
 
@@ -80,7 +93,7 @@ const ImportarNota = ({ isTabMode, onClose }) => {
                 match = produtosSys.find(p => p.nome.toLowerCase().trim() === nomeXml);
             }
 
-            const currentMarkup = empresa.markupPadrao ? Number(empresa.markupPadrao) : 50;
+            const currentMarkup = empresa?.markupPadrao ? Number(empresa.markupPadrao) : 50;
             const multiplier = 1 + (currentMarkup / 100);
 
             return {
@@ -94,17 +107,17 @@ const ImportarNota = ({ isTabMode, onClose }) => {
         setProdutosMatch(matches);
     };
 
-    const handleDragOver = (e) => {
+    const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         setDragging(true);
     };
 
-    const handleDragLeave = (e) => {
+    const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         setDragging(false);
     };
 
-    const handleDrop = async (e) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         setDragging(false);
         const files = e.dataTransfer.files;
@@ -117,14 +130,14 @@ const ImportarNota = ({ isTabMode, onClose }) => {
         }
     };
 
-    const handleMatchChange = (index, field, value) => {
+    const handleMatchChange = (index: number, field: keyof ProdutoMatch, value: any) => {
         const newMatches = [...produtosMatch];
-        newMatches[index][field] = value;
+        (newMatches[index] as any)[field] = value;
         setProdutosMatch(newMatches);
     };
 
-    const handleMarkupChange = (novoMarkup) => {
-        setMarkup(novoMarkup);
+    const handleMarkupChange = (novoMarkup: string) => {
+        setMarkup(Number(novoMarkup));
         const multiplier = 1 + (Number(novoMarkup) / 100);
 
         const newMatches = produtosMatch.map(match => {
@@ -141,28 +154,38 @@ const ImportarNota = ({ isTabMode, onClose }) => {
 
     const processarImportacao = async () => {
         setLoading(true);
+        if (!xmlData || !empresa?.id) return;
+
         try {
             // 1. Cadastrar/Atualizar Fornecedor
-            let fornecedorId = null;
+            let fornecedorId = '';
             if (xmlData.fornecedor) {
-                const fornecedores = await storage.getAll('fornecedores', empresa.id);
+                const fornecedores = await storage.getAll<Fornecedor>('fornecedores', empresa.id);
                 const cnpjLimpo = xmlData.fornecedor.cnpj.replace(/\D/g, '');
                 let fornecedorExistente = fornecedores.find(f => f.cnpj?.replace(/\D/g, '') === cnpjLimpo);
 
                 if (fornecedorExistente) {
-                    fornecedorId = fornecedorExistente.id;
+                    fornecedorId = fornecedorExistente.id!;
                 } else {
-                    const novoFornecedor = await storage.create('fornecedores', {
+                    const novoFornecedor = await storage.create<Fornecedor>('fornecedores', {
                         nome: xmlData.fornecedor.nome,
-                        nomeFantasia: xmlData.fornecedor.nomeFantasia || xmlData.fornecedor.nome,
                         cnpj: xmlData.fornecedor.cnpj,
                         email: '',
                         telefone: '',
-                        endereco: xmlData.fornecedor.endereco,
-                        tipo: 'fornecedor',
-                        ativo: true
+                        endereco: {
+                            cep: xmlData.fornecedor.endereco.cep,
+                            logradouro: xmlData.fornecedor.endereco.logradouro,
+                            numero: xmlData.fornecedor.endereco.numero,
+                            complemento: '',
+                            bairro: xmlData.fornecedor.endereco.bairro,
+                            cidade: xmlData.fornecedor.endereco.cidade,
+                            estado: xmlData.fornecedor.endereco.uf,
+                        },
+                        tipo: 'pj' as const,
+                        ativo: true,
+                        // nomeFantasia: xmlData.fornecedor.nomeFantasia || xmlData.fornecedor.nome, // Fornecedor Interface doesn't have nomeFantasia
                     }, empresa.id);
-                    fornecedorId = novoFornecedor.id;
+                    fornecedorId = novoFornecedor.id!;
                 }
             }
 
@@ -171,7 +194,7 @@ const ImportarNota = ({ isTabMode, onClose }) => {
                 if (item.acao === 'ignorar') continue;
 
                 if (item.acao === 'novo') {
-                    await storage.create('produtos', {
+                    await storage.create<Produto>('produtos', {
                         nome: item.novoNome,
                         descricao: item.xml.nome,
                         tipo: 'produto',
@@ -193,13 +216,13 @@ const ImportarNota = ({ isTabMode, onClose }) => {
                     const custoTotalEntrada = item.xml.valorTotal;
                     const novoPrecoCusto = (custoTotalAntigo + custoTotalEntrada) / novoEstoque;
 
-                    await storage.update('produtos', produtoAtual.id, {
+                    await storage.update<Produto>('produtos', produtoAtual.id!, {
                         quantidade: novoEstoque,
                         precoCusto: novoPrecoCusto
                     });
 
-                    await storage.create('movimentacoes_estoque', {
-                        produtoId: produtoAtual.id,
+                    await storage.create<MovimentacaoEstoque>('movimentacoes_estoque', {
+                        produtoId: produtoAtual.id!,
                         tipo: 'entrada',
                         quantidade: item.xml.quantidade,
                         motivo: `Importação XML NFe ${xmlData.numero}`,
@@ -214,23 +237,23 @@ const ImportarNota = ({ isTabMode, onClose }) => {
             // 3. Gerar Financeiro
             if (xmlData.parcelas && xmlData.parcelas.length > 0) {
                 for (const parc of xmlData.parcelas) {
-                    await storage.create('lancamentos_financeiros', {
+                    await storage.create<LancamentoFinanceiro>('lancamentos_financeiros', {
                         tipo: 'despesa',
                         descricao: `NFe ${xmlData.numero} - Parc ${parc.numero} - ${xmlData.fornecedor.nome}`,
                         valor: parc.valor,
                         categoria: 'fornecedor',
-                        data: parc.vencimento,
+                        dataVencimento: parc.vencimento,
                         status: 'pendente',
                         fornecedorId,
                     }, empresa.id);
                 }
             } else {
-                await storage.create('lancamentos_financeiros', {
+                await storage.create<LancamentoFinanceiro>('lancamentos_financeiros', {
                     tipo: 'despesa',
                     descricao: `NFe ${xmlData.numero} - IMPORTADO - ${xmlData.fornecedor.nome}`,
                     valor: xmlData.valorTotal,
                     categoria: 'fornecedor',
-                    data: toISODate(new Date()),
+                    dataVencimento: toISODate(new Date()),
                     status: 'pendente',
                     fornecedorId,
                 }, empresa.id);
@@ -239,7 +262,7 @@ const ImportarNota = ({ isTabMode, onClose }) => {
             showSaveToast('Importação concluída com sucesso!');
             navigate('/estoque');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro na importação:', error);
             alert('Erro ao processar dados.');
         } finally {
@@ -248,12 +271,12 @@ const ImportarNota = ({ isTabMode, onClose }) => {
     };
 
     return (
-        <div className="p-4 lg:p-6 space-y-6 animate-slideUp">
+        <div className="p-4 lg:p-6 space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
-                        Importar XML (NFe)
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
+                        Importar XML
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
                         Importe notas fiscais eletrônicas para atualizar estoque e financeiro
@@ -305,7 +328,11 @@ const ImportarNota = ({ isTabMode, onClose }) => {
                                         accept=".xml"
                                         className="hidden"
                                         id="xmlUpload"
-                                        onChange={(e) => e.target.files.length > 0 && handleFile(e.target.files[0])}
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                handleFile(e.target.files[0]);
+                                            }
+                                        }}
                                     />
                                     <label
                                         htmlFor="xmlUpload"
@@ -329,7 +356,7 @@ const ImportarNota = ({ isTabMode, onClose }) => {
                                     <div className="card bg-gray-50 dark:bg-gray-800/50 p-4 border border-gray-100 dark:border-gray-700">
                                         <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider mb-1">Nota Fiscal</p>
                                         <p className="font-bold text-text-light dark:text-text-dark">NÂº {xmlData.numero}</p>
-                                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">{formatDate(new Date())}</p>
+                                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">{formatDate(new Date().toISOString())}</p>
                                     </div>
                                     <div className="card bg-green-50 dark:bg-green-900/20 p-4 border border-green-100 dark:border-green-800/30">
                                         <p className="text-xs text-green-700 dark:text-green-300 uppercase tracking-wider mb-1">Valor Total</p>

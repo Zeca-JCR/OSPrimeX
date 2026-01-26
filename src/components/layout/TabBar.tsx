@@ -146,7 +146,7 @@ const TabBar = () => {
 
     return (
         <>
-            <div className="flex-none bg-primary/20 dark:bg-primary/25 border-t-2 border-t-primary border-b border-primary/30 dark:border-primary/40 shadow-md px-2">
+            <div className="flex-none bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-t-2 border-t-primary border-b border-gray-200/50 dark:border-gray-800/10 shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] px-2 z-10 relative">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1.5">
                     {/* Área de Abas (cresce para a direita) */}
                     {tabs.map((tab) => {
@@ -164,11 +164,12 @@ const TabBar = () => {
                                 onDrop={(e) => handleTabDrop(e, tab.id)}
                                 onDragEnd={handleTabDragEnd}
                                 className={`
-                                    group relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+                                    group relative flex items-center gap-2 px-3 py-1.5 rounded-[2px] text-sm font-medium
                                     transition-all duration-200 whitespace-nowrap min-w-0 max-w-[200px] cursor-grab active:cursor-grabbing
+                                    animate-slideUp
                                     ${isActive
-                                        ? 'bg-white dark:bg-gray-800 text-primary shadow-sm border border-primary/20'
-                                        : 'bg-white/40 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/60 text-text-secondary-light dark:text-text-secondary-dark hover:bg-white/70 dark:hover:bg-gray-800/70 hover:border-gray-300 dark:hover:border-gray-600'
+                                        ? 'bg-white dark:bg-gray-800 text-primary shadow-sm border-t-2 border-t-primary border-x border-b-0 border-gray-200 dark:border-gray-700'
+                                        : 'bg-white/40 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/60 text-text-secondary-light dark:text-text-secondary-dark hover:bg-white/70 dark:hover:bg-gray-800/70'
                                     }
                                     ${dragOverTabId === tab.id ? 'ring-2 ring-primary ring-offset-1 scale-105' : ''}
                                     ${draggingTabId === tab.id ? 'opacity-50' : ''}
@@ -186,16 +187,16 @@ const TabBar = () => {
 
                                 {/* Indicador de alterações não salvas */}
                                 {isDirty && (
-                                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Alterações não salvas" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" title="Alterações não salvas" />
                                 )}
 
-                                {/* Botão Fechar */}
+                                {/* Botão Fechar - Estilo Técnico */}
                                 <span
                                     onClick={(e) => handleCloseTab(e, tab.id)}
                                     className={`
-                                        material-symbols-outlined text-base p-0.5 rounded cursor-default
+                                        material-symbols-outlined text-[16px] p-0.5 rounded-[2px] cursor-default
                                         opacity-0 group-hover:opacity-100 transition-opacity
-                                        hover:bg-gray-200 dark:hover:bg-gray-700
+                                        hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30
                                         ${isActive ? 'opacity-100' : ''}
                                     `}
                                     title="Fechar aba"
@@ -203,10 +204,7 @@ const TabBar = () => {
                                     close
                                 </span>
 
-                                {/* Indicador de aba ativa */}
-                                {isActive && (
-                                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
-                                )}
+                                {/* O indicador inferior foi removido em favor da borda superior técnica */}
                             </button>
                         );
                     })}

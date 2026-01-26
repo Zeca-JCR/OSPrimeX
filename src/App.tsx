@@ -1,8 +1,8 @@
-﻿// @ts-nocheck
+﻿// App.tsx
 import { NotificationProvider } from './contexts/NotificationContext';
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, ReactNode } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -49,7 +49,7 @@ import ConfiguracoesEmpresa from './pages/configuracoes/ConfiguracoesEmpresa';
 import Prismas from './pages/os/Prismas';
 
 // Componente de rota protegida
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children }: { children: ReactNode }) => {
     const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
@@ -70,7 +70,7 @@ const PrivateRoute = ({ children }) => {
 };
 
 // Rota pública (redireciona se logado)
-const PublicRoute = ({ children }) => {
+const PublicRoute = ({ children }: { children: ReactNode }) => {
     const { isAuthenticated, loading, usuario } = useAuth();
 
     if (loading) {
@@ -134,8 +134,8 @@ function AppRoutes() {
                 <Route path="fornecedores/:id/editar" element={<CadastroFornecedor />} />
                 <Route path="estoque/reposicao" element={<PedidoReposicao />} />
                 <Route path="estoque/importar" element={<ImportarNota />} />
-                <Route path="financeiro" element={<DashboardFinanceiro />} />
                 <Route path="financeiro/avancado" element={<FinanceiroAdvanced />} />
+                <Route path="financeiro" element={<DashboardFinanceiro />} />
                 <Route path="financeiro/comissoes" element={<RelatorioComissoes />} />
                 <Route path="usuarios" element={<ListaUsuarios />} />
                 <Route path="usuarios/novo" element={<CadastroUsuario />} />

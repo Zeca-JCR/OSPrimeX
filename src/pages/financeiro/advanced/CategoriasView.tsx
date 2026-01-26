@@ -1,19 +1,19 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
 import storage from '../../../lib/storage';
+import { CategoriaFinanceira } from '../../../types';
 
 const CategoriasView = () => {
     const { empresa } = useAuth();
     const { showToast } = useToast();
-    const [categorias, setCategorias] = useState([]);
+    const [categorias, setCategorias] = useState<CategoriaFinanceira[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [editingCategoria, setEditingCategoria] = useState(null);
+    const [editingCategoria, setEditingCategoria] = useState<CategoriaFinanceira | null>(null);
 
     // Estado do formulário
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<Partial<CategoriaFinanceira>>({
         nome: '',
         tipo: 'despesa', // despesa, receita
         cor: '#ef4444',
@@ -28,7 +28,7 @@ const CategoriasView = () => {
         if (!empresa) return;
         setLoading(true);
         try {
-            const data = await storage.getAll('categorias_financeiras', empresa.id);
+            const data = await storage.getAll<CategoriaFinanceira>('categorias_financeiras', empresa.id);
             setCategorias(data.sort((a, b) => a.nome.localeCompare(b.nome)));
         } catch (error) {
             console.error('Erro ao carregar categorias:', error);
@@ -38,14 +38,15 @@ const CategoriasView = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             if (editingCategoria) {
-                await storage.update('categorias_financeiras', editingCategoria.id, form);
+                await storage.update<CategoriaFinanceira>('categorias_financeiras', editingCategoria.id, form);
                 showToast('Categoria atualizada com sucesso!', 'success');
             } else {
-                await storage.create('categorias_financeiras', form, empresa.id);
+                if (!empresa?.id) throw new Error("Empresa não identificada");
+                await storage.create<CategoriaFinanceira>('categorias_financeiras', form as CategoriaFinanceira, empresa.id);
                 showToast('Categoria criada com sucesso!', 'success');
             }
             setShowModal(false);
@@ -58,7 +59,7 @@ const CategoriasView = () => {
         }
     };
 
-    const handleEdit = (categoria) => {
+    const handleEdit = (categoria: CategoriaFinanceira) => {
         setEditingCategoria(categoria);
         setForm({
             nome: categoria.nome,
@@ -69,7 +70,7 @@ const CategoriasView = () => {
         setShowModal(true);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id: string) => {
         if (window.confirm('Tem certeza que deseja excluir esta categoria?')) {
             try {
                 await storage.hardDelete('categorias_financeiras', id);
@@ -257,7 +258,7 @@ const CategoriasView = () => {
                                             name="tipo"
                                             value="despesa"
                                             checked={form.tipo === 'despesa'}
-                                            onChange={(e) => setForm({ ...form, tipo: e.target.value, cor: '#ef4444' })}
+                                            onChange={(e) => setForm({ ...form, tipo: e.target.value as any, cor: '#ef4444' })}
                                             className="text-red-600 focus:ring-red-500"
                                         />
                                         <span className="text-text-light dark:text-text-dark">Despesa</span>
@@ -268,7 +269,7 @@ const CategoriasView = () => {
                                             name="tipo"
                                             value="receita"
                                             checked={form.tipo === 'receita'}
-                                            onChange={(e) => setForm({ ...form, tipo: e.target.value, cor: '#22c55e' })}
+                                            onChange={(e) => setForm({ ...form, tipo: e.target.value as any, cor: '#22c55e' })}
                                             className="text-green-600 focus:ring-green-500"
                                         />
                                         <span className="text-text-light dark:text-text-dark">Receita</span>

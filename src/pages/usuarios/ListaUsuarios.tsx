@@ -1,17 +1,22 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { useNavigate } from 'react-router-dom';
 import storage from '../../lib/storage';
+import { Usuario } from '../../types';
 
-const ListaUsuarios = () => {
+interface ListaUsuariosProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const ListaUsuarios = ({ isTabMode, onClose }: ListaUsuariosProps = {}) => {
     const { empresa, usuario: usuarioLogado, isAdmin } = useAuth();
     const { getLimiteUsuarios } = useTenant();
     const navigate = useNavigate();
     const { openTab } = useTabs();
-    const [usuarios, setUsuarios] = useState([]);
+    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -21,7 +26,7 @@ const ListaUsuarios = () => {
     const carregarUsuarios = async () => {
         if (!empresa) return;
         try {
-            const data = await storage.getAll('usuarios', empresa.id);
+            const data = await storage.getAll<Usuario>('usuarios', empresa.id);
             setUsuarios(data.filter((u) => u.ativo));
         } catch (error) {
             console.error('Erro ao carregar usuários:', error);
@@ -46,7 +51,7 @@ const ListaUsuarios = () => {
         });
     };
 
-    const handleExcluir = async (usuarioExcluir, e) => {
+    const handleExcluir = async (usuarioExcluir: Usuario, e: React.MouseEvent) => {
         e.stopPropagation();
         if (usuarioExcluir.id === usuarioLogado.id) {
             alert('Você não pode excluir seu próprio usuário.');
@@ -62,7 +67,7 @@ const ListaUsuarios = () => {
         }
     };
 
-    const perfilLabels = {
+    const perfilLabels: Record<string, string> = {
         admin: 'Administrador',
         tecnico: 'Técnico',
         financeiro: 'Financeiro',
@@ -74,7 +79,7 @@ const ListaUsuarios = () => {
         financeiro: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
     };
 
-    const handleOpenUsuario = (usuario) => {
+    const handleOpenUsuario = (usuario: Usuario) => {
         openTab({
             id: `usuario-${usuario.id}`,
             type: 'usuario',
@@ -98,7 +103,7 @@ const ListaUsuarios = () => {
             {/* Header - estilo Stitch */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Usuários
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">

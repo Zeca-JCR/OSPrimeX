@@ -1,18 +1,31 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import storage from '../../lib/storage';
-import { parseNFe } from '../../lib/nfeParser';
+import { parseNFe, NFeParsed, ProdutoNFe } from '../../lib/nfeParser';
 import { formatCurrency, toISODate } from '../../lib/utils';
+import { Produto, Fornecedor, MovimentacaoEstoque, LancamentoFinanceiro } from '../../types';
 
-const ImportarXMLModal = ({ onClose, onSave }) => {
+interface ProdutoMatch {
+    xml: ProdutoNFe;
+    sistema: Produto | null;
+    acao: string;
+    novoNome: string;
+    novoPrecoVenda: string;
+}
+
+interface ImportarXMLModalProps {
+    onClose: () => void;
+    onSave: () => void;
+}
+
+const ImportarXMLModal = ({ onClose, onSave }: ImportarXMLModalProps) => {
     const { empresa } = useAuth();
     const { showSaveToast } = useToast();
     const [step, setStep] = useState(1); // 1: Upload, 2: Revisão, 3: Conclusão
-    const [xmlData, setXmlData] = useState(null);
-    const [produtosSistema, setProdutosSistema] = useState([]);
-    const [produtosMatch, setProdutosMatch] = useState([]); // Produtos mapeados
+    const [xmlData, setXmlData] = useState<NFeParsed | null>(null);
+    const [produtosSistema, setProdutosSistema] = useState<Produto[]>([]);
+    const [produtosMatch, setProdutosMatch] = useState<ProdutoMatch[]>([]); // Produtos mapeados
     const [loading, setLoading] = useState(false);
     const [dragging, setDragging] = useState(false);
 
@@ -21,18 +34,19 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
     }, []);
 
     const carregarProdutosSistema = async () => {
-        const prods = await storage.getAll('produtos', empresa.id);
+        if (!empresa?.id) return;
+        const prods = await storage.getAll<Produto>('produtos', empresa.id);
         setProdutosSistema(prods.filter(p => p.ativo));
     };
 
-    const handleFile = async (file) => {
+    const handleFile = async (file: File) => {
         setLoading(true);
         try {
             const data = await parseNFe(file);
             setXmlData(data);
             fazerCorrespondencia(data.produtos, produtosSistema);
             setStep(2);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
             alert('Erro ao ler XML: ' + error.message);
         } finally {
@@ -40,8 +54,8 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
         }
     };
 
-    const fazerCorrespondencia = (produtosXML, produtosSys) => {
-        const matches = produtosXML.map(prodXml => {
+    const fazerCorrespondencia = (produtosXML: ProdutoNFe[], produtosSys: Produto[]) => {
+        const matches: ProdutoMatch[] = produtosXML.map(prodXml => {
             // Tenta achar por código EAN ou nome similar
             // Normalização básica: remove espaços e lowercase
             const nomeXml = prodXml.nome.toLowerCase().trim();
@@ -64,23 +78,23 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
                 sistema: match || null, // Se null, será criado novo
                 acao: match ? 'atualizar' : 'novo', // atualizar, novo, ignorar
                 novoNome: prodXml.nome, // Para edição
-                novoPrecoVenda: prodXml.valorUnitario * 1.5, // Sugestão simples de markup 50%
+                novoPrecoVenda: (prodXml.valorUnitario * 1.5).toString(), // Sugestão simples de markup 50%
             };
         });
         setProdutosMatch(matches);
     };
 
-    const handleDragOver = (e) => {
+    const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         setDragging(true);
     };
 
-    const handleDragLeave = (e) => {
+    const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         setDragging(false);
     };
 
-    const handleDrop = async (e) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         setDragging(false);
         const files = e.dataTransfer.files;
@@ -93,37 +107,47 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
         }
     };
 
-    const handleMatchChange = (index, field, value) => {
+    const handleMatchChange = (index: number, field: keyof ProdutoMatch, value: any) => {
         const newMatches = [...produtosMatch];
-        newMatches[index][field] = value;
+        (newMatches[index] as any)[field] = value;
         setProdutosMatch(newMatches);
     };
 
     const processarImportacao = async () => {
         setLoading(true);
+        if (!xmlData || !empresa?.id) return;
+
         try {
             // 1. Cadastrar/Atualizar Fornecedor
-            let fornecedorId = null;
+            let fornecedorId = '';
             if (xmlData.fornecedor) {
-                const fornecedores = await storage.getAll('fornecedores', empresa.id);
+                const fornecedores = await storage.getAll<Fornecedor>('fornecedores', empresa.id);
                 // Busca por CNPJ (remove pontuação)
                 const cnpjLimpo = xmlData.fornecedor.cnpj.replace(/\D/g, '');
                 let fornecedorExistente = fornecedores.find(f => f.cnpj?.replace(/\D/g, '') === cnpjLimpo);
 
                 if (fornecedorExistente) {
-                    fornecedorId = fornecedorExistente.id;
+                    fornecedorId = fornecedorExistente.id!;
                 } else {
-                    const novoFornecedor = await storage.create('fornecedores', {
+                    const novoFornecedor = await storage.create<Fornecedor>('fornecedores', {
                         nome: xmlData.fornecedor.nome,
-                        nomeFantasia: xmlData.fornecedor.nomeFantasia || xmlData.fornecedor.nome,
+                        // nomeFantasia: xmlData.fornecedor.nomeFantasia || xmlData.fornecedor.nome, // Fornecedor Model doesn't have nomeFantasia
                         cnpj: xmlData.fornecedor.cnpj,
                         email: '', // XML nem sempre tem
                         telefone: '',
-                        endereco: xmlData.fornecedor.endereco,
-                        tipo: 'fornecedor', // ou 'pj'
+                        endereco: {
+                            cep: xmlData.fornecedor.endereco.cep,
+                            logradouro: xmlData.fornecedor.endereco.logradouro,
+                            numero: xmlData.fornecedor.endereco.numero,
+                            bairro: xmlData.fornecedor.endereco.bairro,
+                            cidade: xmlData.fornecedor.endereco.cidade,
+                            estado: xmlData.fornecedor.endereco.uf,
+                            complemento: ''
+                        },
+                        tipo: 'pj' as const, // ou 'pj'
                         ativo: true
                     }, empresa.id);
-                    fornecedorId = novoFornecedor.id;
+                    fornecedorId = novoFornecedor.id!;
                 }
             }
 
@@ -133,7 +157,7 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
 
                 if (item.acao === 'novo') {
                     // Criar Produto
-                    await storage.create('produtos', {
+                    await storage.create<Produto>('produtos', {
                         nome: item.novoNome,
                         descricao: item.xml.nome, // Descrição original
                         tipo: 'produto',
@@ -157,14 +181,14 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
                     const custoTotalEntrada = item.xml.valorTotal;
                     const novoPrecoCusto = (custoTotalAntigo + custoTotalEntrada) / novoEstoque;
 
-                    await storage.update('produtos', produtoAtual.id, {
+                    await storage.update<Produto>('produtos', produtoAtual.id!, {
                         quantidade: novoEstoque,
                         precoCusto: novoPrecoCusto
                     });
 
                     // Registrar movimentação
-                    await storage.create('movimentacoes_estoque', {
-                        produtoId: produtoAtual.id,
+                    await storage.create<MovimentacaoEstoque>('movimentacoes_estoque', {
+                        produtoId: produtoAtual.id!,
                         tipo: 'entrada',
                         quantidade: item.xml.quantidade,
                         motivo: `Importação XML NFe ${xmlData.numero}`,
@@ -179,24 +203,24 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
             // 3. Gerar Financeiro (Contas a Pagar)
             if (xmlData.parcelas && xmlData.parcelas.length > 0) {
                 for (const parc of xmlData.parcelas) {
-                    await storage.create('lancamentos_financeiros', {
+                    await storage.create<LancamentoFinanceiro>('lancamentos_financeiros', {
                         tipo: 'despesa',
                         descricao: `NFe ${xmlData.numero} - Parc ${parc.numero} - ${xmlData.fornecedor.nome}`,
                         valor: parc.valor,
                         categoria: 'fornecedor',
-                        data: parc.vencimento, // Data de vencimento
+                        dataVencimento: parc.vencimento, // Data de vencimento
                         status: 'pendente', // A pagar
                         fornecedorId,
                     }, empresa.id);
                 }
             } else {
                 // Cria uma única á vista se não tiver parcelas
-                await storage.create('lancamentos_financeiros', {
+                await storage.create<LancamentoFinanceiro>('lancamentos_financeiros', {
                     tipo: 'despesa',
                     descricao: `NFe ${xmlData.numero} - IMPORTADO - ${xmlData.fornecedor.nome}`,
                     valor: xmlData.valorTotal,
                     categoria: 'fornecedor',
-                    data: toISODate(new Date()), // Hoje
+                    dataVencimento: toISODate(new Date()), // Hoje
                     status: 'pendente',
                     fornecedorId,
                 }, empresa.id);
@@ -206,7 +230,7 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
             onSave(); // Recarrega tela pai
             onClose();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro na importação:', error);
             alert('Erro ao processar dados.');
         } finally {
@@ -262,7 +286,11 @@ const ImportarXMLModal = ({ onClose, onSave }) => {
                                         accept=".xml"
                                         className="hidden"
                                         id="xmlUpload"
-                                        onChange={(e) => e.target.files.length > 0 && handleFile(e.target.files[0])}
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                handleFile(e.target.files[0]);
+                                            }
+                                        }}
                                     />
                                     <label
                                         htmlFor="xmlUpload"

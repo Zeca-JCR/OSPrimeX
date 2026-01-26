@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+﻿// DetalhesCliente.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -6,8 +6,15 @@ import { useModal } from '../../contexts/ModalContext';
 import storage from '../../lib/storage';
 import { formatTelefone, formatDocumento, getIniciais, formatDate, formatCurrency } from '../../lib/utils';
 import WhatsAppIcon from '../../components/common/WhatsAppIcon';
+import type { Cliente, Veiculo, OrdemServico } from '../../types';
 
-const DetalhesCliente = ({ clienteId, isTabMode, onClose }) => {
+interface DetalhesClienteProps {
+    clienteId?: string;
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const DetalhesCliente = ({ clienteId, isTabMode, onClose }: DetalhesClienteProps) => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
     const { id } = useParams();
@@ -16,14 +23,14 @@ const DetalhesCliente = ({ clienteId, isTabMode, onClose }) => {
     // Prioriza ID da prop (aba) sobre URL
     const idToUse = clienteId || id;
 
-    const [cliente, setCliente] = useState(null);
-    const [veiculos, setVeiculos] = useState([]);
-    const [ordens, setOrdens] = useState([]);
+    const [cliente, setCliente] = useState<Cliente | null>(null);
+    const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+    const [ordens, setOrdens] = useState<OrdemServico[]>([]);
     const [loading, setLoading] = useState(true);
 
 
 
-    const tagsConfig = {
+    const tagsConfig: Record<string, { label: string; color: string; icon: string }> = {
         vip: { label: 'VIP', color: 'bg-amber-500', icon: 'star' },
         recorrente: { label: 'Recorrente', color: 'bg-green-500', icon: 'refresh' },
         novo: { label: 'Novo', color: 'bg-blue-500', icon: 'fiber_new' },
@@ -47,13 +54,13 @@ const DetalhesCliente = ({ clienteId, isTabMode, onClose }) => {
             ]);
 
             if (clienteData) {
-                setCliente(clienteData);
-                setVeiculos(veiculosData.filter((v) => v.clienteId === idToUse && v.ativo));
+                setCliente(clienteData as Cliente);
+                setVeiculos((veiculosData as Veiculo[]).filter((v) => v.clienteId === idToUse && v.ativo));
                 // Filtrar OS do cliente e ordenar por data (mais recentes primeiro)
                 setOrdens(
-                    ordensData
+                    (ordensData as OrdemServico[])
                         .filter(o => o.clienteId === idToUse && o.ativo)
-                        .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm))
+                        .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
                 );
             }
         } catch (error) {

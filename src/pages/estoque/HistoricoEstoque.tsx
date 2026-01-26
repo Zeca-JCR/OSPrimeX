@@ -1,33 +1,41 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import storage from '../../lib/storage';
-import { formatCurrency, formatDateTime, toTitleCase } from '../../lib/utils';
+import { formatDateTime, toTitleCase } from '../../lib/utils';
+import { MovimentacaoEstoque, Produto } from '../../types';
 
-const HistoricoEstoque = ({ isTabMode, onClose }) => {
+
+
+
+interface HistoricoEstoqueProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const HistoricoEstoque = ({ isTabMode, onClose }: HistoricoEstoqueProps = {}) => {
     const { empresa } = useAuth();
-    const [searchParams, setSearchParams] = useSearchParams(); // Add this hook
+    const [searchParams, setSearchParams] = useSearchParams();
     const filtroProdutoId = searchParams.get('produtoId');
 
-    const [movimentacoes, setMovimentacoes] = useState([]);
-    const [produtos, setProdutos] = useState([]);
+    const [movimentacoes, setMovimentacoes] = useState<MovimentacaoEstoque[]>([]);
+    const [produtos, setProdutos] = useState<Produto[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [tipoMov, setTipoMov] = useState('entrada');
+    const [tipoMov, setTipoMov] = useState<'entrada' | 'saida'>('entrada');
 
     useEffect(() => {
         carregarDados();
     }, [empresa]);
 
     const carregarDados = async () => {
-        if (!empresa) return;
+        if (!empresa?.id) return;
         try {
             const [movsData, prodsData] = await Promise.all([
-                storage.getAll('movimentacoes_estoque', empresa.id),
-                storage.getAll('produtos', empresa.id),
+                storage.getAll<MovimentacaoEstoque>('movimentacoes_estoque', empresa.id),
+                storage.getAll<Produto>('produtos', empresa.id),
             ]);
-            let movs = movsData.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+            let movs = movsData.sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
             if (filtroProdutoId) {
                 movs = movs.filter(m => m.produtoId === filtroProdutoId);
             }
@@ -40,12 +48,12 @@ const HistoricoEstoque = ({ isTabMode, onClose }) => {
         }
     };
 
-    const getProdutoNome = (produtoId) => {
+    const getProdutoNome = (produtoId: string) => {
         const produto = produtos.find((p) => p.id === produtoId);
         return toTitleCase(produto?.nome || 'Produto removido');
     };
 
-    const handleNovaMovimentacao = (tipo) => {
+    const handleNovaMovimentacao = (tipo: 'entrada' | 'saida') => {
         setTipoMov(tipo);
         setShowModal(true);
     };
@@ -66,11 +74,11 @@ const HistoricoEstoque = ({ isTabMode, onClose }) => {
     }
 
     return (
-        <div className="flex flex-col h-full p-4 lg:p-6">
+        <div className="flex flex-col h-full p-4 lg:p-6 space-y-4">
             {/* Header - estilo Stitch */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Movimentações
                         {filtroProdutoId && (
                             <span className="ml-2 text-sm font-normal text-text-secondary-light dark:text-text-secondary-dark bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">
@@ -177,7 +185,15 @@ const HistoricoEstoque = ({ isTabMode, onClose }) => {
 };
 
 // Modal de movimentação
-const MovimentacaoModal = ({ tipo, produtos, empresaId, onClose, onSave }) => {
+interface MovimentacaoModalProps {
+    tipo: 'entrada' | 'saida';
+    produtos: Produto[];
+    empresaId?: string;
+    onClose: () => void;
+    onSave: () => void;
+}
+
+const MovimentacaoModal = ({ tipo, produtos, empresaId, onClose, onSave }: MovimentacaoModalProps) => {
     const isEntrada = tipo === 'entrada';
     const [form, setForm] = useState({
         produtoId: '',
@@ -187,15 +203,21 @@ const MovimentacaoModal = ({ tipo, produtos, empresaId, onClose, onSave }) => {
     const [salvando, setSalvando] = useState(false);
     const [error, setError] = useState('');
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSalvando(true);
+
+        if (!empresaId) {
+            setError('Erro de identificação da empresa');
+            setSalvando(false);
+            return;
+        }
 
         try {
             if (!form.produtoId) throw new Error('Selecione um produto');
@@ -208,34 +230,39 @@ const MovimentacaoModal = ({ tipo, produtos, empresaId, onClose, onSave }) => {
 
             if (!produto) throw new Error('Produto não encontrado');
 
+            const estoqueAtual = produto.quantidade || 0;
+
             // Verificar se há estoque suficiente para saída
-            if (!isEntrada && produto.quantidade < quantidade) {
-                throw new Error(`Estoque insuficiente. Disponível: ${produto.quantidade}`);
+            if (!isEntrada && estoqueAtual < quantidade) {
+                throw new Error(`Estoque insuficiente. Disponível: ${estoqueAtual}`);
             }
 
+            const novoEstoque = isEntrada
+                ? estoqueAtual + quantidade
+                : Math.max(0, estoqueAtual - quantidade);
+
             // Criar movimentação
-            await storage.create(
-                'movimentacoes_estoque',
-                {
-                    produtoId: form.produtoId,
-                    tipo,
-                    quantidade,
-                    motivo: form.motivo || (isEntrada ? 'Entrada manual' : 'Saída manual'),
-                },
-                empresaId
-            );
+            const movimentacaoData: Omit<MovimentacaoEstoque, 'id' | 'criadoEm' | 'atualizadoEm'> = {
+                produtoId: form.produtoId,
+                tipo,
+                quantidade,
+                motivo: form.motivo || (isEntrada ? 'Entrada manual' : 'Saída manual'),
+                estoqueAnterior: estoqueAtual,
+                estoqueAtual: novoEstoque,
+                empresaId,
+                ativo: true
+            };
+
+            await storage.create('movimentacoes_estoque', movimentacaoData, empresaId);
 
             // Atualizar estoque do produto
-            const novaQuantidade = isEntrada
-                ? produto.quantidade + quantidade
-                : produto.quantidade - quantidade;
-
-            await storage.update('produtos', form.produtoId, {
-                quantidade: novaQuantidade,
-            });
+            const updatePayload: Partial<Produto> = {
+                quantidade: novoEstoque,
+            };
+            await storage.update('produtos', form.produtoId, updatePayload);
 
             onSave();
-        } catch (error) {
+        } catch (error: any) {
             setError(error.message || 'Erro ao salvar');
         } finally {
             setSalvando(false);

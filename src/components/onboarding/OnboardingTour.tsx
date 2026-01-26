@@ -1,15 +1,39 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useState, useEffect, createContext, useContext } from 'react';
+﻿import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Tipos para o Tour
+interface Step {
+    id: string;
+    title: string;
+    description: string;
+    target?: string;
+    position: 'center' | 'top' | 'bottom' | 'left' | 'right';
+}
+
+interface OnboardingContextData {
+    showTour: boolean;
+    currentStep: number;
+    tourCompleted: boolean;
+    steps: Step[];
+    startTour: () => void;
+    nextStep: () => void;
+    prevStep: () => void;
+    skipTour: () => void;
+    completeTour: () => void;
+    resetTour: () => void;
+}
+
+interface OnboardingProviderProps {
+    children: ReactNode;
+}
+
 // Context para gerenciar o estado do onboarding
-const OnboardingContext = createContext();
+const OnboardingContext = createContext<OnboardingContextData>({} as OnboardingContextData);
 
 export const useOnboarding = () => useContext(OnboardingContext);
 
 // Passos do tour
-const TOUR_STEPS = [
+const TOUR_STEPS: Step[] = [
     {
         id: 'welcome',
         title: 'Bem-vindo ao OSPrimeX! 🚀',
@@ -60,7 +84,7 @@ const TOUR_STEPS = [
 ];
 
 // Provider do Onboarding
-export const OnboardingProvider = ({ children }) => {
+export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children }) => {
     const { isAuthenticated, usuario } = useAuth();
     const [showTour, setShowTour] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
@@ -147,7 +171,7 @@ const TourOverlay = () => {
     const isCentered = step.position === 'center';
 
     const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, height: 0 });
-    const [tooltipStyle, setTooltipStyle] = useState({});
+    const [tooltipStyle, setTooltipStyle] = useState<any>({});
 
     useEffect(() => {
         const updatePosition = () => {
@@ -160,30 +184,32 @@ const TourOverlay = () => {
                 return;
             }
 
-            const element = document.querySelector(step.target);
-            if (element) {
-                const rect = element.getBoundingClientRect();
-                setCoords({
-                    top: rect.top,
-                    left: rect.left,
-                    width: rect.width,
-                    height: rect.height,
-                });
+            if (step.target) {
+                const element = document.querySelector(step.target);
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    setCoords({
+                        top: rect.top,
+                        left: rect.left,
+                        width: rect.width,
+                        height: rect.height,
+                    });
 
-                // Calcular posição do tooltip
-                let style = {};
-                if (step.position === 'right') {
-                    style = {
-                        top: rect.top + (rect.height / 2) - 100, // Centralizar verticalmente (estimativa) mais ou menos
-                        left: rect.right + 20,
-                    };
-                } else if (step.position === 'bottom') {
-                    style = {
-                        top: rect.bottom + 20,
-                        left: rect.left + (rect.width / 2) - 150, // Centralizar horizontalmente
-                    };
+                    // Calcular posição do tooltip
+                    let style: any = {};
+                    if (step.position === 'right') {
+                        style = {
+                            top: rect.top + (rect.height / 2) - 100, // Centralizar verticalmente (estimativa) mais ou menos
+                            left: rect.right + 20,
+                        };
+                    } else if (step.position === 'bottom') {
+                        style = {
+                            top: rect.bottom + 20,
+                            left: rect.left + (rect.width / 2) - 150, // Centralizar horizontalmente
+                        };
+                    }
+                    setTooltipStyle(style);
                 }
-                setTooltipStyle(style);
             }
         };
 
@@ -305,7 +331,7 @@ const TourOverlay = () => {
 };
 
 // Componente de botão para reiniciar o tour
-export const RestartTourButton = () => {
+export const RestartTourButton: React.FC = () => {
     const { resetTour } = useOnboarding();
 
     return (
@@ -320,4 +346,3 @@ export const RestartTourButton = () => {
 };
 
 export default OnboardingProvider;
-

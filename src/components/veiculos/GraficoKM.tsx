@@ -1,10 +1,13 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import React from 'react';
+﻿import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatDate } from '../../lib/utils';
+import { HistoricoKM } from '../../types';
 
-const GraficoKM = ({ dados }) => {
+interface GraficoKMProps {
+    dados: HistoricoKM[];
+}
+
+const GraficoKM: React.FC<GraficoKMProps> = ({ dados }) => {
     // Se não houver dados suficientes, não exibe o gráfico
     if (!dados || dados.length < 2) {
         return (
@@ -55,7 +58,7 @@ const GraficoKM = ({ dados }) => {
                             border: 'none',
                             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                         }}
-                        formatter={(value) => [`${value} km`, 'Quilometragem']}
+                        formatter={(value: number) => [`${value} km`, 'Quilometragem']}
                         labelStyle={{ color: '#374151', marginBottom: '0.25rem' }}
                     />
                     <Line
@@ -73,4 +76,3 @@ const GraficoKM = ({ dados }) => {
 };
 
 export default GraficoKM;
-

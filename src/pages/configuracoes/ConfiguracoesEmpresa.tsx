@@ -1,17 +1,77 @@
-// @ts-nocheck
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, ChangeEvent, FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
 
-const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
+interface ConfiguracoesEmpresaProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+    onDirtyChange?: (isDirty: boolean) => void;
+}
+
+interface Endereco {
+    logradouro: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+}
+
+interface EmpresaForm {
+    nomeFantasia: string;
+    razaoSocial: string;
+    cnpj: string;
+    telefone: string;
+    whatsapp: string;
+    email: string;
+    site: string;
+    endereco: Endereco;
+    // Configurações de OS
+    prefixoOS: string;
+    proximaOS: number;
+    preferenciaOS: string;
+    mensagemPadrao: string;
+    metaMensalOS: number;
+    perfil?: string; // Added from useEffect usage
+    diasValidadeOrcamento: number;
+    diasInatividade: number;
+    imprimirApontamentos: boolean;
+    // Configurações de impressão
+    logoUrl: string;
+    corPrimaria: string;
+    // Configurações de pagamento
+    chavePix: string;
+    banco: string;
+    // Templates de mensagem WhatsApp
+    templateLembreteRevisao: string;
+    templateFollowUp: string;
+    templateAgradecimento: string;
+    markupPadrao: number;
+    // Agenda
+    agendaDiasAntecedencia: number;
+    agendaMensagemConfirmacao: string;
+    // Configurações de Preço
+    descontoNosItens: boolean;
+    acrescimoNosItens: boolean;
+    descontoNoTotal: boolean;
+    acrescimoNoTotal: boolean;
+    // Configurações de Prismas
+    usarPrismas: boolean;
+    prismaCor: string;
+    prismaQuantidade: number;
+    controlarEstoque: boolean;
+}
+
+const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }: ConfiguracoesEmpresaProps) => {
     const { empresa, refreshEmpresa } = useAuth();
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const [loading, setLoading] = useState(true);
     const [salvando, setSalvando] = useState(false);
     const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
 
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<EmpresaForm>({
         nomeFantasia: '',
         razaoSocial: '',
         cnpj: '',
@@ -60,6 +120,7 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
         usarPrismas: false,
         prismaCor: 'Vermelho',
         prismaQuantidade: 20,
+        controlarEstoque: false,
     });
 
     useEffect(() => {
@@ -109,6 +170,7 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                 usarPrismas: empresa.usarPrismas ?? false,
                 prismaCor: empresa.prismaCor || 'Vermelho',
                 prismaQuantidade: empresa.prismaQuantidade || 20,
+                controlarEstoque: empresa.controlarEstoque ?? false,
             });
             setLoading(false);
         }
@@ -116,7 +178,7 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
 
     // Estado isDirty para rastrear alterações
     const [isDirty, setIsDirty] = useState(false);
-    const initialFormRef = useRef(null);
+    const initialFormRef = useRef<string | null>(null);
 
     // Ref para callback que pode mudar - evita loops infinitos
     const onDirtyChangeRef = useRef(onDirtyChange);
@@ -140,10 +202,12 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
         }
     }, [isDirty, isTabMode]);
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        const checked = (e.target as HTMLInputElement).checked;
+
         if (name.startsWith('endereco.')) {
-            const field = name.replace('endereco.', '');
+            const field = name.replace('endereco.', '') as keyof Endereco;
             setForm(prev => ({
                 ...prev,
                 endereco: { ...prev.endereco, [field]: value }
@@ -155,8 +219,8 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
         if (!isDirty) setIsDirty(true);
     };
 
-    const handleLogoUpload = (e) => {
-        const file = e.target.files[0];
+    const handleLogoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) { // 5MB limit
                 alert('A imagem deve ter no máximo 5MB.');
@@ -165,7 +229,7 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
 
             const reader = new FileReader();
             reader.onloadend = () => {
-                setForm(prev => ({ ...prev, logoUrl: reader.result }));
+                setForm(prev => ({ ...prev, logoUrl: reader.result as string }));
             };
             reader.readAsDataURL(file);
         }
@@ -208,7 +272,7 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
         }
     }, [isTabMode, saveConfiguracoes, registerSaveHandler, unregisterSaveHandler]);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         await saveConfiguracoes();
     };
@@ -534,6 +598,20 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
                             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
                                 Margem de lucro sugerida na importação de notas (Ex: 50%)
                             </p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 md:col-span-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                            <input
+                                type="checkbox"
+                                id="controlarEstoque"
+                                name="controlarEstoque"
+                                checked={form.controlarEstoque}
+                                onChange={handleChange}
+                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="controlarEstoque" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
+                                Controlar Estoque Rigorosamente
+                            </label>
+                            <span className="material-symbols-outlined text-gray-400 text-sm" title="Se marcado, impedirá a finalização de OS caso não haja estoque suficiente dos produtos.">help</span>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
@@ -1028,5 +1106,3 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }) => {
 };
 
 export default ConfiguracoesEmpresa;
-
-

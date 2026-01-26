@@ -256,3 +256,19 @@ export const calcularResumoFinanceiro = (
         totalFinal
     };
 };
+
+// ============================================
+// UI Helpers
+// ============================================
+
+export const getEmojiCor = (cor: string | null | undefined): string => {
+    switch (cor) {
+        case 'Vermelho': return '🔴';
+        case 'Azul': return '🔵';
+        case 'Verde': return '🟢';
+        case 'Amarelo': return '🟡';
+        case 'Preto': return '⚫';
+        case 'Laranja': return '🟠';
+        default: return '⚪';
+    }
+};

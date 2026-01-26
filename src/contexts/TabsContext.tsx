@@ -121,7 +121,10 @@ export const TabsProvider = ({ children }: TabsProviderProps) => {
             const newTabs = prev.filter(t => t.id !== tabId);
 
             if (activeTabId === tabId && newTabs.length > 0) {
-                const newIndex = closingIndex > 0 ? closingIndex - 1 : 0;
+                // Regra de Ouro: Prioridade Direita (Right Neighbor)
+                // Se fechou a aba no índice X, o novo elemento no índice X sera o da direita
+                // Se não houver elemento em X (era a última), pega o X-1 (esquerda)
+                const newIndex = closingIndex < newTabs.length ? closingIndex : closingIndex - 1;
                 setActiveTabId(newTabs[newIndex]?.id || null);
             } else if (newTabs.length === 0) {
                 setActiveTabId(null);

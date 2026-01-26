@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { useState } from 'react';
+﻿import { useState, FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import CadastroContaModal from '../../components/auth/CadastroContaModal';
@@ -17,21 +16,21 @@ const Login = () => {
         alert('Instruções de recuperação enviadas para o seu email!');
     };
 
-    const handleCadastroSuccess = (creds) => {
+    const handleCadastroSuccess = (creds: { email: string; senha?: string }) => {
         setShowCadastro(false);
         setEmail(creds.email);
-        setSenha(creds.senha);
+        if (creds.senha) setSenha(creds.senha);
         alert('Conta criada com sucesso! Faça login para continuar.');
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
         try {
             await login(email, senha);
-        } catch (err) {
+        } catch (err: any) {
             setError(err.message || 'Erro ao fazer login');
         } finally {
             setLoading(false);
@@ -202,7 +201,7 @@ const Login = () => {
 
                     {/* Footer */}
                     <p className="text-center text-xs text-text-secondary-light dark:text-text-secondary-dark mt-6">
-                        Â© 2024 OSPrimeX. Todos os direitos reservados.
+                        © 2024 OSPrimeX. Todos os direitos reservados.
                     </p>
                 </div>
             </div>

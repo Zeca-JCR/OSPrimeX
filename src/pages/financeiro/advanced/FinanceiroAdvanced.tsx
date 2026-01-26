@@ -1,11 +1,14 @@
-﻿// @ts-nocheck
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import CategoriasView from './CategoriasView';
 import ContasPagarReceber from './ContasPagarReceber';
 import DREView from './DREView';
 
-const FinanceiroAdvanced = () => {
+interface FinanceiroAdvancedProps {
+    isTabMode?: boolean;
+}
+
+const FinanceiroAdvanced = ({ isTabMode }: FinanceiroAdvancedProps) => {
     const [activeTab, setActiveTab] = useState('categorias');
 
     const renderTabContent = () => {
@@ -26,10 +29,17 @@ const FinanceiroAdvanced = () => {
             {/* Header */}
             <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <Link to="/financeiro" className="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-primary mb-2">
-                        <span className="material-symbols-outlined text-lg">arrow_back</span>
-                        Voltar para Financeiro Básico
-                    </Link>
+                    {!isTabMode ? (
+                        <Link to="/financeiro" className="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark hover:text-primary mb-2">
+                            <span className="material-symbols-outlined text-lg">arrow_back</span>
+                            Voltar para Financeiro Básico
+                        </Link>
+                    ) : (
+                        <div className="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark mb-2">
+                            <span className="material-symbols-outlined text-lg">diamond</span>
+                            Módulo Avançado
+                        </div>
+                    )}
                     <h1 className="text-2xl font-bold text-text-light dark:text-text-dark flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">monitoring</span>
                         Financeiro Avançado

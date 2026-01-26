@@ -1,19 +1,23 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import storage from '../../lib/storage';
 import { useAuth } from '../../contexts/AuthContext';
+import { Cliente } from '../../types';
 
-const ImportarClientesModal = ({ onClose, onSuccess }) => {
+interface ImportarClientesModalProps {
+    onClose: () => void;
+    onSuccess: (importados: number, falhas: number, duplicados: number) => void;
+}
+
+const ImportarClientesModal: React.FC<ImportarClientesModalProps> = ({ onClose, onSuccess }) => {
     const { empresa } = useAuth();
-    const fileInputRef = useRef(null);
-    const [arquivo, setArquivo] = useState(null);
-    const [preview, setPreview] = useState([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [arquivo, setArquivo] = useState<File | null>(null);
+    const [preview, setPreview] = useState<any[]>([]);
     const [erro, setErro] = useState('');
     const [processando, setProcessando] = useState(false);
     const [progresso, setProgresso] = useState({ total: 0, atual: 0, erros: 0, duplicados: 0 });
 
-    const handleFileChange = (e) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -27,17 +31,17 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
         lerArquivo(file);
     };
 
-    const lerConteudoArquivo = (file) => {
+    const lerConteudoArquivo = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
 
             reader.onload = (e) => {
-                const texto = e.target.result;
+                const texto = e.target?.result as string;
                 // Verificar se há caractere de substituição (indicativo de encoding errado)
                 if (texto.includes('\uFFFD')) {
                     // Tentar ler novamente como ISO-8859-1 (ANSI/Windows-1252)
                     const readerIso = new FileReader();
-                    readerIso.onload = (evt) => resolve(evt.target.result);
+                    readerIso.onload = (evt) => resolve(evt.target?.result as string);
                     readerIso.onerror = (err) => reject(err);
                     readerIso.readAsText(file, 'ISO-8859-1');
                 } else {
@@ -50,7 +54,7 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
         });
     };
 
-    const lerArquivo = async (file) => {
+    const lerArquivo = async (file: File) => {
         try {
             const texto = await lerConteudoArquivo(file);
             const linhas = texto.split('\n').map(l => l.trim()).filter(l => l);
@@ -67,7 +71,7 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
             // Preview
             for (let i = 1; i < Math.min(linhas.length, 6); i++) {
                 const valores = linhas[i].split(/[;,]/).map(v => v.trim().replace(/"/g, ''));
-                const obj = {};
+                const obj: any = {};
                 cabecalho.forEach((col, idx) => {
                     obj[col] = valores[idx] || '';
                 });
@@ -100,7 +104,7 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
 
         try {
             // Buscar clientes existentes para validar duplicidade
-            const clientesExistentes = await storage.getAll('clientes', empresa.id);
+            const clientesExistentes = await storage.getAll<Cliente>('clientes', empresa.id);
             const documentosExistentes = new Set(
                 clientesExistentes
                     .map(c => c.documento?.replace(/\D/g, ''))
@@ -121,7 +125,7 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
             for (let i = 1; i < linhas.length; i++) {
                 try {
                     const valores = linhas[i].split(/[;,]/).map(v => v.trim().replace(/"/g, ''));
-                    const obj = {};
+                    const obj: any = {};
                     cabecalho.forEach((col, idx) => {
                         obj[col] = valores[idx] || '';
                     });
@@ -137,7 +141,7 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
                     // Processar tags do CSV
                     let tagsIniciais = ['importado'];
                     if (obj.tags) {
-                        const tagsCSV = obj.tags.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
+                        const tagsCSV = obj.tags.split(',').map((t: string) => t.trim().toLowerCase()).filter((t: string) => t);
                         if (tagsCSV.length > 0) {
                             tagsIniciais = [...tagsIniciais, ...tagsCSV];
                         }
@@ -146,7 +150,7 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
                     // Remover duplicados
                     tagsIniciais = [...new Set(tagsIniciais)];
 
-                    const clienteNovo = {
+                    const clienteNovo: Omit<Cliente, 'id' | 'criadoEm' | 'atualizadoEm' | 'empresaId'> = {
                         nome: obj.nome,
                         tipo: ['pj', 'juridica'].includes(obj.tipo?.toLowerCase()) ? 'pj' : 'pf',
                         documento: obj.documento || '',
@@ -209,7 +213,7 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
 
                 {!processando ? (
                     <div className="space-y-4">
-                        {/* Ãrea de Upload */}
+                        {/* Área de Upload */}
                         <div
                             className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-800/50"
                             onClick={() => fileInputRef.current?.click()}
@@ -332,4 +336,3 @@ const ImportarClientesModal = ({ onClose, onSuccess }) => {
 };
 
 export default ImportarClientesModal;
-

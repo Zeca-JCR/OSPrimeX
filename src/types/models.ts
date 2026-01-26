@@ -47,6 +47,18 @@ export interface Empresa extends BaseEntity {
     plano: PlanoEmpresa;
     limiteUsuarios: number;
     addons: AddonEmpresa[];
+    // Configurações UI
+    usarPrismas?: boolean;
+    prismaCor?: string;
+    diasValidadeOrcamento?: number;
+    markupPadrao?: number;
+    // CRM
+    templateLembreteRevisao?: string;
+    templateAniversario?: string;
+    templateFollowUp?: string;
+    diasInatividade?: number;
+    // Estoque
+    controlarEstoque?: boolean;
 }
 
 // ============================================
@@ -75,6 +87,17 @@ export interface Colaborador extends BaseEntity {
     comissao: number;
 }
 
+export interface Comissao extends BaseEntity {
+    tecnicoId: string;
+    osId?: string;
+    osNumero?: number;
+    valorOs: number;
+    percentual: number;
+    valorComissao: number;
+    status: 'pendente' | 'pago';
+    dataPagamento?: string;
+}
+
 // ============================================
 // Cliente
 // ============================================
@@ -90,6 +113,11 @@ export interface Cliente extends BaseEntity {
     email?: string;
     endereco?: Endereco;
     observacoes?: string;
+    tags?: string[];
+    // Campos de tracking
+    ultimoContato?: string;
+    ultimoDesfecho?: string;
+    dataNascimento?: string;
 }
 
 // ============================================
@@ -109,6 +137,7 @@ export interface Veiculo extends BaseEntity {
     km?: number;
     renavam?: string;
     observacoes?: string;
+    foto?: string;
 }
 
 // ============================================
@@ -128,6 +157,13 @@ export interface Produto extends BaseEntity {
     quantidade?: number; // Estoque atual (apenas para produtos)
     estoqueMinimo?: number;
     fornecedorId?: string;
+    // Campos adicionais
+    codigoBarras?: string;
+    referencia?: string;
+    marca?: string;
+    classificacao?: string;
+    aplicacao?: string;
+    servicoRapido?: boolean;
 }
 
 // ============================================
@@ -135,8 +171,12 @@ export interface Produto extends BaseEntity {
 // ============================================
 
 export interface Fornecedor extends BaseEntity {
+    tipo?: 'pf' | 'pj';
     nome: string;
     cnpj?: string;
+    documento?: string; // Alias or alternative to CNPJ
+    contato?: string;
+    categoria?: string;
     telefone?: string;
     whatsapp?: string;
     email?: string;
@@ -159,7 +199,7 @@ export type StatusOS =
     | 'entregue'
     | 'cancelada';
 
-export type TipoOS = 'os' | 'orcamento';
+export type TipoOS = 'os' | 'orcamento' | 'garantia' | 'cortesia' | 'interna' | 'retorno';
 
 export type StatusFinanceiroOS = 'pendente' | 'parcial' | 'pago';
 
@@ -169,7 +209,8 @@ export interface ChecklistItem {
 }
 
 export interface ItemOS {
-    produtoId: string;
+    tipo?: string;
+    produtoId?: string;
     nome: string;
     quantidade: number;
     precoUnitario: number;
@@ -204,10 +245,18 @@ export interface OrdemServico extends BaseEntity {
     assinaturaCliente?: string;
     assinaturaEntrega?: string;
 
+    // Pagamentos (Injetado via join ou similar)
+    pagamentos?: LancamentoFinanceiro[];
+    valorPago?: number;
+
     // Timestamps adicionais
     dataAprovacao?: string;
     dataFinalizacao?: string;
+    execucaoFinalizadaEm?: string;
     dataEntrega?: string;
+
+    // Campos adicionais
+    prisma?: string | number;
 }
 
 // ============================================
@@ -224,6 +273,7 @@ export interface LancamentoFinanceiro extends BaseEntity {
     valor: number;
     dataVencimento: string;
     dataPagamento?: string;
+    data?: string; // Campo opcional para data genérica
     status: StatusLancamento;
     formaPagamento?: FormaPagamento;
     categoria?: string;
@@ -233,9 +283,27 @@ export interface LancamentoFinanceiro extends BaseEntity {
     observacoes?: string;
 }
 
+export interface CategoriaFinanceira extends BaseEntity {
+    nome: string;
+    icone?: string;
+    cor?: string;
+    tipo?: TipoLancamento;
+}
+
 // ============================================
 // Agenda
 // ============================================
+
+export interface Agendamento extends BaseEntity {
+    data: string;
+    hora: string;
+    clienteId: string;
+    veiculoId: string;
+    tecnicoId?: string;
+    servico?: string;
+    observacoes?: string;
+    status: 'agendado' | 'confirmado' | 'bloqueio' | 'concluido' | 'cancelado';
+}
 
 export interface EventoAgenda extends BaseEntity {
     titulo: string;
@@ -315,7 +383,23 @@ export interface MovimentacaoEstoque extends BaseEntity {
     tipo: TipoMovimentacaoEstoque;
     quantidade: number;
     motivo: string;
+    estoqueAnterior?: number;
+    estoqueAtual?: number;
+    valorCusto?: number;
+    novoPrecoCusto?: number;
     osId?: string;
     fornecedorId?: string;
     notaFiscal?: string;
+}
+
+// ============================================
+// Kanban
+// ============================================
+
+export interface ColunaKanban {
+    id: string;
+    label: string;
+    icon: string;
+    color: string;
+    badgeColor: string;
 }

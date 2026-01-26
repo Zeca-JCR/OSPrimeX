@@ -1,9 +1,14 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import React, { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { toISODate } from '../../lib/utils';
+import { OrdemServico, Apontamento } from '../../types';
 
-export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
+interface TimeTrackingSectionProps {
+    os: OrdemServico;
+    onUpdate: (update: Partial<OrdemServico>) => void;
+    onAddToBill: (valorHoras: number) => void;
+}
+
+export const TimeTrackingSection: React.FC<TimeTrackingSectionProps> = ({ os, onUpdate, onAddToBill }) => {
     const [isExpanded, setIsExpanded] = useState(false); // Default collapsed as per user preference
     const [novoApontamento, setNovoApontamento] = useState({
         data: toISODate(new Date()),
@@ -13,10 +18,10 @@ export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
         cobravel: true
     });
 
-    const [editingId, setEditingId] = useState(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     // Calcular duração em (HH:MM) e Decimal
-    const calcularDuracao = (inicio, fim) => {
+    const calcularDuracao = (inicio: string, fim: string) => {
         if (!inicio || !fim) return { texto: '00:00', decimal: 0 };
 
         const [h1, m1] = inicio.split(':').map(Number);
@@ -54,9 +59,10 @@ export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
             setEditingId(null);
         } else {
             // Adição
-            const novo = {
+            const novo: Apontamento = {
                 id: `apt_${Date.now()}`,
                 criadoEm: new Date().toISOString(),
+                tecnicoId: 'temp', // Ajuste posterior para técnico logado se necessário
                 ...novoApontamento,
                 duracao: texto,
                 duracaoDecimal: decimal
@@ -75,7 +81,7 @@ export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
         }));
     };
 
-    const handleEdit = (apt) => {
+    const handleEdit = (apt: Apontamento) => {
         setNovoApontamento({
             data: apt.data,
             inicio: apt.inicio,
@@ -99,7 +105,7 @@ export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
         }));
     };
 
-    const handleRemove = (id) => {
+    const handleRemove = (id: string) => {
         if (!confirm('Remover este apontamento?')) return;
         const novosApontamentos = (os.apontamentos || []).filter(a => a.id !== id);
         onUpdate({ apontamentos: novosApontamentos });
@@ -116,7 +122,7 @@ export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
         .filter(apt => apt.cobravel)
         .reduce((acc, apt) => acc + (apt.duracaoDecimal * 60), 0);
 
-    const formatarHoras = (mins) => {
+    const formatarHoras = (mins: number) => {
         const h = Math.floor(mins / 60);
         const m = Math.round(mins % 60);
         return `${h}:${m.toString().padStart(2, '0')}`;
@@ -329,7 +335,7 @@ export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
                                     title="Gera um item de serviço com o total de horas cobráveis"
                                 >
                                     <span className="material-symbols-outlined">monetization_on</span>
-                                    Adicionar Ã  Cobrança
+                                    Adicionar à Cobrança
                                 </button>
                             )}
                         </div>
@@ -339,4 +345,3 @@ export const TimeTrackingSection = ({ os, onUpdate, onAddToBill }) => {
         </div>
     );
 };
-

@@ -1,16 +1,19 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
-import { useNavigate, Link } from 'react-router-dom';
 import storage from '../../lib/storage';
 import { toTitleCase } from '../../lib/utils';
+import { Fornecedor } from '../../types';
 
-const Fornecedores = () => {
+interface FornecedoresProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const Fornecedores = ({ isTabMode, onClose }: FornecedoresProps = {}) => {
     const { empresa } = useAuth();
-    const navigate = useNavigate();
     const { openTab } = useTabs();
-    const [fornecedores, setFornecedores] = useState([]);
+    const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState('');
 
@@ -19,9 +22,9 @@ const Fornecedores = () => {
     }, [empresa]);
 
     const carregarFornecedores = async () => {
-        if (!empresa) return;
+        if (!empresa?.id) return;
         try {
-            const data = await storage.getAll('fornecedores', empresa.id);
+            const data = await storage.getAll<Fornecedor>('fornecedores', empresa.id);
             setFornecedores(data.filter((f) => f.ativo !== false));
         } catch (error) {
             console.error('Erro ao carregar fornecedores:', error);
@@ -30,7 +33,7 @@ const Fornecedores = () => {
         }
     };
 
-    const handleExcluir = async (id, e) => {
+    const handleExcluir = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         if (window.confirm('Deseja realmente excluir este fornecedor?')) {
             try {
@@ -42,7 +45,7 @@ const Fornecedores = () => {
         }
     };
 
-    const handleOpenFornecedor = (fornecedor) => {
+    const handleOpenFornecedor = (fornecedor: Fornecedor) => {
         openTab({
             id: `fornecedor-${fornecedor.id}`,
             type: 'fornecedor',
@@ -84,7 +87,7 @@ const Fornecedores = () => {
         <div className="p-4 lg:p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Fornecedores
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">

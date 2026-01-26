@@ -1,12 +1,17 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDate, parseDateLocal } from '../../lib/utils';
 import WhatsAppIcon from '../../components/common/WhatsAppIcon';
+import { Cliente, OrdemServico, Veiculo } from '../../types';
 
-const CRMRetencao = ({ isTabMode, onClose }) => {
+interface CRMRetencaoProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const CRMRetencao = ({ isTabMode, onClose }: CRMRetencaoProps = {}) => {
     const { empresa } = useAuth();
     const [searchParams] = useSearchParams();
     const tabParam = searchParams.get('tab');
@@ -32,9 +37,9 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
         if (!empresa) return;
         try {
             const [clientesData, osData, veiculosData] = await Promise.all([
-                storage.getAll('clientes', empresa.id),
-                storage.getAll('ordens_servico', empresa.id),
-                storage.getAll('veiculos', empresa.id),
+                storage.getAll<Cliente>('clientes', empresa.id),
+                storage.getAll<OrdemServico>('ordens_servico', empresa.id),
+                storage.getAll<Veiculo>('veiculos', empresa.id),
             ]);
             setClientes(clientesData.filter(c => c.ativo !== false));
             setOrdensServico(osData);
@@ -272,9 +277,9 @@ const CRMRetencao = ({ isTabMode, onClose }) => {
     return (
         <div className="p-4 lg:p-6 space-y-4">
             {/* Header - estilo Stitch */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Retenção de Clientes & CRM
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">

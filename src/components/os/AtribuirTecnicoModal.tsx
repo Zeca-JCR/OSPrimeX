@@ -1,8 +1,14 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import React from 'react';
+﻿import React from 'react';
+import type { Colaborador } from '../../types';
 
-export const AtribuirTecnicoModal = ({ tecnicos, tecnicoAtualId, onClose, onSelect }) => {
+interface AtribuirTecnicoModalProps {
+    tecnicos: Colaborador[];
+    tecnicoAtualId?: string;
+    onClose: () => void;
+    onSelect: (tecnicoId: string) => Promise<void>;
+}
+
+export const AtribuirTecnicoModal = ({ tecnicos, tecnicoAtualId, onClose, onSelect }: AtribuirTecnicoModalProps) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <div className="card p-6 w-full max-w-sm animate-slideUp">

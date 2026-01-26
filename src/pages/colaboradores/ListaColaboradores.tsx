@@ -1,15 +1,20 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import { useNavigate } from 'react-router-dom';
 import storage from '../../lib/storage';
+import { Colaborador } from '../../types';
 
-const ListaColaboradores = () => {
+interface ListaColaboradoresProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const ListaColaboradores = ({ isTabMode, onClose }: ListaColaboradoresProps = {}) => {
     const { empresa } = useAuth();
     const navigate = useNavigate();
     const { openTab } = useTabs();
-    const [colaboradores, setColaboradores] = useState([]);
+    const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -19,7 +24,7 @@ const ListaColaboradores = () => {
     const carregarColaboradores = async () => {
         if (!empresa) return;
         try {
-            const data = await storage.getAll('colaboradores', empresa.id);
+            const data = await storage.getAll<Colaborador>('colaboradores', empresa.id);
             // Se não tiver colaboradores e tiver usuários técnicos, poderíamos sugerir migração aqui no futuro
             setColaboradores(data.filter((c) => c.ativo !== false));
         } catch (error) {
@@ -29,7 +34,7 @@ const ListaColaboradores = () => {
         }
     };
 
-    const handleExcluir = async (id, e) => {
+    const handleExcluir = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         if (window.confirm('Deseja realmente excluir este colaborador?')) {
             try {
@@ -41,14 +46,14 @@ const ListaColaboradores = () => {
         }
     };
 
-    const cargoLabels = {
+    const cargoLabels: Record<string, string> = {
         tecnico: 'Técnico / Mecânico',
         gerente: 'Gerente',
         atendente: 'Atendente / Recepcionista',
         auxiliar: 'Auxiliar',
     };
 
-    const handleOpenColaborador = (colaborador) => {
+    const handleOpenColaborador = (colaborador: Colaborador) => {
         openTab({
             id: `colaborador-${colaborador.id}`,
             type: 'colaborador',
@@ -87,7 +92,7 @@ const ListaColaboradores = () => {
         <div className="p-4 lg:p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Colaboradores
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">

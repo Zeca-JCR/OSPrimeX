@@ -1,9 +1,8 @@
-﻿// @ts-nocheck
-// Arquivo PDF extenso - tipagem completa será adicionada em fase futura
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image, pdf } from '@react-pdf/renderer';
 import { gerarPayloadPix } from '../../lib/pix';
-import { calcularResumoFinanceiro } from '../../lib/utils';
+import { calcularResumoFinanceiro, formatCurrency, formatDate } from '../../lib/utils';
+import { OrdemServico, Cliente, Veiculo, Empresa, Usuario } from '../../types';
 
 // =====================================================
 // ESTILOS
@@ -344,35 +343,19 @@ const thermalStyles = StyleSheet.create({
 });
 
 // =====================================================
-// UTILITÃRIOS
+// UTILITÁRIOS
 // =====================================================
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(value || 0);
-};
-
-const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pt-BR');
-};
-
-const formatTime = (dateString) => {
+const formatTime = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 };
 
 // Detectar se é orçamento ou OS
-const isOrcamento = (os) => {
-    // Ã‰ orçamento APENAS se:
-    // 1. Status é explicitamente 'orcamento', 'aguardando_aprovacao' ou 'pendente'
-    // 2. OU se tem flag explícita tipo === 'orcamento'
-    // NÃƒO é orçamento se: aberta, execucao, aguardando_peca, finalizada, cancelada
+const isOrcamento = (os?: OrdemServico) => {
     if (!os) return false;
 
-    // Status que indicam que NÃƒO é mais orçamento (já virou OS de verdade)
+    // Status que indicam que NÃO é mais orçamento (já virou OS de verdade)
     const statusOS = ['aberta', 'execucao', 'aguardando_peca', 'finalizada', 'cancelada'];
     const statusAtual = os.status?.toLowerCase() || '';
 
@@ -386,13 +369,24 @@ const isOrcamento = (os) => {
     return statusOrcamento.includes(statusAtual) || os.tipo === 'orcamento';
 };
 
+interface OSDocumentProps {
+    os: OrdemServico;
+    cliente: Cliente | null;
+    veiculo: Veiculo | null;
+    empresa: Empresa | null;
+    tecnico: Usuario | null;
+    incluirFotos?: boolean;
+}
+
 // =====================================================
 // DOCUMENTO PDF A4 (COMPLETO)
 // =====================================================
 
-export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFotos = false }) => {
+export const OSDocument: React.FC<OSDocumentProps> = ({ os, cliente, veiculo, empresa, tecnico, incluirFotos = false }) => {
     const ehOrcamento = isOrcamento(os);
     const tipoDocumento = ehOrcamento ? 'ORÇAMENTO' : 'ORDEM DE SERVIÇO';
+    // Use type assertion to handle potential missing properties safely or fix types if needed.
+    // Assuming backend data might be loose, but strict typing helps frontend consistency.
     const chavePix = empresa?.chavePix || empresa?.cnpj || empresa?.telefone;
 
     return (
@@ -451,7 +445,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                 {/* Dados do Veículo */}
                 {veiculo ? (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>VEÃCULO</Text>
+                        <Text style={styles.sectionTitle}>VEÍCULO</Text>
                         <View style={styles.row}>
                             <Text style={styles.label}>Modelo:</Text>
                             <Text style={styles.value}>
@@ -476,10 +470,10 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                 ) : null}
 
                 {/* Defeito Reclamado */}
-                {os?.defeitoReclamado ? (
+                {os?.defeitoRelatado ? (
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>DEFEITO RECLAMADO</Text>
-                        <Text>{String(os.defeitoReclamado)}</Text>
+                        <Text>{String(os.defeitoRelatado)}</Text>
                     </View>
                 ) : null}
 
@@ -497,20 +491,20 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                             <View key={index} style={styles.tableRow}>
                                 <View style={styles.colItem}>
                                     <Text>{String(item.nome || '')}</Text>
-                                    {(item.valDesconto > 0 || item.valAcrescimo > 0) && (
+                                    {(item.desconto || 0) > 0 || (item.acrescimo || 0) > 0 ? (
                                         <View style={{ flexDirection: 'row', gap: 5, marginTop: 2 }}>
-                                            {item.valDesconto > 0 && (
+                                            {(item.desconto || 0) > 0 && (
                                                 <Text style={{ fontSize: 8, color: '#16a34a' }}>
-                                                    Desc: -{formatCurrency(item.valDesconto)}
+                                                    Desc: -{formatCurrency(item.desconto)}
                                                 </Text>
                                             )}
-                                            {item.valAcrescimo > 0 && (
+                                            {(item.acrescimo || 0) > 0 && (
                                                 <Text style={{ fontSize: 8, color: '#ea580c' }}>
-                                                    Acr: +{formatCurrency(item.valAcrescimo)}
+                                                    Acr: +{formatCurrency(item.acrescimo)}
                                                 </Text>
                                             )}
                                         </View>
-                                    )}
+                                    ) : null}
                                 </View>
                                 <Text style={styles.colQtd}>{String(item.quantidade || 0)}</Text>
                                 <Text style={styles.colUnit}>{formatCurrency(item.precoUnitario)}</Text>
@@ -522,7 +516,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                     {/* Total */}
                     {(() => {
                         const resumo = calcularResumoFinanceiro(
-                            os?.itens,
+                            os?.itens || [],
                             os?.descontoGlobalTipo, os?.descontoGlobalValor,
                             os?.acrescimoGlobalTipo, os?.acrescimoGlobalValor
                         );
@@ -580,7 +574,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                                 <Text style={{ width: 80, textAlign: 'center' }}>Horário</Text>
                                 <Text style={{ width: 60, textAlign: 'center', fontWeight: 'bold' }}>Duração</Text>
                             </View>
-                            {os.apontamentos.map((apt, index) => (
+                            {os.apontamentos!.map((apt, index) => (
                                 <View key={index} style={styles.tableRow}>
                                     <Text style={{ flex: 2 }}>{apt.descricao || '-'}</Text>
                                     <Text style={{ width: 80, textAlign: 'center' }}>{formatDate(apt.data)}</Text>
@@ -602,10 +596,10 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                             <Image
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
                                     gerarPayloadPix({
-                                        chave: empresa.chavePix,
-                                        nome: empresa.razaoSocial || empresa.nomeFantasia,
+                                        chave: empresa.chavePix || '',
+                                        nome: empresa.razaoSocial || empresa.nomeFantasia || '',
                                         cidade: empresa.endereco?.cidade || 'Cidade',
-                                        valor: os.valorTotal - (os.valorPago || 0),
+                                        valor: (os.valorTotal || 0) - (os.valorPago || 0),
                                         txid: `OS${os.numero}`
                                     })
                                 )}`}
@@ -623,7 +617,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                 {/* Aprovação de Orçamento */}
                 {ehOrcamento ? (
                     <View style={styles.aprovacaoBox}>
-                        <Text style={styles.aprovacaoTitulo}>APROVAÇÃƒO DO ORÇAMENTO</Text>
+                        <Text style={styles.aprovacaoTitulo}>APROVAÇÃO DO ORÇAMENTO</Text>
                         <View style={styles.aprovacaoOpcoes}>
                             <View style={styles.row}>
                                 <View style={styles.checkbox} />
@@ -631,7 +625,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                             </View>
                             <View style={styles.row}>
                                 <View style={styles.checkbox} />
-                                <Text>NÃƒO APROVO</Text>
+                                <Text>NÃO APROVO</Text>
                             </View>
                         </View>
                         <View style={[styles.assinatura, { marginTop: 20 }]}>
@@ -650,7 +644,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                 {/* Técnico Responsável */}
                 {tecnico && !ehOrcamento ? (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>TÃ‰CNICO RESPONSÃVEL</Text>
+                        <Text style={styles.sectionTitle}>TÉCNICO RESPONSÁVEL</Text>
                         <Text>{String(tecnico.nome || '')}</Text>
                     </View>
                 ) : null}
@@ -658,7 +652,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
                 {/* Observações */}
                 {os?.observacoes ? (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>OBSERVAÇÃ•ES</Text>
+                        <Text style={styles.sectionTitle}>OBSERVAÇÕES</Text>
                         <Text>{String(os.observacoes)}</Text>
                     </View>
                 ) : null}
@@ -705,7 +699,7 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
 
                 <View style={styles.footer}>
                     <Text>
-                        {`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} Ã s ${new Date().toLocaleTimeString('pt-BR')} | OSPrimeX`}
+                        {`Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} | OSPrimeX`}
                     </Text>
                     {empresa?.mensagemPadrao ? (
                         <Text style={{ marginTop: 5 }}>{String(empresa.mensagemPadrao)}</Text>
@@ -717,10 +711,17 @@ export const OSDocument = ({ os, cliente, veiculo, empresa, tecnico, incluirFoto
 };
 
 // =====================================================
-// DOCUMENTO TÃ‰RMICO 80MM (CUPOM)
+// DOCUMENTO TÉRMICO 80MM (CUPOM)
 // =====================================================
 
-export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
+interface ThermalDocumentProps {
+    os: OrdemServico;
+    cliente: Cliente | null;
+    veiculo: Veiculo | null;
+    empresa: Empresa | null;
+}
+
+export const ThermalDocument: React.FC<ThermalDocumentProps> = ({ os, cliente, veiculo, empresa }) => {
     const ehOrcamento = isOrcamento(os);
     const tipoDocumento = ehOrcamento ? 'ORÇAMENTO' : 'OS';
 
@@ -771,16 +772,16 @@ export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
                 {(os?.itens || []).map((item, index) => (
                     <View key={index} style={thermalStyles.itemRow}>
                         <Text style={thermalStyles.itemNome}>{item.nome || ''}</Text>
-                        {(item.valDesconto > 0 || item.valAcrescimo > 0) && (
+                        {(item.desconto || 0) > 0 || (item.acrescimo || 0) > 0 ? (
                             <View style={{ marginBottom: 2 }}>
-                                {item.valDesconto > 0 && (
-                                    <Text style={{ fontSize: 9 }}>Desc: -{formatCurrency(item.valDesconto)}</Text>
+                                {(item.desconto || 0) > 0 && (
+                                    <Text style={{ fontSize: 9 }}>Desc: -{formatCurrency(item.desconto)}</Text>
                                 )}
-                                {item.valAcrescimo > 0 && (
-                                    <Text style={{ fontSize: 9 }}>Acr: +{formatCurrency(item.valAcrescimo)}</Text>
+                                {(item.acrescimo || 0) > 0 && (
+                                    <Text style={{ fontSize: 9 }}>Acr: +{formatCurrency(item.acrescimo)}</Text>
                                 )}
                             </View>
-                        )}
+                        ) : null}
                         <View style={thermalStyles.itemDetalhe}>
                             <Text>{`${item.quantidade || 0}x ${formatCurrency(item.precoUnitario)}`}</Text>
                             <Text>{formatCurrency(item.total)}</Text>
@@ -792,7 +793,7 @@ export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
                 <View style={thermalStyles.totalSection}>
                     {(() => {
                         const resumo = calcularResumoFinanceiro(
-                            os?.itens,
+                            os?.itens || [],
                             os?.descontoGlobalTipo, os?.descontoGlobalValor,
                             os?.acrescimoGlobalTipo, os?.acrescimoGlobalValor
                         );
@@ -846,9 +847,9 @@ export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
                                 gerarPayloadPix({
                                     chave: empresa.chavePix,
-                                    nome: empresa.razaoSocial || empresa.nomeFantasia,
+                                    nome: empresa.razaoSocial || empresa.nomeFantasia || '',
                                     cidade: empresa.endereco?.cidade || 'Cidade',
-                                    valor: os.valorTotal - (os.valorPago || 0),
+                                    valor: (os.valorTotal || 0) - (os.valorPago || 0),
                                     txid: `OS${os.numero}`
                                 })
                             )}`}
@@ -869,10 +870,19 @@ export const ThermalDocument = ({ os, cliente, veiculo, empresa }) => {
 };
 
 // =====================================================
-// BOTÃ•ES DE DOWNLOAD
+// BOTÕES DE DOWNLOAD
 // =====================================================
 
-export const DownloadOSButton = ({ os, cliente, veiculo, empresa, tecnico, className = '' }) => {
+interface DownloadButtonProps {
+    os: OrdemServico;
+    cliente: Cliente | null;
+    veiculo: Veiculo | null;
+    empresa: Empresa | null;
+    tecnico: Usuario | null;
+    className?: string;
+}
+
+export const DownloadOSButton: React.FC<DownloadButtonProps> = ({ os, cliente, veiculo, empresa, tecnico, className = '' }) => {
     const ehOrcamento = isOrcamento(os);
     const nomeArquivo = ehOrcamento ? `Orcamento_${os?.numero}` : `OS_${os?.numero}`;
     const [loading, setLoading] = useState(false);
@@ -893,7 +903,7 @@ export const DownloadOSButton = ({ os, cliente, veiculo, empresa, tecnico, class
         }
     };
 
-    const executarDownload = async (incluirFotos) => {
+    const executarDownload = async (incluirFotos: boolean) => {
         setLoading(true);
         setShowPhotoConfirm(false);
 
@@ -962,7 +972,7 @@ export const DownloadOSButton = ({ os, cliente, veiculo, empresa, tecnico, class
                                     Incluir Fotos no Download?
                                 </h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Esta OS possui {os.fotos.length} foto(s)
+                                    Esta OS possui {(os.fotos || []).length} foto(s)
                                 </p>
                             </div>
                         </div>
@@ -1000,7 +1010,7 @@ export const DownloadOSButton = ({ os, cliente, veiculo, empresa, tecnico, class
     );
 };
 
-export const DownloadThermalButton = ({ os, cliente, veiculo, empresa, className = '' }) => {
+export const DownloadThermalButton: React.FC<DownloadButtonProps> = ({ os, cliente, veiculo, empresa, className = '' }) => {
     const ehOrcamento = isOrcamento(os);
     const nomeArquivo = ehOrcamento ? `Termica_Orc_${os?.numero}` : `Termica_OS_${os?.numero}`;
 
@@ -1032,4 +1042,3 @@ export const DownloadThermalButton = ({ os, cliente, veiculo, empresa, className
 };
 
 export default OSDocument;
-

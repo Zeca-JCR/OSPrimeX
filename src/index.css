@@ -17,16 +17,18 @@
   /* Light Mode */
   --color-bg-light: #f6f7f8;
   --color-surface-light: #ffffff;
-  --color-text-light: #111a22;
-  --color-text-secondary-light: #64748b;
+  --color-text-light: #0f172a;
+  /* Darker Slate 900 for primary text */
+  --color-text-secondary-light: #475569;
+  /* Slate 600 for better secondary contrast */
 
   /* Dark Mode - Premium Midnight */
   --color-bg-dark: #0f172a;
   /* Slate 900 */
   --color-surface-dark: rgba(30, 41, 59, 0.7);
   /* Slate 800 with opacity for glass */
-  --color-text-dark: #f1f5f9;
-  /* Slate 100 */
+  --color-text-dark: #f8fafc;
+  /* Lighter Slate 50 */
   --color-text-secondary-dark: #94a3b8;
   /* Slate 400 */
 
@@ -139,62 +141,62 @@ html.dark body {
 
 @layer components {
 
-  /* Card padrão - Glassmorphism */
+  /* Card padrão - Tech Style */
   .card {
-    @apply bg-surface-light dark:bg-surface-dark backdrop-blur-md rounded-2xl shadow-sm border border-[var(--color-border-light)] dark:border-[var(--color-border-dark)];
+    @apply bg-surface-light dark:bg-surface-dark backdrop-blur-md rounded-[2px] shadow-sm border border-[var(--color-border-light)] dark:border-[var(--color-border-dark)];
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .card:hover {
-    @apply shadow-md transform -translate-y-[2px];
+    @apply shadow-md transform -translate-y-[1px];
     border-color: rgba(19, 127, 236, 0.3);
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.1);
   }
 
   /* Dark mode specific hover glow */
   .dark .card:hover {
-    box-shadow: 0 10px 40px -10px rgba(19, 127, 236, 0.15);
+    box-shadow: 0 4px 20px -5px rgba(19, 127, 236, 0.15);
   }
 
   /* Botão primário */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5;
-    @apply bg-primary text-white font-medium rounded-xl;
+    @apply bg-primary text-white font-medium rounded-[2px];
     @apply hover:bg-[var(--color-primary-hover)] active:scale-[0.98];
     @apply transition-all;
-    box-shadow: 0 4px 14px 0 rgba(19, 127, 236, 0.4);
+    box-shadow: 0 2px 8px 0 rgba(19, 127, 236, 0.3);
   }
 
   .btn-primary:focus {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.3);
+    box-shadow: 0 0 0 2px rgba(19, 127, 236, 0.3);
   }
 
   /* Botão secundário */
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5;
     @apply bg-surface-light dark:bg-surface-dark;
-    @apply text-text-light dark:text-text-dark font-medium rounded-xl;
+    @apply text-text-light dark:text-text-dark font-medium rounded-[2px];
     @apply border border-[var(--color-border-light)] dark:border-[var(--color-border-dark)];
     @apply hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[0.98];
     @apply transition-all focus:outline-none;
   }
 
   .btn-secondary:focus {
-    box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.2);
+    box-shadow: 0 0 0 2px rgba(19, 127, 236, 0.2);
   }
 
   /* Botão ghost */
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5;
-    @apply text-text-secondary-light dark:text-text-secondary-dark font-medium rounded-xl;
+    @apply text-text-secondary-light dark:text-text-secondary-dark font-medium rounded-[2px];
     @apply hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[0.98];
     @apply transition-all;
   }
 
   /* Input padrão */
   .input {
-    @apply block w-full h-11 px-3 text-sm rounded-xl;
+    @apply block w-full h-11 px-3 text-sm rounded-[2px];
     @apply bg-surface-light dark:bg-surface-dark;
     @apply border-none ring-1 ring-[var(--color-border-light)] dark:ring-[var(--color-border-dark)];
     @apply focus:ring-2 focus:ring-primary;
@@ -276,6 +278,19 @@ html.dark body {
    Animations
    ============================================ */
 
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -318,6 +333,21 @@ html.dark body {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Accordion Animation */
+.animate-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease-out;
+}
+
+.animate-accordion.open {
+  grid-template-rows: 1fr;
+}
+
+.animate-accordion>div {
+  overflow: hidden;
+}
+
 /* ============================================
    React Big Calendar Customization
    ============================================ */
@@ -352,6 +382,10 @@ html.dark body {
 
 .dark .rbc-month-row+.rbc-month-row {
   border-top: 1px solid var(--color-border-dark);
+}
+
+.dark .rbc-time-cell {
+  padding-right: 10px;
 }
 
 .dark .rbc-date-cell {
@@ -414,7 +448,7 @@ html.dark body {
 
 /* Event Styles */
 .rbc-event {
-  border-radius: 6px;
+  border-radius: 2px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: none !important;
   padding: 2px 5px !important;

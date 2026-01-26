@@ -1,15 +1,48 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import storage from '../../lib/storage';
-import { formatPlaca, validarPlaca, toISODate } from '../../lib/utils';
+import { formatPlaca, toISODate } from '../../lib/utils';
+import type { BaseEntity, Cliente, Veiculo, OrdemServico, ItemOS } from '../../types';
 
-export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '', initialVeiculoId = '' }) => {
+interface TemplateOS extends BaseEntity {
+    nome: string;
+    itens: ItemOS[];
+}
+
+interface NovaOSModalProps {
+    empresaId?: string;
+    onClose: () => void;
+    onSave: (os: OrdemServico) => void;
+    initialClienteId?: string;
+    initialVeiculoId?: string;
+}
+
+interface NovaOSForm {
+    tipo: string;
+    clienteId: string;
+    veiculoId: string;
+    km: string;
+    defeitoRelatado: string;
+}
+
+interface NewClienteForm {
+    nome: string;
+    telefone: string;
+    documento: string;
+}
+
+interface NewVeiculoForm {
+    placa: string;
+    modelo: string;
+    marca: string;
+    ano: string;
+}
+
+export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '', initialVeiculoId = '' }: NovaOSModalProps) => {
     const { empresa } = useAuth();
     const { podeCriarOS, getLimiteOS } = useTenant();
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<NovaOSForm>({
         tipo: 'os', // 'os' ou 'orcamento'
         clienteId: initialClienteId,
         veiculoId: initialVeiculoId,
@@ -20,18 +53,19 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
     const [error, setError] = useState('');
 
     // States de dados
-    const [clientes, setClientes] = useState([]);
-    const [veiculos, setVeiculos] = useState([]);
-    const [templates, setTemplates] = useState([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+    const [templates, setTemplates] = useState<TemplateOS[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
     useEffect(() => {
         const carregarDados = async () => {
+            if (!empresaId) return;
             try {
                 const [c, v, t] = await Promise.all([
-                    storage.getAll('clientes', empresaId),
-                    storage.getAll('veiculos', empresaId),
-                    storage.getAll('osprimex_templates', empresaId)
+                    storage.getAll<Cliente>('clientes', empresaId),
+                    storage.getAll<Veiculo>('veiculos', empresaId),
+                    storage.getAll<TemplateOS>('osprimex_templates', empresaId)
                 ]);
                 setClientes(c || []);
                 setVeiculos(v || []);
@@ -46,26 +80,31 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
     // Estados para Cadastro Rápido
     const [showAddCliente, setShowAddCliente] = useState(false);
     const [showAddVeiculo, setShowAddVeiculo] = useState(false);
-    const [extraClientes, setExtraClientes] = useState([]);
-    const [extraVeiculos, setExtraVeiculos] = useState([]);
+    const [extraClientes, setExtraClientes] = useState<Cliente[]>([]);
+    const [extraVeiculos, setExtraVeiculos] = useState<Veiculo[]>([]);
 
-    const [newCliente, setNewCliente] = useState({ nome: '', telefone: '', documento: '' });
-    const [newVeiculo, setNewVeiculo] = useState({ placa: '', modelo: '', marca: '', ano: '' });
+    const [newCliente, setNewCliente] = useState<NewClienteForm>({ nome: '', telefone: '', documento: '' });
+    const [newVeiculo, setNewVeiculo] = useState<NewVeiculoForm>({ placa: '', modelo: '', marca: '', ano: '' });
 
     // Handler Salvar Novo Cliente
     const handleSaveCliente = async () => {
         try {
             if (!newCliente.nome) return;
-            const novoCliente = await storage.create('clientes', {
+
+            // Casting parcial para any onde não temos todos os campos opcionais do Cliente, 
+            // mas mantendo a tipagem principal.
+            // O ideal seria que Cliente tivesse campos opcionais.
+            const clientePartial: Partial<Cliente> = {
                 ...newCliente,
-                tipo: 'pessoa_fisica', // Default
+                tipo: 'pf',
                 email: '',
                 cep: '',
-                endereco: '',
-                cidade: '',
-                estado: '',
-                ativo: true
-            }, empresaId);
+                endereco: {},
+                ativo: true,
+                criadoEm: new Date().toISOString()
+            };
+
+            const novoCliente = await storage.create<Cliente>('clientes', clientePartial as Cliente, empresaId);
 
             setExtraClientes(prev => [...prev, novoCliente]);
             setForm(prev => ({ ...prev, clienteId: novoCliente.id }));
@@ -81,11 +120,15 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
     const handleSaveVeiculo = async () => {
         try {
             if (!newVeiculo.placa || !newVeiculo.modelo || !form.clienteId) return;
-            const novoVeiculo = await storage.create('veiculos', {
+
+            const veiculoPartial: Partial<Veiculo> = {
                 ...newVeiculo,
                 clienteId: form.clienteId,
-                ativo: true
-            }, empresaId);
+                ativo: true,
+                criadoEm: new Date().toISOString()
+            };
+
+            const novoVeiculo = await storage.create<Veiculo>('veiculos', veiculoPartial as Veiculo, empresaId);
 
             setExtraVeiculos(prev => [...prev, novoVeiculo]);
             setForm(prev => ({ ...prev, veiculoId: novoVeiculo.id }));
@@ -101,7 +144,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
         ? veiculos.filter(v => v.clienteId === form.clienteId && v.ativo)
         : veiculos.filter(v => v.ativo);
 
-    const handleChange = (e) => {
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setForm((prev) => {
             const newForm = { ...prev, [name]: value };
@@ -120,7 +163,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
         setSalvando(true);
@@ -128,8 +171,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
         try {
             // Verificar limite do plano
             const pode = await podeCriarOS();
-            if (!pode && form.tipo === 'os') { // Bloqueia OS, mas talvez permita Orçamento? Vamos bloquear tudo por enquanto ou só OS.
-                // Como Orçamento vira OS, melhor bloquear tudo.
+            if (!pode && form.tipo === 'os') {
                 const limite = getLimiteOS();
                 throw new Error(`Limite do plano atingido(${limite} OS).Faça upgrade.`);
             }
@@ -138,7 +180,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
             if (!form.veiculoId) throw new Error('Selecione um veículo');
 
             // Gerar número da OS
-            const ordens = await storage.getAll('ordens_servico', empresaId);
+            const ordens = await storage.getAll<OrdemServico>('ordens_servico', empresaId);
             const ultimoNumero = ordens.reduce((max, o) => Math.max(max, o.numero || 0), 1000);
 
             // Atualizar KM do veículo se informado
@@ -147,7 +189,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
             }
 
             // Carregar itens do template se selecionado
-            let novosItens = [];
+            let novosItens: ItemOS[] = [];
             let novoValorTotal = 0;
 
             if (selectedTemplateId) {
@@ -155,14 +197,14 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
                 if (template && template.itens) {
                     novosItens = template.itens.map(item => ({
                         ...item,
-                        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)} `,
+                        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                         total: (Number(item.quantidade) || 1) * (Number(item.precoUnitario) || 0)
                     }));
                     novoValorTotal = novosItens.reduce((acc, item) => acc + item.total, 0);
                 }
             }
 
-            const novaOS = await storage.create(
+            const novaOS = await storage.create<OrdemServico>(
                 'ordens_servico',
                 {
                     numero: ultimoNumero + 1,
@@ -170,19 +212,23 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
                     veiculoId: form.veiculoId,
                     tecnicoId: null,
                     status: form.tipo === 'orcamento' ? 'orcamento' : 'aberta',
-                    tipo: form.tipo,
+                    tipo: form.tipo as any,
                     defeitoRelatado: form.defeitoRelatado,
                     defeitoConstatado: '',
                     dataAbertura: new Date().toISOString(), // Garante a data explícita
+                    criadoEm: new Date().toISOString(),
+                    ativo: true,
                     validadeOrcamento: form.tipo === 'orcamento' ? (() => {
-                        const dias = Number(empresa?.diasValidadeOrcamento || 10);
+                        // Workaround: empresa might not have strict type updated yet for diasValidadeOrcamento
+                        const empresaAny = empresa as any;
+                        const dias = Number(empresaAny?.diasValidadeOrcamento || 10);
                         const hoje = new Date();
                         hoje.setDate(hoje.getDate() + dias);
                         // Ajuste para pegar a data local correta (YYYY-MM-DD) sem converter para UTC
                         const offset = hoje.getTimezoneOffset() * 60000;
                         const dataLocal = new Date(hoje.getTime() - offset);
                         return toISODate(dataLocal);
-                    })() : '',
+                    })() : undefined,
                     kmAtual: form.km || '', // Salva o KM de abertura na OS
                     checklist: [],
                     itens: novosItens,
@@ -190,12 +236,12 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
                     statusFinanceiro: 'pendente',
                     fotos: [],
                     observacoes: '',
-                },
+                } as OrdemServico,
                 empresaId
             );
 
             onSave(novaOS);
-        } catch (error) {
+        } catch (error: any) {
             setError(error.message || 'Erro ao criar OS');
         } finally {
             setSalvando(false);
@@ -233,7 +279,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <label
-                                    className={`flex items - center justify - center gap - 2 p - 3 rounded - xl border - 2 cursor - pointer transition - all ${['os', 'garantia', 'cortesia', 'retorno', 'interna'].includes(form.tipo)
+                                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${['os', 'garantia', 'cortesia', 'retorno', 'interna'].includes(form.tipo)
                                         ? 'border-primary bg-primary/10 text-primary'
                                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                                         } `}
@@ -250,7 +296,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
                                     <span className="font-medium">Ordem de Serviço</span>
                                 </label>
                                 <label
-                                    className={`flex items - center justify - center gap - 2 p - 3 rounded - xl border - 2 cursor - pointer transition - all ${form.tipo === 'orcamento'
+                                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${form.tipo === 'orcamento'
                                         ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
                                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                                         } `}
@@ -419,7 +465,7 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
                                                     const val = formatPlaca(e.target.value);
                                                     setNewVeiculo(prev => ({ ...prev, placa: val }));
                                                 }}
-                                                className={`input w - full ${newVeiculo.placa && !/^[A-Z]{3}-?\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$/.test(newVeiculo.placa) ? 'border-red-500 bg-red-50' : ''} `}
+                                                className={`input w-full ${newVeiculo.placa && !/^[A-Z]{3}-?\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$/.test(newVeiculo.placa) ? 'border-red-500 bg-red-50' : ''} `}
                                                 maxLength={8}
                                                 autoFocus
                                             />
@@ -559,4 +605,3 @@ export const NovaOSModal = ({ empresaId, onClose, onSave, initialClienteId = '',
         </div>
     );
 };
-

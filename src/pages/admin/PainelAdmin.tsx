@@ -1,20 +1,27 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import storage from '../../lib/storage';
-import { FEATURES, FEATURE_DESCRIPTIONS, updateFeatures, getEnabledFeatures } from '../../lib/featureFlags';
-import { formatCurrency, formatDate } from '../../lib/utils';
+import { FEATURES, FEATURE_DESCRIPTIONS, updateFeatures, getEnabledFeatures, FeatureKey } from '../../lib/featureFlags';
+import { formatDate } from '../../lib/utils';
 import { useToast } from '../../contexts/ToastContext';
+import { Empresa, OrdemServico, Usuario } from '../../types';
+
+interface Stats {
+    totalEmpresas: number;
+    empresasAtivas: number;
+    totalOS: number;
+    totalUsuarios: number;
+}
 
 const PainelAdmin = () => {
     const { usuario } = useAuth();
     const { showToast } = useToast();
-    const [empresas, setEmpresas] = useState([]);
+    const [empresas, setEmpresas] = useState<Empresa[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedEmpresa, setSelectedEmpresa] = useState(null);
+    const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa & { enabledFeatures?: string[] } | null>(null);
     const [showFeatureModal, setShowFeatureModal] = useState(false);
     const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
-    const [stats, setStats] = useState({});
+    const [stats, setStats] = useState<Stats>({ totalEmpresas: 0, empresasAtivas: 0, totalOS: 0, totalUsuarios: 0 });
 
     useEffect(() => {
         if (usuario?.perfil === 'superadmin') {
@@ -24,12 +31,12 @@ const PainelAdmin = () => {
 
     const carregarDados = async () => {
         try {
-            const empresasData = await storage.getAll('empresas');
+            const empresasData = await storage.getAll<Empresa>('empresas');
             setEmpresas(empresasData);
 
             // Calcular estatísticas
-            const osTotais = await storage.getAll('ordens_servico');
-            const usuariosTotais = await storage.getAll('usuarios');
+            const osTotais = await storage.getAll<OrdemServico>('ordens_servico');
+            const usuariosTotais = await storage.getAll<Usuario>('usuarios');
 
             setStats({
                 totalEmpresas: empresasData.length,
@@ -44,7 +51,7 @@ const PainelAdmin = () => {
         }
     };
 
-    const atualizarPlanoEmpresa = async (empresaId, novoPlano) => {
+    const atualizarPlanoEmpresa = async (empresaId: string, novoPlano: string) => {
         try {
             await storage.update('empresas', empresaId, { plano: novoPlano });
             showToast('Plano atualizado com sucesso!', 'success');
@@ -55,7 +62,7 @@ const PainelAdmin = () => {
         }
     };
 
-    const atualizarStatusEmpresa = async (empresaId, ativo) => {
+    const atualizarStatusEmpresa = async (empresaId: string, ativo: boolean) => {
         try {
             await storage.update('empresas', empresaId, { ativo });
             showToast(`Empresa ${ativo ? 'ativada' : 'desativada'} com sucesso!`, 'success');
@@ -66,16 +73,27 @@ const PainelAdmin = () => {
         }
     };
 
-    const abrirGestaoFeatures = async (empresa) => {
+    const abrirGestaoFeatures = async (empresa: Empresa) => {
         const features = await getEnabledFeatures(empresa.id);
         setSelectedEmpresa({ ...empresa, enabledFeatures: features });
         setShowFeatureModal(true);
     };
 
-    const handleCriarEmpresa = async (dados) => {
+    interface CreateCompanyData {
+        nomeFantasia: string;
+        razaoSocial: string;
+        cnpj: string;
+        emailEmpresa: string;
+        plano: string;
+        adminNome: string;
+        adminEmail: string;
+        adminSenha: string;
+    }
+
+    const handleCriarEmpresa = async (dados: CreateCompanyData) => {
         try {
             // 1. Criar Empresa
-            const novaEmpresa = await storage.create('empresas', {
+            const novaEmpresa = await storage.create<Omit<Empresa, 'id' | 'criadoEm' | 'atualizadoEm'>>('empresas', {
                 nomeFantasia: dados.nomeFantasia,
                 razaoSocial: dados.razaoSocial,
                 cnpj: dados.cnpj,
@@ -83,8 +101,9 @@ const PainelAdmin = () => {
                 plano: dados.plano,
                 limiteUsuarios: dados.plano === 'essencial' ? 1 : dados.plano === 'profissional' ? 3 : 5,
                 addons: [], // Add-ons começam vazios
-                ativo: true
-            }, null); // Empresa não tem empresaId pai
+                ativo: true,
+                telefone: ''
+            } as unknown as Empresa, null as any); // Empresa não tem empresaId pai
 
             // 2. Criar Usuário Admin
             await storage.create('usuarios', {
@@ -96,7 +115,7 @@ const PainelAdmin = () => {
             }, novaEmpresa.id);
 
             // 3. Inicializar Feature Flags Padrão (Opcional, mas boa prática)
-            const featureFlags = [];
+            // const featureFlags = [];
             // Poderíamos adicionar flags padrão aqui se necessário
 
             showToast('Empresa criada com sucesso!', 'success');
@@ -172,7 +191,7 @@ const PainelAdmin = () => {
                     label="Total de OS"
                     value={stats.totalOS}
                     icon="assignment"
-                    color="bg-purple-500"
+                    color="bg-cyan-600"
                 />
                 <StatCard
                     label="Total de Usuários"
@@ -233,9 +252,9 @@ const PainelAdmin = () => {
                                             onChange={(e) => atualizarPlanoEmpresa(empresa.id, e.target.value)}
                                             className="text-xs font-medium px-2 py-1 rounded-full border-none bg-transparent focus:ring-0 cursor-pointer"
                                             style={{
-                                                backgroundColor: empresa.plano === 'plus' ? '#F3E8FF' :
+                                                backgroundColor: empresa.plano === 'plus' ? '#D1FAE5' :
                                                     empresa.plano === 'profissional' ? '#DBEAFE' : '#F3F4F6',
-                                                color: empresa.plano === 'plus' ? '#7E22CE' :
+                                                color: empresa.plano === 'plus' ? '#059669' :
                                                     empresa.plano === 'profissional' ? '#1D4ED8' : '#374151'
                                             }}
                                         >
@@ -256,14 +275,14 @@ const PainelAdmin = () => {
                                         <div className="flex justify-end gap-1">
                                             <button
                                                 onClick={() => abrirGestaoFeatures(empresa)}
-                                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-primary"
+                                                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-primary"
                                                 title="Gerenciar Features"
                                             >
                                                 <span className="material-symbols-outlined text-lg">toggle_on</span>
                                             </button>
                                             <button
                                                 onClick={() => atualizarStatusEmpresa(empresa.id, empresa.ativo === false)}
-                                                className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${empresa.ativo !== false ? 'text-red-500' : 'text-green-500'
+                                                className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 ${empresa.ativo !== false ? 'text-red-500' : 'text-green-500'
                                                     }`}
                                                 title={empresa.ativo !== false ? 'Desativar' : 'Ativar'}
                                             >
@@ -308,7 +327,7 @@ const PainelAdmin = () => {
 };
 
 // Componente de card de estatística
-const StatCard = ({ label, value, icon, color }) => (
+const StatCard = ({ label, value, icon, color }: { label: string, value: number, icon: string, color: string }) => (
     <div className="card p-4">
         <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>
@@ -323,7 +342,12 @@ const StatCard = ({ label, value, icon, color }) => (
 );
 
 // Modal de Nova Empresa
-const NewCompanyModal = ({ onClose, onSave }) => {
+interface NewCompanyModalProps {
+    onClose: () => void;
+    onSave: (data: any) => Promise<void>;
+}
+
+const NewCompanyModal: React.FC<NewCompanyModalProps> = ({ onClose, onSave }) => {
     const [formData, setFormData] = useState({
         nomeFantasia: '',
         razaoSocial: '',
@@ -336,7 +360,7 @@ const NewCompanyModal = ({ onClose, onSave }) => {
     });
     const [saving, setSaving] = useState(false);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
         try {
@@ -351,7 +375,7 @@ const NewCompanyModal = ({ onClose, onSave }) => {
             <div className="card w-full max-w-lg p-6 animate-slideUp max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-text-light dark:text-text-dark">Nova Empresa</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
@@ -464,11 +488,17 @@ const NewCompanyModal = ({ onClose, onSave }) => {
 };
 
 // Modal de gestão de features
-const FeatureModal = ({ empresa, onClose, onSave }) => {
-    const [enabledFeatures, setEnabledFeatures] = useState(empresa.enabledFeatures || []);
+interface FeatureModalProps {
+    empresa: Empresa & { enabledFeatures?: string[] };
+    onClose: () => void;
+    onSave: (features: string[]) => Promise<void>;
+}
+
+const FeatureModal: React.FC<FeatureModalProps> = ({ empresa, onClose, onSave }) => {
+    const [enabledFeatures, setEnabledFeatures] = useState<string[]>(empresa.enabledFeatures || []);
     const [salvando, setSalvando] = useState(false);
 
-    const toggleFeature = (feature) => {
+    const toggleFeature = (feature: string) => {
         setEnabledFeatures(prev => {
             if (prev.includes(feature)) {
                 return prev.filter(f => f !== feature);
@@ -503,7 +533,7 @@ const FeatureModal = ({ empresa, onClose, onSave }) => {
                             {empresa.nomeFantasia}
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <button onClick={onClose} className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
@@ -579,13 +609,22 @@ const FeatureModal = ({ empresa, onClose, onSave }) => {
 };
 
 // Componente de item de feature
-const FeatureItem = ({ feature, info, enabled, disabled, onToggle, isBeta }) => (
+interface FeatureItemProps {
+    feature: string;
+    info: { nome: string; descricao: string; icone: string };
+    enabled: boolean;
+    disabled?: boolean;
+    onToggle: () => void;
+    isBeta?: boolean;
+}
+
+const FeatureItem: React.FC<FeatureItemProps> = ({ feature, info, enabled, disabled, onToggle, isBeta }) => (
     <div
-        className={`flex items-center justify-between p-3 rounded-lg transition-colors ${disabled ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-surface-light dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800'
+        className={`flex items-center justify-between p-3 rounded transition-colors ${disabled ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-surface-light dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
     >
         <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${enabled ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+            <div className={`w-8 h-8 rounded flex items-center justify-center ${enabled ? 'bg-primary/10 text-primary' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                 }`}>
                 <span className="material-symbols-outlined text-lg">{info.icone}</span>
             </div>
@@ -616,4 +655,3 @@ const FeatureItem = ({ feature, info, enabled, disabled, onToggle, isBeta }) => 
 );
 
 export default PainelAdmin;
-

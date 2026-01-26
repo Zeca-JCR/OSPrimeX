@@ -1,9 +1,13 @@
-﻿// @ts-nocheck
-// Tipagem completa será adicionada em fase futura
-import { useState } from 'react';
+﻿import { useState, FormEvent } from 'react';
 import storage from '../../lib/storage';
+import { Empresa, Usuario } from '../../types';
 
-const CadastroContaModal = ({ onClose, onSuccess }) => {
+interface CadastroContaModalProps {
+    onClose: () => void;
+    onSuccess: (creds: { email: string; senha: string }) => void;
+}
+
+const CadastroContaModal: React.FC<CadastroContaModalProps> = ({ onClose, onSuccess }) => {
     const [formData, setFormData] = useState({
         nomeFantasia: '',
         razaoSocial: '',
@@ -17,29 +21,33 @@ const CadastroContaModal = ({ onClose, onSuccess }) => {
     const [saving, setSaving] = useState(false);
     const [step, setStep] = useState(1); // 1: Empresa, 2: Admin
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSaving(true);
         try {
             // 1. Criar Empresa
-            const novaEmpresa = await storage.create('empresas', {
+            const novaEmpresa = await storage.create<Empresa>('empresas', {
                 nomeFantasia: formData.nomeFantasia,
                 razaoSocial: formData.nomeFantasia, // Simplificação
                 cnpj: formData.cnpj,
                 email: formData.emailEmpresa,
-                plano: formData.plano,
+                plano: formData.plano as 'essencial' | 'profissional' | 'expert',
                 limiteUsuarios: formData.plano === 'essencial' ? 1 : formData.plano === 'profissional' ? 3 : 5,
                 addons: [],
-                ativo: true
-            }, null);
+                ativo: true,
+                criadoEm: new Date().toISOString()
+            }, undefined); // Empresa não tem empresaId pai
+
+            if (!novaEmpresa.id) throw new Error("Falha ao criar empresa");
 
             // 2. Criar Usuário Admin
-            await storage.create('usuarios', {
+            await storage.create<Usuario>('usuarios', {
                 nome: formData.adminNome,
                 email: formData.adminEmail,
                 senha: formData.adminSenha,
                 perfil: 'admin',
-                ativo: true
+                ativo: true,
+                criadoEm: new Date().toISOString()
             }, novaEmpresa.id);
 
             onSuccess({ email: formData.adminEmail, senha: formData.adminSenha });
@@ -191,4 +199,3 @@ const CadastroContaModal = ({ onClose, onSuccess }) => {
 };
 
 export default CadastroContaModal;
-

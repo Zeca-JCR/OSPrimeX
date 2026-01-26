@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const LandingPage = () => {
@@ -269,7 +268,7 @@ const LandingPage = () => {
                         </div>
                     </div>
                     <div className="pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
-                        <p>Â© 2024 OSPrimeX. Todos os direitos reservados.</p>
+                        <p>© 2024 OSPrimeX. Todos os direitos reservados.</p>
                     </div>
                 </div>
             </footer>
@@ -278,4 +277,3 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
-

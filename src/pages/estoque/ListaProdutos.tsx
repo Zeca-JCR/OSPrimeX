@@ -1,25 +1,27 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
-import { useTenant } from '../../contexts/TenantContext'; // Novo import
 import { useToast } from '../../contexts/ToastContext';
 import storage from '../../lib/storage';
-import { formatCurrency, parseDateLocal, toISODate, normalizeString, toTitleCase } from '../../lib/utils';
+import { formatCurrency, normalizeString, toTitleCase } from '../../lib/utils';
 import useTableColumns from '../../hooks/useTableColumns';
 import ColumnToggler from '../../components/common/ColumnToggler';
-import CreatableSelect from '../../components/common/CreatableSelect';
 import ImportarXMLModal from './ImportarXMLModal'; // Novo import
+import { Produto, OrdemServico, MovimentacaoEstoque } from '../../types';
 
-const ListaProdutos = () => {
+interface ListaProdutosProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const ListaProdutos = ({ isTabMode, onClose }: ListaProdutosProps = {}) => {
     const { empresa } = useAuth();
-    const { hasAddon } = useTenant(); // Novo hook
     const { showSaveToast } = useToast();
     const { openTab } = useTabs();
-    const [produtos, setProdutos] = useState([]);
-    const [fornecedores, setFornecedores] = useState([]);
-    const [ordensServico, setOrdensServico] = useState([]);
+    const [produtos, setProdutos] = useState<Produto[]>([]);
+
+    const [ordensServico, setOrdensServico] = useState<OrdemServico[]>([]);
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState('');
     const [filtroTipo, setFiltroTipo] = useState('todos');
@@ -29,8 +31,8 @@ const ListaProdutos = () => {
 
     // Modal de movimentação manual
     const [showMovimentacao, setShowMovimentacao] = useState(false);
-    const [produtoMovimentar, setProdutoMovimentar] = useState(null);
-    const [tipoMovimentacao, setTipoMovimentacao] = useState('entrada'); // entrada, saida
+    const [produtoMovimentar, setProdutoMovimentar] = useState<Produto | null>(null);
+    const [tipoMovimentacao, setTipoMovimentacao] = useState<'entrada' | 'saida'>('entrada'); // entrada, saida
 
     const columnsConfig = [
         { id: 'item', label: 'Item' },
@@ -49,16 +51,15 @@ const ListaProdutos = () => {
     }, [empresa]);
 
     const carregarDados = async () => {
-        if (!empresa) return;
+        if (!empresa?.id) return;
         try {
-            const [produtosData, osData, fornecedoresData] = await Promise.all([
-                storage.getAll('produtos', empresa.id),
-                storage.getAll('ordens_servico', empresa.id),
-                storage.getAll('fornecedores', empresa.id)
+            const [produtosData, osData] = await Promise.all([
+                storage.getAll<Produto>('produtos', empresa.id),
+                storage.getAll<OrdemServico>('ordens_servico', empresa.id)
             ]);
             setProdutos(produtosData.filter((p) => p.ativo));
             setOrdensServico(osData);
-            setFornecedores(fornecedoresData.filter(f => f.ativo !== false));
+            // setFornecedores(fornecedoresData.filter(f => f.ativo !== false));
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
         } finally {
@@ -74,13 +75,15 @@ const ListaProdutos = () => {
         const osFinalizadas = ordensServico.filter(os => os.status === 'finalizada');
 
         // 2. Calcular receita por produto
-        const receitaPorProduto = {};
+        const receitaPorProduto: { [key: string]: number } = {};
         let receitaTotal = 0;
 
         osFinalizadas.forEach(os => {
             if (os.itens && Array.isArray(os.itens)) {
                 os.itens.forEach(item => {
-                    const produtoId = item.produtoId || item.id; // Fallback para id apenas se produtoId não existir
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const itemAny = item as any;
+                    const produtoId = item.produtoId || itemAny.id; // Fallback para id apenas se produtoId não existir
                     if (produtoId) {
                         const totalItem = (Number(item.quantidade) || 0) * (Number(item.precoUnitario) || 0);
                         if (receitaPorProduto[produtoId]) {
@@ -106,7 +109,7 @@ const ListaProdutos = () => {
 
         // 4. Calcular acumulado e classificar
         let acumulado = 0;
-        produtosABC = produtosABC.map(p => {
+        const produtosClassificados = produtosABC.map(p => {
             acumulado += p.receita;
             const percentualAcumulado = receitaTotal > 0 ? (acumulado / receitaTotal) * 100 : 0;
             const percentualIndividual = receitaTotal > 0 ? (p.receita / receitaTotal) * 100 : 0;
@@ -121,7 +124,7 @@ const ListaProdutos = () => {
         // Filter out items with 0 revenue if wanted, but maybe good to see C items with 0 sales.
         // Keeping all.
 
-        return { produtos: produtosABC, receitaTotal };
+        return { produtos: produtosClassificados, receitaTotal };
     }, [produtos, ordensServico]);
 
     // ... (rest of handlers)
@@ -147,10 +150,10 @@ const ListaProdutos = () => {
     });
 
     // Separar por tipo para exibição
-    const produtosLista = produtosFiltrados.filter((p) => p.tipo === 'produto');
-    const servicosLista = produtosFiltrados.filter((p) => p.tipo === 'servico');
+    // const produtosLista = produtosFiltrados.filter((p) => p.tipo === 'produto');
+    // const servicosLista = produtosFiltrados.filter((p) => p.tipo === 'servico');
 
-    const handleEdit = (produto) => {
+    const handleEdit = (produto: Produto) => {
         openTab({
             id: `produto-${produto.id}`,
             type: 'produto',
@@ -163,22 +166,23 @@ const ListaProdutos = () => {
         navigate('/estoque/novo');
     };
 
-    const handleDuplicate = (item, e) => {
+    const handleDuplicate = (item: Produto, e: React.MouseEvent) => {
         e.stopPropagation();
         if (!confirm(`Deseja criar um novo item copiando os dados de "${item.nome}"?`)) return;
         navigate('/estoque/novo', { state: { duplicatedItem: item } });
     };
 
     // Abrir modal de movimentação
-    const abrirMovimentacao = (produto, tipo) => {
+    const abrirMovimentacao = (produto: Produto, tipo: 'entrada' | 'saida') => {
         setProdutoMovimentar(produto);
         setTipoMovimentacao(tipo);
         setShowMovimentacao(true);
     };
 
     // Processar movimentação
-    const processarMovimentacao = async ({ quantidade, motivo, valorCusto }) => {
+    const processarMovimentacao = async ({ quantidade, motivo, valorCusto }: { quantidade: number, motivo: string, valorCusto: number }) => {
         if (!produtoMovimentar || !quantidade) return;
+        if (!empresa?.id) return;
 
         try {
             const estoqueAtual = Number(produtoMovimentar.quantidade) || 0;
@@ -190,25 +194,28 @@ const ListaProdutos = () => {
             // Calcular novo custo médio ponderado (só para entradas com valor)
             let novoPrecoCusto = produtoMovimentar.precoCusto || 0;
             if (tipoMovimentacao === 'entrada' && valorCusto > 0 && qtd > 0) {
-                const custoUnitarioNovo = valorCusto / qtd;
                 const custoTotalAnterior = estoqueAtual * (produtoMovimentar.precoCusto || 0);
-                const custoTotalNovo = valorCusto;
+                const custoTotalNovo = valorCusto; // Valor Total da Compra
                 // Custo médio ponderado = (custo total anterior + custo nova compra) / estoque total
+                // novoEstoque já é soma de atual + qtd
                 novoPrecoCusto = novoEstoque > 0
                     ? (custoTotalAnterior + custoTotalNovo) / novoEstoque
-                    : custoUnitarioNovo;
+                    : (valorCusto / qtd);
                 novoPrecoCusto = Math.round(novoPrecoCusto * 100) / 100; // 2 casas decimais
             }
 
             // Atualizar estoque e custo do produto
-            const updateData = { quantidade: novoEstoque };
+            const updateData: Partial<Produto> = {
+                quantidade: novoEstoque
+            };
+
             if (tipoMovimentacao === 'entrada' && valorCusto > 0) {
                 updateData.precoCusto = novoPrecoCusto;
             }
             await storage.update('produtos', produtoMovimentar.id, updateData);
 
             // Registrar movimentação
-            await storage.create('movimentacoes_estoque', {
+            const movimentacaoData: Omit<MovimentacaoEstoque, 'id' | 'criadoEm' | 'atualizadoEm'> = {
                 produtoId: produtoMovimentar.id,
                 tipo: tipoMovimentacao,
                 quantidade: qtd,
@@ -216,8 +223,15 @@ const ListaProdutos = () => {
                 estoqueAnterior: estoqueAtual,
                 estoqueAtual: novoEstoque,
                 valorCusto: valorCusto || 0,
-                novoPrecoCusto: novoPrecoCusto, // Registrar o custo médio calculado
-            }, empresa.id);
+                novoPrecoCusto: novoPrecoCusto,
+                osId: undefined,
+                fornecedorId: undefined,
+                notaFiscal: undefined,
+                empresaId: empresa.id,
+                ativo: true
+            };
+
+            await storage.create<MovimentacaoEstoque>('movimentacoes_estoque', movimentacaoData, empresa.id);
 
             setShowMovimentacao(false);
             setProdutoMovimentar(null);
@@ -249,7 +263,7 @@ const ListaProdutos = () => {
             {/* Header - estilo Stitch */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Produtos e Serviços
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
@@ -371,7 +385,8 @@ const ListaProdutos = () => {
                                     <tbody>
                                         {produtosFiltrados.map((item, index) => {
                                             const isProduto = item.tipo === 'produto';
-                                            const estoqueBaixo = isProduto && item.quantidade <= (item.estoqueMinimo || 0);
+                                            const qtdAtual = item.quantidade ?? 0;
+                                            const estoqueBaixo = isProduto && qtdAtual <= (item.estoqueMinimo || 0);
 
                                             return (
                                                 <tr
@@ -429,9 +444,9 @@ const ListaProdutos = () => {
                                                     {isVisible('estoque') && (
                                                         <td className="py-3 px-4 text-right hidden md:table-cell">
                                                             {isProduto ? (
-                                                                <span className={`text-sm ${item.quantidade <= 0 ? 'text-red-600 font-bold' : estoqueBaixo ? 'text-orange-600 font-medium' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
-                                                                    {item.quantidade} {item.unidade}
-                                                                    {item.quantidade <= 0 ? (
+                                                                <span className={`text-sm ${qtdAtual <= 0 ? 'text-red-600 font-bold' : estoqueBaixo ? 'text-orange-600 font-medium' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
+                                                                    {qtdAtual} {item.unidade}
+                                                                    {qtdAtual <= 0 ? (
                                                                         <span className="ml-2 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
                                                                             Esgotado
                                                                         </span>
@@ -549,7 +564,7 @@ const ListaProdutos = () => {
                                 ))}
                                 {analiseABC.produtos.length === 0 && (
                                     <tr>
-                                        <td colSpan="6" className="px-4 py-8 text-center text-text-secondary-light dark:text-text-secondary-dark">
+                                        <td colSpan={6} className="px-4 py-8 text-center text-text-secondary-light dark:text-text-secondary-dark">
                                             Nenhuma venda registrada para cálculo da curva ABC.
                                         </td>
                                     </tr>
@@ -596,7 +611,14 @@ const ListaProdutos = () => {
 
 
 // Modal de Movimentação Manual
-const MovimentacaoModal = ({ produto, tipo, onClose, onConfirm }) => {
+interface MovimentacaoModalProps {
+    produto: Produto;
+    tipo: 'entrada' | 'saida';
+    onClose: () => void;
+    onConfirm: (data: { quantidade: number; motivo: string; valorCusto: number }) => Promise<void>;
+}
+
+const MovimentacaoModal = ({ produto, tipo, onClose, onConfirm }: MovimentacaoModalProps) => {
     const [quantidade, setQuantidade] = useState('');
     const [motivo, setMotivo] = useState('');
     const [valorCusto, setValorCusto] = useState('');
@@ -604,7 +626,7 @@ const MovimentacaoModal = ({ produto, tipo, onClose, onConfirm }) => {
 
     const isEntrada = tipo === 'entrada';
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!quantidade || Number(quantidade) <= 0) {
             alert('Informe uma quantidade válida');

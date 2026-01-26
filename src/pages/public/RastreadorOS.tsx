@@ -1,15 +1,18 @@
-﻿// @ts-nocheck
-import { useState } from 'react';
+﻿import { useState, FormEvent } from 'react';
 import storage from '../../lib/storage';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import PlacaBadge from '../../components/common/PlacaBadge';
+import { OrdemServico, Veiculo, Cliente, Empresa } from '../../types';
+
+interface Toast {
+    mensagem: string;
+    tipo: 'success' | 'error';
+}
 
 const RastreadorOS = () => {
     const [busca, setBusca] = useState({ numero: '', placa: '' });
-    const [os, setOs] = useState(null);
-    const [cliente, setCliente] = useState(null);
-    const [veiculo, setVeiculo] = useState(null);
-    const [empresa, setEmpresa] = useState(null);
+    const [os, setOs] = useState<OrdemServico | null>(null);
+    const [veiculo, setVeiculo] = useState<Veiculo | null>(null);
     const [buscando, setBuscando] = useState(false);
     const [erro, setErro] = useState('');
     const [buscaRealizada, setBuscaRealizada] = useState(false);
@@ -21,9 +24,9 @@ const RastreadorOS = () => {
     const [aprovacaoSucesso, setAprovacaoSucesso] = useState(false);
 
     // Toast notification
-    const [toast, setToast] = useState(null);
+    const [toast, setToast] = useState<Toast | null>(null);
 
-    const handleBuscar = async (e) => {
+    const handleBuscar = async (e: FormEvent) => {
         e.preventDefault();
         setErro('');
         setOs(null);
@@ -32,28 +35,30 @@ const RastreadorOS = () => {
 
         try {
             // Buscar em todas as empresas (público)
-            const todasEmpresas = JSON.parse(localStorage.getItem('osprimex_empresas') || '[]');
-            let osEncontrada = null;
-            let empresaId = null;
+            const todasEmpresas: Empresa[] = JSON.parse(localStorage.getItem('osprimex_empresas') || '[]');
+            let osEncontrada: OrdemServico | null = null;
+            // Unused variables for public tracker unless we display company info
+            // let empresaId: string | null = null;
+            // let clienteEncontrado: Cliente | null = null;
 
             for (const empresa of todasEmpresas) {
-                const ordens = await storage.getAll('ordens_servico', empresa.id);
-                const veiculos = await storage.getAll('veiculos', empresa.id);
+                const ordens = await storage.getAll<OrdemServico>('ordens_servico', empresa.id);
+                const veiculos = await storage.getAll<Veiculo>('veiculos', empresa.id);
 
                 // Buscar OS pelo número
-                const osMatch = ordens.find((o) => o.numero?.toString() === busca.numero);
+                const osMatch = ordens.find((o) => o?.numero?.toString() === busca.numero);
                 if (osMatch) {
                     // Verificar se a placa bate
                     const veiculoOS = veiculos.find((v) => v.id === osMatch.veiculoId);
                     if (veiculoOS && veiculoOS.placa.toUpperCase().replace(/[^A-Z0-9]/g, '') ===
                         busca.placa.toUpperCase().replace(/[^A-Z0-9]/g, '')) {
                         osEncontrada = osMatch;
-                        empresaId = empresa.id;
+                        // empresaId = empresa.id;
                         setVeiculo(veiculoOS);
 
-                        // Buscar cliente
-                        const clientes = await storage.getAll('clientes', empresa.id);
-                        setCliente(clientes.find((c) => c.id === osMatch.clienteId));
+                        // Buscar cliente (opcional para exibir nome)
+                        // const clientes = await storage.getAll<Cliente>('clientes', empresa.id);
+                        // clienteEncontrado = clientes.find((c) => c.id === osMatch.clienteId) || null;
                         break;
                     }
                 }
@@ -73,7 +78,7 @@ const RastreadorOS = () => {
     };
 
     // Toast notification helper
-    const mostrarToast = (mensagem, tipo = 'success') => {
+    const mostrarToast = (mensagem: string, tipo: 'success' | 'error' = 'success') => {
         setToast({ mensagem, tipo });
         setTimeout(() => setToast(null), 4000);
     };
@@ -85,22 +90,25 @@ const RastreadorOS = () => {
             return;
         }
 
+        if (!os) return;
+
         setAprovando(true);
         try {
-            await storage.update('ordens_servico', os.id, {
-                status: 'execucao',
+            await storage.update('ordens_servico', os.id as string, {
+                status: 'execucao', // Change status to 'execucao' (waiting to start/approved) - backend/hook logic might refine this
+                // 'aprovadoEm' is not in standard type but valid for logic
                 aprovadoEm: new Date().toISOString(),
                 aprovadoPor: nomeAprovador,
                 observacoes: `${os.observacoes || ''}\n[APROVADO ONLINE por ${nomeAprovador} em ${new Date().toLocaleString('pt-BR')}]`.trim(),
-            });
+            } as any);
 
             // Recarregar OS atualizada do storage
-            const osAtualizada = await storage.getById('ordens_servico', os.id);
+            const osAtualizada = await storage.getById<OrdemServico>('ordens_servico', os.id as string);
             setOs(osAtualizada);
 
             setAprovacaoSucesso(true);
             setShowAprovacao(false);
-            mostrarToast('âœ… Orçamento aprovado com sucesso! A oficina foi notificada.', 'success');
+            mostrarToast('✅ Orçamento aprovado com sucesso! A oficina foi notificada.', 'success');
         } catch (error) {
             console.error('Erro ao aprovar:', error);
             mostrarToast('Erro ao aprovar orçamento. Tente novamente.', 'error');
@@ -110,9 +118,9 @@ const RastreadorOS = () => {
     };
 
     // Verificar se é orçamento
-    const isOrcamento = ['orcamento', 'aguardando_aprovacao', 'pendente'].includes(os?.status?.toLowerCase());
+    const isOrcamento = ['orcamento', 'aguardando_aprovacao', 'pendente'].includes(os?.status?.toLowerCase() || '');
 
-    const statusConfig = {
+    const statusConfig: Record<string, { label: string; color: string; icon: string; descricao: string }> = {
         orcamento: {
             label: 'Aguardando Aprovação',
             color: 'bg-yellow-500',
@@ -149,6 +157,12 @@ const RastreadorOS = () => {
             icon: 'cancel',
             descricao: 'Esta OS foi cancelada. Entre em contato para mais informações.'
         },
+        aguardando_peca: {
+            label: 'Aguardando Peça',
+            color: 'bg-orange-500',
+            icon: 'inventory_2',
+            descricao: 'Estamos aguardando a chegada de peças para continuar o serviço.'
+        }
     };
 
     const getEtapas = () => {
@@ -158,14 +172,17 @@ const RastreadorOS = () => {
             { id: 'finalizada', label: 'Finalizada' },
         ];
 
-        const statusIndex = {
+        const statusIndex: Record<string, number> = {
+            orcamento: -1,
+            aguardando_aprovacao: -1,
             aberta: 0,
             execucao: 1,
+            aguardando_peca: 1, // Same stage as execution visually
             finalizada: 2,
             cancelada: -1,
         };
 
-        const atual = statusIndex[os?.status] ?? -1;
+        const atual = statusIndex[os?.status || ''] ?? -1;
 
         return etapas.map((etapa, index) => ({
             ...etapa,
@@ -272,16 +289,16 @@ const RastreadorOS = () => {
                     <div className="space-y-4 animate-slideUp">
                         {/* Status principal */}
                         <div className="card p-6 text-center">
-                            <div className={`w-20 h-20 rounded-full ${statusConfig[os.status].color} mx-auto mb-4 flex items-center justify-center`}>
+                            <div className={`w-20 h-20 rounded-full ${statusConfig[os.status]?.color || 'bg-gray-500'} mx-auto mb-4 flex items-center justify-center`}>
                                 <span className="material-symbols-outlined text-white text-4xl">
-                                    {statusConfig[os.status].icon}
+                                    {statusConfig[os.status]?.icon || 'help'}
                                 </span>
                             </div>
                             <h2 className="text-2xl font-bold text-text-light dark:text-text-dark mb-2">
-                                {statusConfig[os.status].label}
+                                {statusConfig[os.status]?.label || os.status}
                             </h2>
                             <p className="text-text-secondary-light dark:text-text-secondary-dark">
-                                {statusConfig[os.status].descricao}
+                                {statusConfig[os.status]?.descricao || ''}
                             </p>
                         </div>
 
@@ -342,7 +359,7 @@ const RastreadorOS = () => {
                                 </div>
                                 <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
                                     <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-1">Placa</p>
-                                    <PlacaBadge placa={veiculo?.placa} size="md" />
+                                    <PlacaBadge placa={veiculo?.placa || ''} size="md" />
                                 </div>
                                 <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
                                     <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">Data de Entrada</p>
@@ -361,34 +378,21 @@ const RastreadorOS = () => {
                         </div>
 
                         {/* Valor (se finalizada) */}
-                        {os.status === 'finalizada' && os.valorTotal > 0 && (
-                            <div className="card p-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                        {(os.status === 'finalizada' || isOrcamento) && (os.valorTotal || 0) > 0 && (
+                            <div className={`card p-6 border-2 ${isOrcamento ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'}`}>
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm text-green-700 dark:text-green-400">Valor Total</p>
-                                        <p className="text-3xl font-bold text-green-700 dark:text-green-400">
+                                        <p className={`text-sm ${isOrcamento ? 'text-yellow-700 dark:text-yellow-400' : 'text-green-700 dark:text-green-400'}`}>
+                                            {isOrcamento ? 'Valor do Orçamento' : 'Valor Total'}
+                                        </p>
+                                        <p className={`text-3xl font-bold ${isOrcamento ? 'text-yellow-700 dark:text-yellow-400' : 'text-green-700 dark:text-green-400'}`}>
                                             {formatCurrency(os.valorTotal)}
                                         </p>
                                     </div>
-                                    <div className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-white text-2xl">payments</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Valor do Orçamento (se orçamento) */}
-                        {isOrcamento && os.valorTotal > 0 && (
-                            <div className="card p-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-yellow-700 dark:text-yellow-400">Valor do Orçamento</p>
-                                        <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-400">
-                                            {formatCurrency(os.valorTotal)}
-                                        </p>
-                                    </div>
-                                    <div className="w-14 h-14 rounded-full bg-yellow-500 flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-white text-2xl">receipt_long</span>
+                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isOrcamento ? 'bg-yellow-500' : 'bg-green-500'}`}>
+                                        <span className="material-symbols-outlined text-white text-2xl">
+                                            {isOrcamento ? 'receipt_long' : 'payments'}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -437,10 +441,10 @@ const RastreadorOS = () => {
                                 </h3>
                                 <div className="grid grid-cols-3 gap-2">
                                     {os.fotos.map((foto) => (
-                                        <div key={foto.id} className="aspect-square rounded-xl overflow-hidden">
+                                        <div key={foto.id || (Math.random() + "")} className="aspect-square rounded-xl overflow-hidden">
                                             <img
                                                 src={foto.data}
-                                                alt={foto.nome}
+                                                alt={foto.descricao || 'Foto da OS'}
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
@@ -545,4 +549,3 @@ const RastreadorOS = () => {
 };
 
 export default RastreadorOS;
-

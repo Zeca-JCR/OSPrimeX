@@ -1,6 +1,5 @@
-﻿// @ts-nocheck
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
@@ -9,21 +8,26 @@ import ImportarClientesModal from '../../components/clientes/ImportarClientesMod
 import { useToast } from '../../contexts/ToastContext';
 import useTableColumns from '../../hooks/useTableColumns';
 import ColumnToggler from '../../components/common/ColumnToggler';
+import { Cliente } from '../../types';
 
-const ListaClientes = () => {
+interface ListaClientesProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+}
+
+const ListaClientes = ({ isTabMode, onClose }: ListaClientesProps = {}) => {
     const { empresa } = useAuth();
     const { showSaveToast } = useToast();
     const navigate = useNavigate();
     const { openTab } = useTabs();
-    const [clientes, setClientes] = useState([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
     const [loading, setLoading] = useState(true);
     const [busca, setBusca] = useState('');
     const [filtro, setFiltro] = useState('todos');
     const [filtroTag, setFiltroTag] = useState('');
     const [showImportar, setShowImportar] = useState(false);
 
-
-    const tagsConfig = {
+    const tagsConfig: Record<string, { label: string; color: string }> = {
         vip: { label: 'VIP', color: 'bg-amber-500' },
         recorrente: { label: 'Recorrente', color: 'bg-green-500' },
         novo: { label: 'Novo', color: 'bg-blue-500' },
@@ -43,7 +47,6 @@ const ListaClientes = () => {
         columnsConfig.map(c => c.id)
     );
 
-
     useEffect(() => {
         carregarClientes();
     }, [empresa]);
@@ -51,7 +54,7 @@ const ListaClientes = () => {
     const carregarClientes = async () => {
         if (!empresa) return;
         try {
-            const data = await storage.getAll('clientes', empresa.id);
+            const data = await storage.getAll<Cliente>('clientes', empresa.id);
             setClientes(data.filter(c => c.ativo));
         } catch (error) {
             console.error('Erro ao carregar clientes:', error);
@@ -60,7 +63,7 @@ const ListaClientes = () => {
         }
     };
 
-    const handleImportSuccess = (total, falhas, duplicados = 0) => {
+    const handleImportSuccess = (total: number, falhas: number, duplicados = 0) => {
         setShowImportar(false);
         carregarClientes();
         let msg = `Importação concluída! ${total} clientes importados.`;
@@ -71,7 +74,7 @@ const ListaClientes = () => {
         else alert(msg);
     };
 
-    const handleOpenCliente = (cliente) => {
+    const handleOpenCliente = (cliente: Cliente) => {
         openTab({
             id: `cliente-${cliente.id}`,
             type: 'cliente',
@@ -120,11 +123,11 @@ const ListaClientes = () => {
     }
 
     return (
-        <div className="p-4 lg:p-6">
+        <div className="p-4 lg:p-6 space-y-4">
             {/* Header - estilo Stitch */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                    <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                         Clientes
                     </h1>
                     <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
@@ -152,7 +155,7 @@ const ListaClientes = () => {
             </div>
 
             {/* Filtros - estilo Stitch */}
-            <div className="card mb-4">
+            <div className="card">
                 <div className="flex flex-col sm:flex-row gap-3 p-3">
                     {/* Busca */}
                     <div className="relative flex-1">
@@ -359,4 +362,3 @@ const ListaClientes = () => {
 };
 
 export default ListaClientes;
-

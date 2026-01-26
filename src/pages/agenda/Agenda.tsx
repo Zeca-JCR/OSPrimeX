@@ -1,5 +1,4 @@
-﻿// @ts-nocheck
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 import storage from '../../lib/storage';
@@ -7,18 +6,28 @@ import { toISODate } from '../../lib/utils';
 import AgendaCalendar from '../../components/agenda/AgendaCalendar';
 import PatioSidebar from '../../components/agenda/PatioSidebar';
 import { NovaOSModal } from '../../components/os/NovaOSModal';
+import { Agendamento, Cliente, Veiculo, Usuario, OrdemServico, Empresa } from '../../types';
 
-const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgendamento, autoOpenTimestamp }) => {
+interface AgendaProps {
+    isTabMode?: boolean;
+    onClose?: () => void;
+    openAgendamentoId?: string;
+    timestamp?: number;
+    autoOpenAgendamento?: boolean;
+    autoOpenTimestamp?: number;
+}
+
+const Agenda: React.FC<AgendaProps> = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgendamento, autoOpenTimestamp }) => {
     const { empresa } = useAuth();
     const location = useLocation();
-    const [agendamentos, setAgendamentos] = useState([]);
-    const [clientes, setClientes] = useState([]);
-    const [veiculos, setVeiculos] = useState([]);
-    const [tecnicos, setTecnicos] = useState([]);
-    const [activeOS, setActiveOS] = useState([]);
+    const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+    const [tecnicos, setTecnicos] = useState<Usuario[]>([]);
+    const [activeOS, setActiveOS] = useState<any[]>([]); // Using any for enriched OS temporarily
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [agendamentoEdit, setAgendamentoEdit] = useState(null);
+    const [agendamentoEdit, setAgendamentoEdit] = useState<Agendamento | null>(null);
 
     // Estado para Nova OS via Agenda
     const [showNovaOS, setShowNovaOS] = useState(false);
@@ -27,7 +36,7 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
     // Persistência da View (Semana, Mês, Dia)
     const [view, setView] = useState(() => localStorage.getItem('agenda_view') || 'week');
 
-    const handleViewChange = (newView) => {
+    const handleViewChange = (newView: string) => {
         setView(newView);
         localStorage.setItem('agenda_view', newView);
     };
@@ -68,14 +77,13 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
         if (!empresa) return;
         try {
             const [agendamentosData, clientesData, veiculosData, colaboradoresData, osData] = await Promise.all([
-                storage.getAll('agendamentos', empresa.id),
-                storage.getAll('clientes', empresa.id),
-                storage.getAll('veiculos', empresa.id),
-                storage.getAll('colaboradores', empresa.id),
-                storage.getAll('ordens_servico', empresa.id),
+                storage.getAll<Agendamento>('agendamentos', empresa.id),
+                storage.getAll<Cliente>('clientes', empresa.id),
+                storage.getAll<Veiculo>('veiculos', empresa.id),
+                storage.getAll<Usuario>('colaboradores', empresa.id),
+                storage.getAll<OrdemServico>('ordens_servico', empresa.id),
             ]);
 
-            setAgendamentos(agendamentosData.filter((a) => a.ativo));
             setAgendamentos(agendamentosData.filter((a) => a.ativo));
             setClientes(clientesData.filter((c) => c.ativo));
             setVeiculos(veiculosData.filter((v) => v.ativo));
@@ -118,7 +126,7 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
             }
 
             // Warning de agendamento próximo
-            const diasAntecedencia = empresa?.agendaDiasAntecedencia || 1;
+            const diasAntecedencia = Number(empresa?.agendaDiasAntecedencia || 1);
             const hoje = new Date();
             const limite = new Date();
             limite.setDate(hoje.getDate() + diasAntecedencia);
@@ -167,9 +175,9 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
             // Dados enriquecidos já vieram do carregarDados (veiculo, cliente)
             const placa = os.veiculo?.placa || 'Sem Placa';
             const modelo = os.veiculo?.modelo || '';
-            const statusLabelMap = {
-                aberta: 'APROVADA (NÃƒO INICIADA)',
-                execucao: 'EM EXECUÇÃƒO',
+            const statusLabelMap: Record<string, string> = {
+                aberta: 'APROVADA (NÃO INICIADA)',
+                execucao: 'EM EXECUÇÃO',
                 aguardando_peca: 'AGUARDANDO PEÇA',
                 finalizada: 'FINALIZADA',
                 cancelada: 'CANCELADA',
@@ -192,7 +200,7 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
         return [...agendamentoEvents, ...osEvents];
     }, [agendamentos, activeOS, clientes, veiculos, tecnicos, empresa]);
 
-    const handleNovoAgendamento = (slotInfo) => {
+    const handleNovoAgendamento = (slotInfo: { start: Date }) => {
         const dataStr = toISODate(slotInfo.start);
         const horaStr = slotInfo.start.toTimeString().slice(0, 5);
 
@@ -200,21 +208,33 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
             data: dataStr,
             hora: horaStr,
             tecnicoId: ''
-        });
+        } as Agendamento);
         setShowModal(true);
     };
 
-    const handleEditAgendamento = (evento) => {
+    interface CalendarEvent {
+        id: string | number;
+        title: string;
+        start: Date;
+        end: Date;
+        resourceId?: string;
+        status?: string;
+        allDay?: boolean;
+        type: 'agendamento' | 'os';
+        original: any; // Mantemos any aqui na origem pois pode ser Agendamento ou OS, mas poderíamos usar Union Type
+    }
+
+    const handleEditAgendamento = (evento: CalendarEvent) => {
         // Se for uma OS, por enquanto apenas ignoramos ou avisamos
         if (evento.type === 'os') {
             return;
         }
 
-        setAgendamentoEdit(evento.original);
+        setAgendamentoEdit(evento.original as Agendamento);
         setShowModal(true);
     };
 
-    const handleEventDrop = async ({ event, start }) => {
+    const handleEventDrop = async ({ event, start }: { event: CalendarEvent, start: Date }) => {
         // Usa helper para obter string local segura (YYYY-MM-DD)
         const novaData = toISODate(start);
 
@@ -223,20 +243,20 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
         // Validação de conflito no Drag & Drop
         const conflito = agendamentos.find(a =>
             a.id !== event.id &&
-            a.tecnicoId === event.original.tecnicoId &&
+            a.tecnicoId === (event.original as Agendamento).tecnicoId &&
             a.data === novaData &&
             a.hora === novaHora &&
             a.status !== 'cancelado'
         );
 
-        if (conflito && event.original.tecnicoId) {
-            alert(`Conflito! O técnico já tem agendamento em ${novaData} Ã s ${novaHora}.`);
+        if (conflito && (event.original as Agendamento).tecnicoId) {
+            alert(`Conflito! O técnico já tem agendamento em ${novaData} às ${novaHora}.`);
             return;
         }
 
         try {
-            await storage.update('agendamentos', event.id, {
-                ...event.original,
+            await storage.update('agendamentos', event.id as string, {
+                ...(event.original as Agendamento),
                 data: novaData,
                 hora: novaHora
             });
@@ -253,7 +273,7 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
         carregarDados();
     };
 
-    const handleCriarOS = (agendamento) => {
+    const handleCriarOS = (agendamento: Agendamento) => {
         if (!agendamento.clienteId || !agendamento.veiculoId) {
             alert("Este agendamento precisa ter Cliente e Veículo definidos para gerar uma OS.");
             return;
@@ -280,9 +300,9 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
         <div className="h-full flex flex-col lg:flex-row bg-background-light dark:bg-background-dark overflow-hidden">
             {/* Main Calendar Area */}
             <div className="flex-1 w-full flex flex-col p-4 lg:p-6 h-full overflow-hidden">
-                <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                <div className="flex items-center justify-between mb-4 flex-shrink-0 space-y-4">
                     <div>
-                        <h1 className="text-lg font-bold text-text-light dark:text-text-dark">
+                        <h1 className="text-2xl font-bold text-text-light dark:text-text-dark">
                             Agenda
                         </h1>
                         <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
@@ -299,8 +319,8 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
                 </div>
 
                 <AgendaCalendar
-                    events={events}
-                    view={view}
+                    events={events as any[]}
+                    view={view as any}
                     onView={handleViewChange}
                     onEventDrop={handleEventDrop}
                     onEventClick={handleEditAgendamento}
@@ -347,7 +367,19 @@ const Agenda = ({ isTabMode, onClose, openAgendamentoId, timestamp, autoOpenAgen
     );
 };
 
-const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgendamentos, empresa, onClose, onSave, onCriarOS }) => {
+interface AgendamentoModalProps {
+    agendamento: Agendamento | null;
+    clientes: Cliente[];
+    veiculos: Veiculo[];
+    tecnicos: Usuario[];
+    todosAgendamentos: Agendamento[];
+    empresa: Empresa | null;
+    onClose: () => void;
+    onSave: () => void;
+    onCriarOS: (ag: Agendamento) => void;
+}
+
+const AgendamentoModal: React.FC<AgendamentoModalProps> = ({ agendamento, clientes, veiculos, tecnicos, todosAgendamentos, empresa, onClose, onSave, onCriarOS }) => {
     const empresaId = empresa?.id;
     const isEdicao = !!agendamento?.id;
 
@@ -372,7 +404,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
 
     const veiculosDoCliente = veiculos.filter((v) => v.clienteId === form.clienteId);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setForm((prev) => {
             const newForm = { ...prev, [name]: value };
@@ -383,7 +415,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
         });
     };
 
-    const checarConflito = (tecnicoId, data, hora) => {
+    const checarConflito = (tecnicoId: string, data: string, hora: string) => {
         if (!tecnicoId) return false;
 
         return todosAgendamentos?.some(a =>
@@ -395,7 +427,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
         );
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSalvando(true);
@@ -427,10 +459,10 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
 
                 const dataFormatada = toISODate(novaData);
 
-                // VERIFICAÇÃƒO DE CONFLITO
+                // VERIFICAÇÃO DE CONFLITO
                 if (checarConflito(form.tecnicoId, dataFormatada, form.hora)) {
                     if (loops > 1) {
-                        throw new Error(`Conflito de horário para o técnico em ${dataFormatada} Ã s ${form.hora}. Operação cancelada.`);
+                        throw new Error(`Conflito de horário para o técnico em ${dataFormatada} às ${form.hora}. Operação cancelada.`);
                     } else {
                         throw new Error(`O técnico já possui agendamento neste horário (${form.hora}).`);
                     }
@@ -447,15 +479,15 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
                     status: form.status,
                 };
 
-                if (isEdicao) {
+                if (isEdicao && agendamento) {
                     await storage.update('agendamentos', agendamento.id, payload);
-                } else {
+                } else if (empresaId) {
                     await storage.create('agendamentos', payload, empresaId);
                 }
             }
 
             onSave();
-        } catch (error) {
+        } catch (error: any) {
             setError(error.message || 'Erro ao salvar');
         } finally {
             setSalvando(false);
@@ -464,6 +496,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
 
     const handleDelete = async () => {
         if (!confirm('Deseja excluir este agendamento?')) return;
+        if (!agendamento) return;
         try {
             await storage.softDelete('agendamentos', agendamento.id);
             onSave();
@@ -492,7 +525,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
         const [ano, mes, dia] = form.data.split('-');
         const dataFormatada = `${dia}/${mes}`;
 
-        let msg = empresa?.agendaMensagemConfirmacao || 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} Ã s {hora}? \uD83D\uDE97';
+        let msg = empresa?.agendaMensagemConfirmacao || 'Olá {nome}, confirmamos seu agendamento do veículo {veiculo} para {data} às {hora}? \uD83D\uDE97';
 
         msg = msg.replace(/{nome}/g, cliente.nome.split(' ')[0])
             .replace(/{veiculo}/g, nomeVeiculo)
@@ -517,7 +550,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
                     <h2 className="text-xl font-bold text-text-light dark:text-text-dark">
                         {isEdicao ? 'Editar Agendamento' : 'Novo Agendamento'}
                     </h2>
-                    <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <button onClick={onClose} className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
@@ -582,7 +615,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
 
                     {/* Checkbox de Recorrência (Apenas Criação) */}
                     {!isEdicao && (
-                        <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+                        <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded border border-gray-100 dark:border-gray-800">
                             <label className="flex items-center gap-2 cursor-pointer mb-2">
                                 <input
                                     type="checkbox"
@@ -719,8 +752,8 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
                             <p className="text-sm font-medium text-primary mb-2">Ações Rápidas</p>
                             <button
                                 type="button"
-                                onClick={() => onCriarOS(form)}
-                                className="w-full flex items-center justify-center gap-2 p-2 bg-white dark:bg-gray-800 border border-primary/20 hover:border-primary text-primary rounded-lg transition-all"
+                                onClick={() => onCriarOS(form as any)}
+                                className="w-full flex items-center justify-center gap-2 p-2 bg-white dark:bg-gray-800 border border-primary/20 hover:border-primary text-primary rounded transition-all"
                             >
                                 <span className="material-symbols-outlined">description</span>
                                 Abrir OS / Orçamento
@@ -733,7 +766,7 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
                         <button
                             type="button"
                             onClick={handleWhatsApp}
-                            className="w-full mt-2 flex items-center justify-center gap-2 p-2 bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 text-green-700 dark:text-green-400 rounded-lg transition-all"
+                            className="w-full mt-2 flex items-center justify-center gap-2 p-2 bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 text-green-700 dark:text-green-400 rounded transition-all"
                         >
                             <span className="material-symbols-outlined">chat</span>
                             Enviar Confirmação (WhatsApp)
@@ -774,4 +807,3 @@ const AgendamentoModal = ({ agendamento, clientes, veiculos, tecnicos, todosAgen
 };
 
 export default Agenda;
-
