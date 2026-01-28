@@ -18,7 +18,6 @@ const PDFLinkWrapper: React.FC<PDFLinkWrapperProps> = ({ fileName, className, ch
     React.useEffect(() => {
         const loadDeps = async () => {
             try {
-                // @ts-ignore - Dynamic import
                 const [pdfModule, docModule] = await Promise.all([
                     import('@react-pdf/renderer'),
                     import('./RelatorioDocument')

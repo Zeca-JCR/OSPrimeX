@@ -53,7 +53,7 @@ const TabBar = () => {
         return toTitleCase(title);
     };
 
-    const handleCloseTab = (e: MouseEvent<HTMLSpanElement>, tabId: string) => {
+    const handleCloseTab = (e: MouseEvent<HTMLElement>, tabId: string) => {
         e.stopPropagation();
         if (isTabDirty(tabId)) {
             focusTab(tabId);
@@ -274,6 +274,16 @@ const TabBar = () => {
                             <span className="material-symbols-outlined text-sm">menu</span>
                             <span className="hidden sm:inline">Abas</span>
                             <span className="material-symbols-outlined text-xs">{showDropdown ? 'expand_less' : 'expand_more'}</span>
+                        </button>
+
+                        {/* Botão Fechar Aba Ativa (Fixo) */}
+                        <button
+                            onClick={(e) => activeTabId && handleCloseTab(e, activeTabId)}
+                            disabled={!activeTabId}
+                            className="flex items-center justify-center p-1.5 rounded bg-white/50 dark:bg-gray-800/50 border border-gray-200/60 dark:border-gray-700/60 text-text-secondary-light dark:text-text-secondary-dark hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Fechar aba atual"
+                        >
+                            <span className="material-symbols-outlined text-sm font-bold">close</span>
                         </button>
                     </div>
                 </div>

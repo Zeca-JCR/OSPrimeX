@@ -199,8 +199,6 @@ const Prismas = () => {
                     {prismas.map(num => {
                         const os = prismasMap.get(num);
                         const corStatus = os ? getCorStatus(os.status) : 'bg-green-500';
-                        // @ts-ignore - unused variable but kept from original structure
-                        const disponivel = !os;
 
                         return (
                             <button

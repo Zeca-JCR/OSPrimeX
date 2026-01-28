@@ -1,4 +1,5 @@
 import type { OrdemServico } from '../../../types';
+import { CollapsibleSection } from '../../common/CollapsibleSection';
 
 interface OSFotosProps {
     os: OrdemServico;
@@ -7,13 +8,22 @@ interface OSFotosProps {
 }
 
 export const OSFotos = ({ os, onAddFoto, onShowFoto }: OSFotosProps) => {
+    const fotosCount = (os.fotos || []).length;
+    const canAddFoto = os.status !== 'finalizada' && os.status !== 'cancelada' && fotosCount < 5;
+
     return (
-        <div className="card p-4">
-            <div className="flex items-center justify-between mb-3">
-                <p className="font-semibold text-text-light dark:text-text-dark">
-                    Fotos ({(os.fotos || []).length}/5)
-                </p>
-                {os.status !== 'finalizada' && os.status !== 'cancelada' && (os.fotos || []).length < 5 && (
+        <CollapsibleSection
+            title="Fotos"
+            icon="photo_library"
+            defaultExpanded={false}
+            persistKey={`os_fotos_${os.id}`}
+            badge={
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-text-secondary-light dark:text-text-secondary-dark">
+                    {fotosCount}/5
+                </span>
+            }
+            headerActions={
+                canAddFoto && (
                     <label className="text-sm text-primary hover:underline flex items-center gap-1 cursor-pointer">
                         <span className="material-symbols-outlined text-lg">add_a_photo</span>
                         Adicionar
@@ -24,8 +34,9 @@ export const OSFotos = ({ os, onAddFoto, onShowFoto }: OSFotosProps) => {
                             onChange={onAddFoto}
                         />
                     </label>
-                )}
-            </div>
+                )
+            }
+        >
 
             {(!os.fotos || os.fotos.length === 0) ? (
                 <div className="text-center py-6">
@@ -66,6 +77,6 @@ export const OSFotos = ({ os, onAddFoto, onShowFoto }: OSFotosProps) => {
                     ))}
                 </div>
             )}
-        </div>
+        </CollapsibleSection>
     );
 };

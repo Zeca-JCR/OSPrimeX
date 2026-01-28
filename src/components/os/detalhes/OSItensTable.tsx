@@ -66,10 +66,10 @@ export const OSItensTable = ({
     };
 
     return (
-        <div className="card overflow-hidden">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-4">
+        <div className="card overflow-hidden border-l-4 border-l-primary shadow-lg shadow-primary/10">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-primary/5 to-transparent">
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">shopping_cart</span>
+                    <span className="material-symbols-outlined text-primary text-xl">monetization_on</span>
                     Itens e Serviços
                     <span className="text-xs font-normal text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                         {os.itens?.length || 0}
@@ -214,44 +214,56 @@ export const OSItensTable = ({
                                     </td>
                                 </tr>
                             )}
-                            {/* Resumo Financeiro */}
-                            {(() => {
-                                const resumo = calcularResumoFinanceiro(
-                                    os.itens || [],
-                                    (os as any).descontoGlobalTipo, (os as any).descontoGlobalValor,
-                                    (os as any).acrescimoGlobalTipo, (os as any).acrescimoGlobalValor
-                                );
-                                return (
-                                    <>
-                                        <tr>
-                                            <td colSpan={3} className="px-4 py-2 text-right text-xs text-text-secondary-light dark:text-text-secondary-dark">Subtotal</td>
-                                            <td colSpan={2} className="px-4 py-2 text-right text-xs text-text-secondary-light dark:text-text-secondary-dark">{formatCurrency(resumo.somaItens)}</td>
-                                        </tr>
-                                        {resumo.valDescontoGlobal > 0 && (
-                                            <tr>
-                                                <td colSpan={3} className="px-4 py-2 text-right text-xs text-green-600 dark:text-green-400">Desconto Global</td>
-                                                <td colSpan={2} className="px-4 py-2 text-right text-xs text-green-600 dark:text-green-400">- {formatCurrency(resumo.valDescontoGlobal)}</td>
-                                            </tr>
-                                        )}
-                                        {resumo.valAcrescimoGlobal > 0 && (
-                                            <tr>
-                                                <td colSpan={3} className="px-4 py-2 text-right text-xs text-orange-600 dark:text-orange-400">Acréscimo Global</td>
-                                                <td colSpan={2} className="px-4 py-2 text-right text-xs text-orange-600 dark:text-orange-400">+ {formatCurrency(resumo.valAcrescimoGlobal)}</td>
-                                            </tr>
-                                        )}
-                                        <tr className="border-t border-gray-200 dark:border-gray-700">
-                                            <td colSpan={3} className="px-4 py-3 text-right font-semibold text-text-light dark:text-text-dark">Total</td>
-                                            <td colSpan={2} className="px-4 py-3 text-right text-xl font-bold text-primary">
-                                                {formatCurrency(resumo.totalFinal)}
-                                            </td>
-                                        </tr>
-                                    </>
-                                );
-                            })()}
                         </tfoot>
                     )}
                 </table>
             </div>
+
+            {/* Resumo Financeiro Sticky - Fora da tabela para melhor visibilidade */}
+            {(os.itens && os.itens.length > 0) && (() => {
+                const resumo = calcularResumoFinanceiro(
+                    os.itens || [],
+                    (os as any).descontoGlobalTipo, (os as any).descontoGlobalValor,
+                    (os as any).acrescimoGlobalTipo, (os as any).acrescimoGlobalValor
+                );
+                return (
+                    <div className="sticky bottom-0 bg-gradient-to-t from-gray-100 dark:from-gray-800 to-gray-50 dark:to-gray-800/80 border-t-2 border-primary/30 p-4">
+                        <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-2">
+                            {/* Subtotal */}
+                            <div className="text-right">
+                                <span className="text-xs text-gray-500 uppercase block">Subtotal</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">{formatCurrency(resumo.somaItens)}</span>
+                            </div>
+
+                            {/* Desconto */}
+                            {resumo.valDescontoGlobal > 0 && (
+                                <div className="text-right">
+                                    <span className="text-xs text-green-600 uppercase block">Desconto</span>
+                                    <span className="text-sm text-green-600">- {formatCurrency(resumo.valDescontoGlobal)}</span>
+                                </div>
+                            )}
+
+                            {/* Acréscimo */}
+                            {resumo.valAcrescimoGlobal > 0 && (
+                                <div className="text-right">
+                                    <span className="text-xs text-orange-600 uppercase block">Acréscimo</span>
+                                    <span className="text-sm text-orange-600">+ {formatCurrency(resumo.valAcrescimoGlobal)}</span>
+                                </div>
+                            )}
+
+                            {/* Separador visual */}
+                            <div className="hidden sm:block w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
+
+                            {/* Total Principal */}
+                            <div className="text-right">
+                                <span className="text-xs text-gray-500 uppercase block">Total</span>
+                                <span className="text-2xl font-bold text-primary">{formatCurrency(resumo.totalFinal)}</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 };
+

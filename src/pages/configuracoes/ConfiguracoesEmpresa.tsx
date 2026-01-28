@@ -2,6 +2,17 @@ import { useState, useEffect, useRef, useCallback, ChangeEvent, FormEvent } from
 import { useAuth } from '../../contexts/AuthContext';
 import { useTabs } from '../../contexts/TabsContext';
 import storage from '../../lib/storage';
+import { ConfigTabs, TabItem, useConfigTabs } from '../../components/common/ConfigTabs';
+
+// Definição das tabs de configuração
+const CONFIG_TABS: TabItem[] = [
+    { id: 'geral', label: 'Geral', icon: 'business' },
+    { id: 'orcamentos', label: 'Orçamentos e OS', icon: 'receipt_long' },
+    { id: 'financeiro', label: 'Financeiro', icon: 'payments' },
+    { id: 'operacional', label: 'Operacional', icon: 'settings' },
+    { id: 'comunicacao', label: 'Comunicação', icon: 'chat' },
+    { id: 'aparencia', label: 'Aparência', icon: 'palette' },
+];
 
 interface ConfiguracoesEmpresaProps {
     isTabMode?: boolean;
@@ -64,12 +75,79 @@ interface EmpresaForm {
     controlarEstoque: boolean;
 }
 
+const SEARCH_ITEMS = [
+    { label: 'Nome Fantasia', target: 'nomeFantasia', keywords: ['nome', 'identificação'] },
+    { label: 'Razão Social', target: 'razaoSocial', keywords: ['razao', 'social', 'legal'] },
+    { label: 'CNPJ', target: 'cnpj', keywords: ['documento', 'federal', 'fiscal'] },
+    { label: 'Contato (Email/Tel)', target: 'email', keywords: ['telefone', 'whatsapp', 'site'] },
+    { label: 'Endereço', target: 'endereco.logradouro', keywords: ['rua', 'bairro', 'cidade', 'cep', 'estado'] },
+    { label: 'Descontos nos Itens', target: 'descontoNosItens', keywords: ['preço', 'valor', 'item'] },
+    { label: 'Total da OS (Descontos)', target: 'descontoNoTotal', keywords: ['global', 'fechamento', 'acrescimo'] },
+    { label: 'Markup Padrão', target: 'markupPadrao', keywords: ['lucro', 'margem', 'preço', 'custo'] },
+    { label: 'Controle de Estoque', target: 'controlarEstoque', keywords: ['bloqueio', 'saldo', 'negativo', 'inventario'] },
+    { label: 'Prefixo da OS', target: 'prefixoOS', keywords: ['numero', 'identificador'] },
+    { label: 'Próxima OS', target: 'proximaOS', keywords: ['numero', 'sequencia'] },
+    { label: 'Visualização Padrão (Kanban/Lista)', target: 'preferenciaOS', keywords: ['layout', 'exibição'] },
+    { label: 'Imprimir Apontamentos', target: 'imprimirApontamentos', keywords: ['pdf', 'horas', 'relatorio'] },
+    { label: 'Mensagem do PDF', target: 'mensagemPadrao', keywords: ['rodape', 'garantia', 'texto'] },
+    { label: 'Meta Mensal', target: 'metaMensalOS', keywords: ['objetivo', 'vendas'] },
+    { label: 'Validade Orçamento', target: 'diasValidadeOrcamento', keywords: ['expiração', 'prazo'] },
+    { label: 'Controle de Prismas', target: 'usarPrismas', keywords: ['placa', 'identificador', 'numero', 'pátio'] },
+    { label: 'Chave PIX', target: 'chavePix', keywords: ['pix', 'pagamento', 'chave', 'banco'] },
+    { label: 'Banco (Recebimento)', target: 'banco', keywords: ['banco', 'pix', 'instituição', 'conta'] },
+    { label: 'Confirmação de Agendamento', target: 'agendaDiasAntecedencia', keywords: ['agenda', 'whatsapp', 'confirmação', 'agendamento'] },
+    { label: 'Mensagem de Agendamento', target: 'agendaMensagemConfirmacao', keywords: ['agenda', 'mensagem', 'texto', 'whatsapp'] },
+];
+
 const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }: ConfiguracoesEmpresaProps) => {
     const { empresa, refreshEmpresa } = useAuth();
     const { registerSaveHandler, unregisterSaveHandler } = useTabs();
     const [loading, setLoading] = useState(true);
     const [salvando, setSalvando] = useState(false);
     const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
+
+    // Search State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<typeof SEARCH_ITEMS>([]);
+
+    // Tabs State
+    const { activeTab, setActiveTab } = useConfigTabs('geral', 'empresa_config');
+
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        const term = searchTerm.toLowerCase();
+        const results = SEARCH_ITEMS.filter(item =>
+            item.label.toLowerCase().includes(term) ||
+            item.keywords.some(k => k.includes(term))
+        );
+        setSearchResults(results);
+    }, [searchTerm]);
+
+    const handleJumpTo = (target: string) => {
+        // Tenta encontrar por name ou id
+        const element = document.getElementsByName(target)[0] || document.getElementById(target);
+
+        if (element) {
+            // Scroll suave
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Focus se for input
+            if (element instanceof HTMLElement) {
+                element.focus();
+
+                // Highlight temporário visual
+                element.classList.add('ring-4', 'ring-primary/30', 'transition-all', 'duration-500');
+                setTimeout(() => {
+                    element.classList.remove('ring-4', 'ring-primary/30');
+                }, 2000);
+            }
+
+            setSearchTerm(''); // Limpa a busca após selecionar
+        }
+    };
 
     const [form, setForm] = useState<EmpresaForm>({
         nomeFantasia: '',
@@ -297,6 +375,59 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }: Configuraco
                 <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
                     Gerencie os dados e preferências da sua empresa
                 </p>
+
+                {/* Search Bar */}
+                <div className="mt-4 relative max-w-lg">
+                    <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            search
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Pesquisar configuração (ex: estoque, prisma, markup)..."
+                            className="input w-full pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                <span className="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Results Dropdown */}
+                    {searchResults.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-60 overflow-y-auto z-50">
+                            {searchResults.map((item, index) => (
+                                <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => handleJumpTo(item.target)}
+                                    className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between group border-b border-gray-100 dark:border-gray-700/50 last:border-0 transition-colors"
+                                >
+                                    <span className="text-sm font-medium text-text-light dark:text-text-dark">
+                                        {item.label}
+                                    </span>
+                                    <span className="material-symbols-outlined text-gray-300 group-hover:text-primary text-sm">
+                                        arrow_forward
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {searchTerm && searchResults.length === 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 text-center z-50">
+                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                Nenhuma configuração encontrada para "{searchTerm}"
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Mensagem de feedback */}
@@ -313,796 +444,844 @@ const ConfiguracoesEmpresa = ({ isTabMode, onClose, onDirtyChange }: Configuraco
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Dados básicos */}
-                <div className="card p-4 lg:p-6">
+                {/* Navegação por Tabs */}
+                <ConfigTabs
+                    tabs={CONFIG_TABS}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    persistKey="empresa_config"
+                >
+                    <div className="space-y-6">
 
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-primary">business</span>
-                        Dados da Empresa
-                    </h2>
+                        {/* ===== TAB: GERAL ===== */}
+                        {activeTab === 'geral' && (
+                            <>
+                                {/* Dados básicos */}
+                                <div className="card p-4 lg:p-6">
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Nome Fantasia *
-                            </label>
-                            <input
-                                type="text"
-                                name="nomeFantasia"
-                                value={form.nomeFantasia}
-                                onChange={handleChange}
-                                className="input w-full"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Razão Social
-                            </label>
-                            <input
-                                type="text"
-                                name="razaoSocial"
-                                value={form.razaoSocial}
-                                onChange={handleChange}
-                                className="input w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                CNPJ
-                            </label>
-                            <input
-                                type="text"
-                                name="cnpj"
-                                value={form.cnpj}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="00.000.000/0000-00"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Email
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={form.email}
-                                onChange={handleChange}
-                                className="input w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Telefone
-                            </label>
-                            <input
-                                type="text"
-                                name="telefone"
-                                value={form.telefone}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="(00) 0000-0000"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                WhatsApp
-                            </label>
-                            <input
-                                type="text"
-                                name="whatsapp"
-                                value={form.whatsapp}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="(00) 00000-0000"
-                            />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Site
-                            </label>
-                            <input
-                                type="url"
-                                name="site"
-                                value={form.site}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="https://..."
-                            />
-                        </div>
-                    </div>
-                </div>
+                                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg text-primary">business</span>
+                                        Dados da Empresa
+                                    </h2>
 
-                {/* Endereço */}
-                <div className="card p-4 lg:p-6">
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-primary">location_on</span>
-                        Endereço
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Logradouro
-                            </label>
-                            <input
-                                type="text"
-                                name="endereco.logradouro"
-                                value={form.endereco.logradouro}
-                                onChange={handleChange}
-                                className="input w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Número
-                            </label>
-                            <input
-                                type="text"
-                                name="endereco.numero"
-                                value={form.endereco.numero}
-                                onChange={handleChange}
-                                className="input w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Complemento
-                            </label>
-                            <input
-                                type="text"
-                                name="endereco.complemento"
-                                value={form.endereco.complemento}
-                                onChange={handleChange}
-                                className="input w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Bairro
-                            </label>
-                            <input
-                                type="text"
-                                name="endereco.bairro"
-                                value={form.endereco.bairro}
-                                onChange={handleChange}
-                                className="input w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                CEP
-                            </label>
-                            <input
-                                type="text"
-                                name="endereco.cep"
-                                value={form.endereco.cep}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="00000-000"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Cidade
-                            </label>
-                            <input
-                                type="text"
-                                name="endereco.cidade"
-                                value={form.endereco.cidade}
-                                onChange={handleChange}
-                                className="input w-full"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Estado
-                            </label>
-                            <select
-                                name="endereco.estado"
-                                value={form.endereco.estado}
-                                onChange={handleChange}
-                                className="input w-full"
-                            >
-                                <option value="">Selecione</option>
-                                {['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(uf => (
-                                    <option key={uf} value={uf}>{uf}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Configurações de Orçamento/Preço */}
-                <div className="md:col-span-2 card p-6">
-                    <h3 className="text-lg font-bold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary">price_change</span>
-                        Configurações de Orçamento
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <h4 className="font-medium text-text-light dark:text-text-dark">Itens e Serviços</h4>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={form.descontoNosItens}
-                                    onChange={(e) => setForm({ ...form, descontoNosItens: e.target.checked })}
-                                    className="toggle toggle-primary"
-                                />
-                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    Permitir <strong>Descontos</strong> nos itens
-                                </span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={form.acrescimoNosItens}
-                                    onChange={(e) => setForm({ ...form, acrescimoNosItens: e.target.checked })}
-                                    className="toggle toggle-primary"
-                                />
-                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    Permitir <strong>Acréscimos</strong> nos itens
-                                </span>
-                            </label>
-                        </div>
-                        <div className="space-y-4">
-                            <h4 className="font-medium text-text-light dark:text-text-dark">Total da OS</h4>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={form.descontoNoTotal}
-                                    onChange={(e) => setForm({ ...form, descontoNoTotal: e.target.checked })}
-                                    className="toggle toggle-primary"
-                                />
-                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    Permitir <strong>Desconto Global</strong> no total
-                                </span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={form.acrescimoNoTotal}
-                                    onChange={(e) => setForm({ ...form, acrescimoNoTotal: e.target.checked })}
-                                    className="toggle toggle-primary"
-                                />
-                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    Permitir <strong>Acréscimo Global</strong> no total
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Configurações de OS */}
-                <div className="card p-4 lg:p-6">
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-primary">assignment</span>
-                        Configurações de OS e Estoque
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Markup Padrão (%)
-                            </label>
-                            <input
-                                type="number"
-                                name="markupPadrao"
-                                value={form.markupPadrao}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="50"
-                                min="0"
-                            />
-                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                Margem de lucro sugerida na importação de notas (Ex: 50%)
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2 md:col-span-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                            <input
-                                type="checkbox"
-                                id="controlarEstoque"
-                                name="controlarEstoque"
-                                checked={form.controlarEstoque}
-                                onChange={handleChange}
-                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <label htmlFor="controlarEstoque" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
-                                Controlar Estoque Rigorosamente
-                            </label>
-                            <span className="material-symbols-outlined text-gray-400 text-sm" title="Se marcado, impedirá a finalização de OS caso não haja estoque suficiente dos produtos.">help</span>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Prefixo da OS
-                            </label>
-                            <input
-                                type="text"
-                                name="prefixoOS"
-                                value={form.prefixoOS}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="OS"
-                            />
-                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                Ex: OS0001, AT0001
-                            </p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Número da próxima OS
-                            </label>
-                            <input
-                                type="number"
-                                name="proximaOS"
-                                value={form.proximaOS}
-                                onChange={handleChange}
-                                className="input w-full"
-                                min="1"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Visualização padrão das OS
-                            </label>
-                            <select
-                                name="preferenciaOS"
-                                value={form.preferenciaOS}
-                                onChange={handleChange}
-                                className="input w-full"
-                            >
-                                <option value="kanban">Kanban (colunas)</option>
-                                <option value="lista">Lista (tabela)</option>
-                            </select>
-                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                Como as OS serão exibidas ao entrar na tela
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2 md:col-span-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                            <input
-                                type="checkbox"
-                                id="imprimirApontamentos"
-                                name="imprimirApontamentos"
-                                checked={form.imprimirApontamentos}
-                                onChange={handleChange}
-                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <label htmlFor="imprimirApontamentos" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
-                                Imprimir Apontamento de Horas na OS
-                            </label>
-                            <span className="material-symbols-outlined text-gray-400 text-sm" title="Se marcado, uma tabela com os apontamentos de horas será impressa no PDF da OS.">help</span>
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Mensagem padrão (rodapé do PDF)
-                            </label>
-                            <textarea
-                                name="mensagemPadrao"
-                                value={form.mensagemPadrao}
-                                onChange={handleChange}
-                                className="input w-full"
-                                rows={3}
-                                placeholder="Ex: Garantia de 90 dias para serviços executados."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-primary">flag</span>
-                                Meta mensal de OS
-                            </label>
-                            <input
-                                type="number"
-                                name="metaMensalOS"
-                                value={form.metaMensalOS}
-                                onChange={handleChange}
-                                className="input w-full"
-                                min="1"
-                                max="999"
-                            />
-                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                Quantidade de OS finalizadas por mês para atingir a meta
-                            </p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-primary">timelapse</span>
-                                Dias de Inatividade (CRM)
-                            </label>
-                            <input
-                                type="number"
-                                name="diasInatividade"
-                                value={form.diasInatividade}
-                                onChange={handleChange}
-                                className="input w-full"
-                                min="30"
-                                max="365"
-                            />
-                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                Dias sem serviços para considerar cliente inativo (Padrão: 90)
-                            </p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-primary">event_busy</span>
-                                Validade do Orçamento (Dias)
-                            </label>
-                            <input
-                                type="number"
-                                name="diasValidadeOrcamento"
-                                value={form.diasValidadeOrcamento}
-                                onChange={handleChange}
-                                className="input w-full"
-                                min="1"
-                                max="90"
-                            />
-                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                Validade padrão sugerida ao criar orçamento (Padrão: 10 dias)
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Controle de Prismas */}
-                <div className="card p-4 lg:p-6">
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-primary">filter_9_plus</span>
-                        Controle de Prismas
-                    </h2>
-                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
-                        Prismas são acessórios de identificação visual colocados sobre veículos para vincular rapidamente o carro à sua OS
-                    </p>
-
-                    <div className="space-y-4">
-                        {/* Toggle Usar Prismas */}
-                        <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                            <input
-                                type="checkbox"
-                                id="usarPrismas"
-                                name="usarPrismas"
-                                checked={form.usarPrismas}
-                                onChange={handleChange}
-                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <label htmlFor="usarPrismas" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
-                                Usar controle de prismas nas OS
-                            </label>
-                        </div>
-
-                        {/* Configurações (só aparece se ativado) */}
-                        {form.usarPrismas && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-primary/30">
-                                <div>
-                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                        Cor dos Prismas
-                                    </label>
-                                    <select
-                                        name="prismaCor"
-                                        value={form.prismaCor}
-                                        onChange={handleChange}
-                                        className="input w-full"
-                                    >
-                                        <option value="Vermelho">🔴 Vermelho</option>
-                                        <option value="Azul">🔵 Azul</option>
-                                        <option value="Verde">🟢 Verde</option>
-                                        <option value="Amarelo">🟡 Amarelo</option>
-                                        <option value="Preto">⚫ Preto</option>
-                                        <option value="Laranja">🟠 Laranja</option>
-                                    </select>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Nome Fantasia *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="nomeFantasia"
+                                                value={form.nomeFantasia}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Razão Social
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="razaoSocial"
+                                                value={form.razaoSocial}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                CNPJ
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="cnpj"
+                                                value={form.cnpj}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                placeholder="00.000.000/0000-00"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Email
+                                            </label>
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                value={form.email}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Telefone
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="telefone"
+                                                value={form.telefone}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                placeholder="(00) 0000-0000"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                WhatsApp
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="whatsapp"
+                                                value={form.whatsapp}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                placeholder="(00) 00000-0000"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Site
+                                            </label>
+                                            <input
+                                                type="url"
+                                                name="site"
+                                                value={form.site}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                placeholder="https://..."
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                        Quantidade Total
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="prismaQuantidade"
-                                        value={form.prismaQuantidade}
-                                        onChange={handleChange}
-                                        className="input w-full"
-                                        min="1"
-                                        max="999"
-                                    />
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
-                                        Números de 1 até {form.prismaQuantidade}
+
+                                {/* Endereço */}
+                                <div className="card p-4 lg:p-6">
+                                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg text-primary">location_on</span>
+                                        Endereço
+                                    </h2>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Logradouro
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="endereco.logradouro"
+                                                value={form.endereco.logradouro}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Número
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="endereco.numero"
+                                                value={form.endereco.numero}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Complemento
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="endereco.complemento"
+                                                value={form.endereco.complemento}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Bairro
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="endereco.bairro"
+                                                value={form.endereco.bairro}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                CEP
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="endereco.cep"
+                                                value={form.endereco.cep}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                placeholder="00000-000"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Cidade
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="endereco.cidade"
+                                                value={form.endereco.cidade}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Estado
+                                            </label>
+                                            <select
+                                                name="endereco.estado"
+                                                value={form.endereco.estado}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            >
+                                                <option value="">Selecione</option>
+                                                {['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(uf => (
+                                                    <option key={uf} value={uf}>{uf}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ===== TAB: FINANCEIRO ===== */}
+                        {activeTab === 'financeiro' && (
+                            <>
+                                {/* Configurações de Orçamento/Preço */}
+                                <div className="md:col-span-2 card p-6">
+                                    <h3 className="text-lg font-bold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">price_change</span>
+                                        Configurações de Orçamento
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <h4 className="font-medium text-text-light dark:text-text-dark">Itens e Serviços</h4>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={form.descontoNosItens}
+                                                    onChange={(e) => setForm({ ...form, descontoNosItens: e.target.checked })}
+                                                    className="toggle toggle-primary"
+                                                    name="descontoNosItens"
+                                                />
+                                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                                    Permitir <strong>Descontos</strong> nos itens
+                                                </span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={form.acrescimoNosItens}
+                                                    onChange={(e) => setForm({ ...form, acrescimoNosItens: e.target.checked })}
+                                                    className="toggle toggle-primary"
+                                                    name="acrescimoNosItens"
+                                                />
+                                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                                    Permitir <strong>Acréscimos</strong> nos itens
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <h4 className="font-medium text-text-light dark:text-text-dark">Total da OS</h4>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={form.descontoNoTotal}
+                                                    onChange={(e) => setForm({ ...form, descontoNoTotal: e.target.checked })}
+                                                    className="toggle toggle-primary"
+                                                    name="descontoNoTotal"
+                                                />
+                                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                                    Permitir <strong>Desconto Global</strong> no total
+                                                </span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={form.acrescimoNoTotal}
+                                                    onChange={(e) => setForm({ ...form, acrescimoNoTotal: e.target.checked })}
+                                                    className="toggle toggle-primary"
+                                                    name="acrescimoNoTotal"
+                                                />
+                                                <span className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                                    Permitir <strong>Acréscimo Global</strong> no total
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ===== TAB: ORCAMENTOS E OS ===== */}
+                        {activeTab === 'orcamentos' && (
+                            <>
+                                {/* Configurações de OS */}
+                                <div className="card p-4 lg:p-6">
+                                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg text-primary">assignment</span>
+                                        Configurações de OS e Estoque
+                                    </h2>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Markup Padrão (%)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="markupPadrao"
+                                                value={form.markupPadrao}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                placeholder="50"
+                                                min="0"
+                                            />
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                Margem de lucro sugerida na importação de notas (Ex: 50%)
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-2 md:col-span-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                            <input
+                                                type="checkbox"
+                                                id="controlarEstoque"
+                                                name="controlarEstoque"
+                                                checked={form.controlarEstoque}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <label htmlFor="controlarEstoque" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
+                                                Controlar Estoque Rigorosamente
+                                            </label>
+                                            <span className="material-symbols-outlined text-gray-400 text-sm" title="Se marcado, impedirá a finalização de OS caso não haja estoque suficiente dos produtos.">help</span>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Prefixo da OS
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="prefixoOS"
+                                                value={form.prefixoOS}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                placeholder="OS"
+                                            />
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                Ex: OS0001, AT0001
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Número da próxima OS
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="proximaOS"
+                                                value={form.proximaOS}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                min="1"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Visualização padrão das OS
+                                            </label>
+                                            <select
+                                                name="preferenciaOS"
+                                                value={form.preferenciaOS}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                            >
+                                                <option value="kanban">Kanban (colunas)</option>
+                                                <option value="lista">Lista (tabela)</option>
+                                            </select>
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                Como as OS serão exibidas ao entrar na tela
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-2 md:col-span-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                            <input
+                                                type="checkbox"
+                                                id="imprimirApontamentos"
+                                                name="imprimirApontamentos"
+                                                checked={form.imprimirApontamentos}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <label htmlFor="imprimirApontamentos" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
+                                                Imprimir Apontamento de Horas na OS
+                                            </label>
+                                            <span className="material-symbols-outlined text-gray-400 text-sm" title="Se marcado, uma tabela com os apontamentos de horas será impressa no PDF da OS.">help</span>
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Mensagem padrão (rodapé do PDF)
+                                            </label>
+                                            <textarea
+                                                name="mensagemPadrao"
+                                                value={form.mensagemPadrao}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                rows={3}
+                                                placeholder="Ex: Garantia de 90 dias para serviços executados."
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-primary">flag</span>
+                                                Meta mensal de OS
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="metaMensalOS"
+                                                value={form.metaMensalOS}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                min="1"
+                                                max="999"
+                                            />
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                Quantidade de OS finalizadas por mês para atingir a meta
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-primary">timelapse</span>
+                                                Dias de Inatividade (CRM)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="diasInatividade"
+                                                value={form.diasInatividade}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                min="30"
+                                                max="365"
+                                            />
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                Dias sem serviços para considerar cliente inativo (Padrão: 90)
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-primary">event_busy</span>
+                                                Validade do Orçamento (Dias)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="diasValidadeOrcamento"
+                                                value={form.diasValidadeOrcamento}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                min="1"
+                                                max="90"
+                                            />
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                Validade padrão sugerida ao criar orçamento (Padrão: 10 dias)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ===== TAB: OPERACIONAL ===== */}
+                        {activeTab === 'operacional' && (
+                            <>
+                                {/* Controle de Prismas */}
+                                <div className="card p-4 lg:p-6">
+                                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg text-primary">filter_9_plus</span>
+                                        Controle de Prismas
+                                    </h2>
+                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
+                                        Prismas são acessórios de identificação visual colocados sobre veículos para vincular rapidamente o carro à sua OS
                                     </p>
+
+                                    <div className="space-y-4">
+                                        {/* Toggle Usar Prismas */}
+                                        <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                            <input
+                                                type="checkbox"
+                                                id="usarPrismas"
+                                                name="usarPrismas"
+                                                checked={form.usarPrismas}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                            />
+                                            <label htmlFor="usarPrismas" className="text-sm font-medium text-text-light dark:text-text-dark select-none cursor-pointer">
+                                                Usar controle de prismas nas OS
+                                            </label>
+                                        </div>
+
+                                        {/* Configurações (só aparece se ativado) */}
+                                        {form.usarPrismas && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-primary/30">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                        Cor dos Prismas
+                                                    </label>
+                                                    <select
+                                                        name="prismaCor"
+                                                        value={form.prismaCor}
+                                                        onChange={handleChange}
+                                                        className="input w-full"
+                                                    >
+                                                        <option value="Vermelho">🔴 Vermelho</option>
+                                                        <option value="Azul">🔵 Azul</option>
+                                                        <option value="Verde">🟢 Verde</option>
+                                                        <option value="Amarelo">🟡 Amarelo</option>
+                                                        <option value="Preto">⚫ Preto</option>
+                                                        <option value="Laranja">🟠 Laranja</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                        Quantidade Total
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        name="prismaQuantidade"
+                                                        value={form.prismaQuantidade}
+                                                        onChange={handleChange}
+                                                        className="input w-full"
+                                                        min="1"
+                                                        max="999"
+                                                    />
+                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">
+                                                        Números de 1 até {form.prismaQuantidade}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ===== TAB: APARÊNCIA ===== */}
+                        {activeTab === 'aparencia' && (
+                            <>
+                                {/* Personalização */}
+                                <div className="card p-4 lg:p-6">
+                                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg text-primary">palette</span>
+                                        Personalização
+                                    </h2>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Logo da Oficina
+                                            </label>
+
+                                            <div className="flex flex-col gap-4">
+                                                {/* Preview e Actions */}
+                                                {form.logoUrl ? (
+                                                    <div className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                                                        <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                                            <img
+                                                                src={form.logoUrl}
+                                                                alt="Logo Preview"
+                                                                className="max-w-full max-h-full object-contain"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label className="btn-secondary text-xs cursor-pointer inline-flex items-center gap-1">
+                                                                <span className="material-symbols-outlined text-sm">upload</span>
+                                                                Trocar
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    className="hidden"
+                                                                    onChange={handleLogoUpload}
+                                                                />
+                                                            </label>
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleRemoverLogo}
+                                                                className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                                                            >
+                                                                <span className="material-symbols-outlined text-sm">delete</span>
+                                                                Remover
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                            <span className="material-symbols-outlined text-3xl text-gray-400 mb-2">cloud_upload</span>
+                                                            <p className="mb-1 text-sm text-text-secondary-light dark:text-text-secondary-dark font-medium">
+                                                                Clique para enviar o logo
+                                                            </p>
+                                                            <p className="text-xs text-gray-400">
+                                                                PNG, JPG (Max. 5MB)
+                                                            </p>
+                                                        </div>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={handleLogoUpload}
+                                                        />
+                                                    </label>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                Cor Primária
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    name="corPrimaria"
+                                                    value={form.corPrimaria}
+                                                    onChange={handleChange}
+                                                    className="w-12 h-10 rounded-lg cursor-pointer border-0"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={form.corPrimaria}
+                                                    onChange={handleChange}
+                                                    name="corPrimaria"
+                                                    className="input flex-1"
+                                                    placeholder="#137fec"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </>
+                        )}
+
+                        {/* Pagamento PIX - Na tab Financeiro */}
+                        {activeTab === 'financeiro' && (
+                            <div className="card p-4 lg:p-6 border-l-4 border-primary">
+                                <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-lg text-primary">pix</span>
+                                    Pagamento PIX
+                                </h2>
+                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
+                                    Configure sua chave PIX para exibir no PDF e facilitar o recebimento.
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                            Chave PIX
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="chavePix"
+                                            value={form.chavePix}
+                                            onChange={handleChange}
+                                            className="input w-full"
+                                            placeholder="CPF, CNPJ, Email ou Telefone"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                            Banco
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="banco"
+                                            value={form.banco}
+                                            onChange={handleChange}
+                                            className="input w-full"
+                                            placeholder="Ex: Banco do Brasil, Nubank..."
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
 
-                {/* Personalização */}
-                <div className="card p-4 lg:p-6">
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-primary">palette</span>
-                        Personalização
-                    </h2>
+                        {/* ===== TAB: COMUNICAÇÃO ===== */}
+                        {activeTab === 'comunicacao' && (
+                            <>
+                                {/* Templates de Mensagem WhatsApp */}
+                                <div className="card p-4 lg:p-6 border-l-4 border-green-500">
+                                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg text-green-600">chat</span>
+                                        Templates de Mensagem WhatsApp
+                                    </h2>
+                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
+                                        Configure as mensagens padrão para enviar via WhatsApp. Use <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{'{nome}'}</code> e <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{'{veiculo}'}</code> para personalização automática.
+                                    </p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Logo da Oficina
-                            </label>
-
-                            <div className="flex flex-col gap-4">
-                                {/* Preview e Actions */}
-                                {form.logoUrl ? (
-                                    <div className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                                        <div className="w-20 h-20 flex items-center justify-center bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                            <img
-                                                src={form.logoUrl}
-                                                alt="Logo Preview"
-                                                className="max-w-full max-h-full object-contain"
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-orange-500">event_upcoming</span>
+                                                Lembrete de Revisão
+                                            </label>
+                                            <textarea
+                                                name="templateLembreteRevisao"
+                                                value={form.templateLembreteRevisao}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                rows={2}
+                                                placeholder="Olá {nome}! Seu veículo {veiculo} precisa de revisão..."
                                             />
                                         </div>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="btn-secondary text-xs cursor-pointer inline-flex items-center gap-1">
-                                                <span className="material-symbols-outlined text-sm">upload</span>
-                                                Trocar
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="hidden"
-                                                    onChange={handleLogoUpload}
-                                                />
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-yellow-500">schedule</span>
+                                                Follow-up (Cliente Inativo)
                                             </label>
-                                            <button
-                                                type="button"
-                                                onClick={handleRemoverLogo}
-                                                className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
-                                            >
-                                                <span className="material-symbols-outlined text-sm">delete</span>
-                                                Remover
-                                            </button>
+                                            <textarea
+                                                name="templateFollowUp"
+                                                value={form.templateFollowUp}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                rows={2}
+                                                placeholder="Olá {nome}! Faz um tempo que não nos vemos..."
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-green-500">thumb_up</span>
+                                                Agradecimento (Pós-Serviço)
+                                            </label>
+                                            <textarea
+                                                name="templateAgradecimento"
+                                                value={form.templateAgradecimento}
+                                                onChange={handleChange}
+                                                className="input w-full"
+                                                rows={2}
+                                                placeholder="Olá {nome}! Obrigado pela preferência..."
+                                            />
                                         </div>
                                     </div>
-                                ) : (
-                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <span className="material-symbols-outlined text-3xl text-gray-400 mb-2">cloud_upload</span>
-                                            <p className="mb-1 text-sm text-text-secondary-light dark:text-text-secondary-dark font-medium">
-                                                Clique para enviar o logo
+
+                                    <div className="pt-4 border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
+                                        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
+                                            <span className="material-symbols-outlined text-sm align-middle mr-1 text-blue-500">calendar_month</span>
+                                            Confirmação de Agendamento
+                                        </label>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                                            <div>
+                                                <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">
+                                                    Dias de Antecedência (Aviso)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    name="agendaDiasAntecedencia"
+                                                    value={form.agendaDiasAntecedencia}
+                                                    onChange={handleChange}
+                                                    className="input w-full"
+                                                    min="0"
+                                                    max="7"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">
+                                                    Mensagem de Confirmação
+                                                </label>
+                                                <textarea
+                                                    name="agendaMensagemConfirmacao"
+                                                    value={form.agendaMensagemConfirmacao}
+                                                    onChange={handleChange}
+                                                    className="input w-full"
+                                                    rows={2}
+                                                    placeholder="Olá {nome}, confirmamos seu agendamento para {data}?"
+                                                />
+                                                <p className="text-[10px] text-text-secondary-light mt-1">
+                                                    Variáveis: {'{nome}'}, {'{veiculo}'}, {'{data}'}, {'{hora}'}, {'{servico}'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Informações do plano */}
+                                <div className="card p-4 lg:p-6 bg-gradient-to-br from-primary/5 to-transparent">
+                                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg text-primary">workspace_premium</span>
+                                        Seu Plano
+                                    </h2>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="font-semibold text-text-light dark:text-text-dark capitalize">
+                                                {empresa?.plano || 'Básico'}
                                             </p>
-                                            <p className="text-xs text-gray-400">
-                                                PNG, JPG (Max. 5MB)
+                                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                                {empresa?.limiteUsuarios || 1} usuário(s) incluído(s)
                                             </p>
                                         </div>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleLogoUpload}
-                                        />
-                                    </label>
-                                )}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Cor Primária
-                            </label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="color"
-                                    name="corPrimaria"
-                                    value={form.corPrimaria}
-                                    onChange={handleChange}
-                                    className="w-12 h-10 rounded-lg cursor-pointer border-0"
-                                />
-                                <input
-                                    type="text"
-                                    value={form.corPrimaria}
-                                    onChange={handleChange}
-                                    name="corPrimaria"
-                                    className="input flex-1"
-                                    placeholder="#137fec"
-                                />
-                            </div>
-                        </div>
+                                        <button type="button" className="btn-secondary text-sm">
+                                            Fazer upgrade
+                                        </button>
+                                    </div>
+                                </div>
+
+
+
+                                {/* Sticky Footer Actions */}
+                                <div className="sticky bottom-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-20 -mx-4 lg:-mx-6 mt-6">
+                                    <div className="max-w-4xl mx-auto flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (isTabMode) {
+                                                    onClose?.();
+                                                } else {
+                                                    window.history.back();
+                                                }
+                                            }}
+                                            className="btn-secondary flex-1"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={salvando}
+                                            className="btn-primary flex-1 shadow-lg shadow-primary/20"
+                                        >
+                                            {salvando ? (
+                                                <>
+                                                    <span className="material-symbols-outlined animate-spin">sync</span>
+                                                    Salvando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="material-symbols-outlined">save</span>
+                                                    Salvar
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
-
-
-                </div>
-
-                {/* Pagamento PIX */}
-                <div className="card p-4 lg:p-6 border-l-4 border-primary">
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-primary">pix</span>
-                        Pagamento PIX
-                    </h2>
-                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
-                        Configure sua chave PIX para exibir no PDF e facilitar o recebimento.
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Chave PIX
-                            </label>
-                            <input
-                                type="text"
-                                name="chavePix"
-                                value={form.chavePix}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="CPF, CNPJ, Email ou Telefone"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                Banco
-                            </label>
-                            <input
-                                type="text"
-                                name="banco"
-                                value={form.banco}
-                                onChange={handleChange}
-                                className="input w-full"
-                                placeholder="Ex: Banco do Brasil, Nubank..."
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Templates de Mensagem WhatsApp */}
-                <div className="card p-4 lg:p-6 border-l-4 border-green-500">
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-green-600">chat</span>
-                        Templates de Mensagem WhatsApp
-                    </h2>
-                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mb-4">
-                        Configure as mensagens padrão para enviar via WhatsApp. Use <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{'{nome}'}</code> e <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{'{veiculo}'}</code> para personalização automática.
-                    </p>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-orange-500">event_upcoming</span>
-                                Lembrete de Revisão
-                            </label>
-                            <textarea
-                                name="templateLembreteRevisao"
-                                value={form.templateLembreteRevisao}
-                                onChange={handleChange}
-                                className="input w-full"
-                                rows={2}
-                                placeholder="Olá {nome}! Seu veículo {veiculo} precisa de revisão..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-yellow-500">schedule</span>
-                                Follow-up (Cliente Inativo)
-                            </label>
-                            <textarea
-                                name="templateFollowUp"
-                                value={form.templateFollowUp}
-                                onChange={handleChange}
-                                className="input w-full"
-                                rows={2}
-                                placeholder="Olá {nome}! Faz um tempo que não nos vemos..."
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                                <span className="material-symbols-outlined text-sm align-middle mr-1 text-green-500">thumb_up</span>
-                                Agradecimento (Pós-Serviço)
-                            </label>
-                            <textarea
-                                name="templateAgradecimento"
-                                value={form.templateAgradecimento}
-                                onChange={handleChange}
-                                className="input w-full"
-                                rows={2}
-                                placeholder="Olá {nome}! Obrigado pela preferência..."
-                            />
-                        </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)]">
-                        <label className="block text-sm font-medium text-text-light dark:text-text-dark mb-2">
-                            <span className="material-symbols-outlined text-sm align-middle mr-1 text-blue-500">calendar_month</span>
-                            Confirmação de Agendamento
-                        </label>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                            <div>
-                                <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">
-                                    Dias de Antecedência (Aviso)
-                                </label>
-                                <input
-                                    type="number"
-                                    name="agendaDiasAntecedencia"
-                                    value={form.agendaDiasAntecedencia}
-                                    onChange={handleChange}
-                                    className="input w-full"
-                                    min="0"
-                                    max="7"
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="text-xs text-text-secondary-light dark:text-text-secondary-dark block mb-1">
-                                    Mensagem de Confirmação
-                                </label>
-                                <textarea
-                                    name="agendaMensagemConfirmacao"
-                                    value={form.agendaMensagemConfirmacao}
-                                    onChange={handleChange}
-                                    className="input w-full"
-                                    rows={2}
-                                    placeholder="Olá {nome}, confirmamos seu agendamento para {data}?"
-                                />
-                                <p className="text-[10px] text-text-secondary-light mt-1">
-                                    Variáveis: {'{nome}'}, {'{veiculo}'}, {'{data}'}, {'{hora}'}, {'{servico}'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Informações do plano */}
-                <div className="card p-4 lg:p-6 bg-gradient-to-br from-primary/5 to-transparent">
-                    <h2 className="text-sm font-semibold text-text-light dark:text-text-dark mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg text-primary">workspace_premium</span>
-                        Seu Plano
-                    </h2>
-
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="font-semibold text-text-light dark:text-text-dark capitalize">
-                                {empresa?.plano || 'Básico'}
-                            </p>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                {empresa?.limiteUsuarios || 1} usuário(s) incluído(s)
-                            </p>
-                        </div>
-                        <button type="button" className="btn-secondary text-sm">
-                            Fazer upgrade
-                        </button>
-                    </div>
-                </div>
-
-
-
-                {/* Sticky Footer Actions */}
-                <div className="sticky bottom-0 p-4 bg-surface-light dark:bg-surface-dark border-t border-[var(--color-border-light)] dark:border-[var(--color-border-dark)] z-20 -mx-4 lg:-mx-6 mt-6">
-                    <div className="max-w-4xl mx-auto flex gap-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                if (isTabMode) {
-                                    onClose?.();
-                                } else {
-                                    window.history.back();
-                                }
-                            }}
-                            className="btn-secondary flex-1"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={salvando}
-                            className="btn-primary flex-1 shadow-lg shadow-primary/20"
-                        >
-                            {salvando ? (
-                                <>
-                                    <span className="material-symbols-outlined animate-spin">sync</span>
-                                    Salvando...
-                                </>
-                            ) : (
-                                <>
-                                    <span className="material-symbols-outlined">save</span>
-                                    Salvar
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </form >
+                </ConfigTabs>
+            </form>
         </div >
     );
 };
 
 export default ConfiguracoesEmpresa;
+
